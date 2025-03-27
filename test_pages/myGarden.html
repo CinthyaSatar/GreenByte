@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f8f9fc;
+      overflow-x: hidden;
+    }
+
+    /* Floating sidebar styles */
+    .sidebar {
+      width: 80px !important;
+      height: calc(100vh - 2rem);
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 1030;
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(28, 200, 138, 0.2);
+      border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+    }
+
+    /* Hide all text by default */
+    .sidebar span {
+      display: none;
+    }
+
+    /* Center icons */
+    .sidebar .nav-link {
+      text-align: center;
+      padding: 1rem;
+      position: relative;
+      color: #1cc88a;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar .nav-link:hover {
+      color: #169b6b;
+    }
+
+    .sidebar .nav-link i {
+      font-size: 1.2rem;
+    }
+
+    /* Tooltip styles on hover */
+    .sidebar .nav-link:hover span {
+      display: block;
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1cc88a;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.75rem;
+      margin-left: 10px;
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(28, 200, 138, 0.1);
+    }
+
+    /* Content wrapper adjustment */
+    #content-wrapper {
+      margin-left: 96px;
+      padding: 1rem;
+    }
+
+    /* Divider styles */
+    .sidebar-divider {
+      border: none;
+      border-top: 1px solid rgba(28, 200, 138, 0.1);
+      margin: 0.5rem 1rem;
+    }
+
+    /* Logo section styles */
+    .logo-section {
+      padding: 1.5rem 0;
+      text-align: center;
+    }
+
+    .logo-section i {
+      color: #1cc88a;
+      font-size: 1.5rem;
+    }
+
+    /* Navigation section */
+    .nav-section {
+      flex: 1;
+      padding: 0.5rem 0;
+    }
+
+    /* User section styles */
+    .user-section {
+      padding: 1rem 0;
+      text-align: center;
+    }
+
+    .user-btn {
+      background: none;
+      border: none;
+      color: #1cc88a;
+      width: 100%;
+      padding: 0.5rem;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .user-btn:hover {
+      color: #169b6b;
+    }
+
+    /* Dropdown Styles */
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      left: 100%;
+      bottom: 0;
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 0.15rem 1.75rem rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(28, 200, 138, 0.1);
+      min-width: 180px;
+      z-index: 1000;
+      margin-left: 10px;
+    }
+
+    .user-dropdown.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      color: #3a3b45;
+      text-decoration: none;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .dropdown-item:hover {
+      background-color: #f8f9fc;
+      color: #1cc88a;
+    }
+
+    .dropdown-item i {
+      color: #1cc88a;
+      margin-right: 0.5rem;
+      width: 1rem;
+      text-align: center;
+    }
+
+    .dropdown-divider {
+      border-top: 1px solid rgba(28, 200, 138, 0.1);
+      margin: 0.5rem 0;
+    }
+  </style>
+
+  <title>GreenByte Dashboard</title>
+</head>
+
+<body>
+  <!-- Floating Sidebar -->
+  <nav class="sidebar">
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <i class="fas fa-seedling"></i>
+    </div>
+
+    <!-- Navigation Section -->
+    <div class="nav-section">
+      <div class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="fas fa-fw fa-home"></i>
+          <span>Home</span>
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="fas fa-fw fa-leaf"></i>
+          <span>Garden</span>
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="fas fa-fw fa-calendar"></i>
+          <span>Schedule</span>
+        </a>
+      </div>
+
+      <hr class="sidebar-divider">
+
+      <div class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="fas fa-fw fa-chart-line"></i>
+          <span>Analytics</span>
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- User Section -->
+    <div class="user-section">
+      <button id="userDropdownBtn" class="user-btn">
+        <i class="fas fa-user-circle"></i>
+      </button>
+
+      <!-- Add Dropdown Menu -->
+      <div id="userDropdown" class="user-dropdown">
+        <a href="#" class="dropdown-item">
+          <i class="fas fa-user fa-sm fa-fw mr-2"></i>
+          Profile
+        </a>
+        <a href="#" class="dropdown-item">
+          <i class="fas fa-cogs fa-sm fa-fw mr-2"></i>
+          Settings
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item">
+          <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2"></i>
+          Logout
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="content-wrapper">
+    <div id="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- Main Content Column -->
+          <div class="col-xl-8 col-lg-7">
+            <!-- Garden Overview Card -->
+            <div class="card shadow-sm mb-4" style="background: white;
+                        border: 1px solid rgba(28, 200, 138, 0.2);
+                        border-radius: 1rem !important;
+                        border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h3 class="text-success">My Garden Zones</h3>
+                  <button class="btn" style="background: rgba(28, 200, 138, 0.1); 
+                                 color: #1cc88a; 
+                                 border: 1px solid rgba(28, 200, 138, 0.2);
+                                 border-radius: 0.5rem;
+                                 transition: all 0.2s ease;">
+                    <i class="fas fa-plus"></i> Add Zone
+                  </button>
+                </div>
+
+                <!-- Zone Cards -->
+                <div class="row">
+                  <!-- Vegetable Zone -->
+                  <div class="col-md-6 mb-4">
+                    <div class="card h-100" style="background: white; 
+                                border-radius: 1.5rem !important; 
+                                border: 1px solid rgba(28, 200, 138, 0.2);
+                                box-shadow: 0 8px 24px rgba(0,0,0,0.12);">
+                      <div class="card-header bg-white d-flex justify-content-between align-items-center" 
+                           style="border-top-left-radius: 1.5rem;
+                                  border-top-right-radius: 1.5rem;
+                                  border-bottom: 1px solid rgba(28, 200, 138, 0.2);">
+                        <h5 class="text-success m-0">Vegetable Zone</h5>
+                        <span class="badge rounded-pill bg-success px-3 py-2">Zone 6b</span>
+                      </div>
+                      <div class="card-body p-4">
+                  
+                        <!-- Growing Conditions -->
+                        <div class="mb-4">
+                          <h6 class="text-muted mb-3">Growing Conditions</h6>
+                          <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge bg-light text-success p-2">
+                              <i class="fas fa-sun text-warning"></i> Full Sun
+                            </span>
+                            <span class="badge bg-light text-success p-2">
+                              <i class="fas fa-tint text-primary"></i> Daily Watering
+                            </span>
+                            <span class="badge bg-light text-success p-2">
+                              <i class="fas fa-thermometer-half text-danger"></i> 65-85°F
+                            </span>
+                            <span class="badge bg-light text-success p-2">
+                              <i class="fas fa-mountain text-secondary"></i> Well-drained Soil
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Soil Information -->
+                        <div class="mb-4">
+                          <h6 class="text-muted mb-3">Soil Composition</h6>
+                          <div class="d-flex flex-wrap gap-3">
+                            <div>
+                              <small class="text-muted d-block">pH Level</small>
+                              <span class="text-success">6.5-7.0</span>
+                            </div>
+                            <div>
+                              <small class="text-muted d-block">Soil Type</small>
+                              <span class="text-success">Loamy</span>
+                            </div>
+                            <div>
+                              <small class="text-muted d-block">Organic Matter</small>
+                              <span class="text-success">High</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Current Plants -->
+                        <div>
+                          <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-muted mb-0">Current Plants</h6>
+                            <span class="badge bg-success">3 Active</span>
+                          </div>
+                          <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <small class="text-success">
+                                <i class="fas fa-leaf"></i> Tomatoes
+                                <span class="text-muted ms-2">- Roma variety</span>
+                              </small>
+                              <span class="badge bg-success">Fruiting</span>
+                            </div>
+                          </div>
+                          <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <small class="text-success">
+                                <i class="fas fa-leaf"></i> Bell Peppers
+                                <span class="text-muted ms-2">- Mixed colors</span>
+                              </small>
+                              <span class="badge bg-warning text-dark">Growing</span>
+                            </div>
+                          </div>
+                          <div class="bg-light p-2 rounded" style="border: 1px dashed #1cc88a;">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <small class="text-success">
+                                <i class="fas fa-leaf"></i> Basil
+                                <span class="text-muted ms-2">- Sweet variety</span>
+                              </small>
+                              <span class="badge bg-success">Ready to harvest</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Herb Zone -->
+                  <div class="col-md-6 mb-4">
+                    <div class="card h-100" style="background: white; 
+                                border-radius: 1.5rem !important; 
+                                box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;
+                                border: 1px solid rgba(28, 200, 138, 0.2);">
+                      <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-top-left-radius: 1.5rem;
+                                  border-top-right-radius: 1.5rem;
+                                  border-bottom: 1px solid rgba(28, 200, 138, 0.2);">
+                        <h5 class="text-success m-0">Herb Garden</h5>
+                        <span class="badge rounded-pill bg-success px-3 py-2">Zone 6b</span>
+                      </div>
+                      <div class="card-body p-4">
+                        <div class="mb-3">
+                          <small class="text-muted">Conditions</small>
+                          <div class="d-flex gap-2 mt-2">
+                            <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                              <i class="fas fa-cloud-sun"></i> Partial Sun
+                            </span>
+                            <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                              <i class="fas fa-box"></i> Container
+                            </span>
+                          </div>
+                        </div>
+
+                        <div class="mb-3">
+                          <small class="text-muted">Active Plants</small>
+                          <div class="mt-2">
+                            <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-leaf"></i> Basil</small>
+                                <span class="badge bg-success">Mature</span>
+                              </div>
+                            </div>
+                            <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-leaf"></i> Thyme</small>
+                                <span class="badge bg-success">Mature</span>
+                              </div>
+                            </div>
+                            <div class="bg-light p-2 rounded" style="border: 1px dashed #1cc88a;">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-leaf"></i> Mint</small>
+                                <span class="badge bg-success">Mature</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Native Garden Zone -->
+                  <div class="col-md-6 mb-4">
+                    <div class="card h-100" style="background: white; 
+                                border-radius: 1.5rem !important; 
+                                box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;
+                                border: 1px solid rgba(28, 200, 138, 0.2);">
+                      <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-top-left-radius: 1.5rem;
+                                  border-top-right-radius: 1.5rem;
+                                  border-bottom: 1px solid rgba(28, 200, 138, 0.2);">
+                        <h5 class="text-success m-0">Native Garden</h5>
+                        <span class="badge rounded-pill bg-success px-3 py-2">Zone 6b</span>
+                      </div>
+                      <div class="card-body p-4">
+                        <div class="mb-3">
+                          <small class="text-muted">Conditions</small>
+                          <div class="d-flex gap-2 mt-2">
+                            <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                              <i class="fas fa-sun"></i> Full Sun
+                            </span>
+                            <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                              <i class="fas fa-mountain"></i> Clay Soil
+                            </span>
+                          </div>
+                        </div>
+
+                        <div class="mb-3">
+                          <small class="text-muted">Active Plants</small>
+                          <div class="mt-2">
+                            <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-leaf"></i> Purple Coneflower</small>
+                                <span class="badge bg-success">Blooming</span>
+                              </div>
+                            </div>
+                            <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-leaf"></i> Black-Eyed Susan</small>
+                                <span class="badge bg-success">Blooming</span>
+                              </div>
+                            </div>
+                            <div class="bg-light p-2 rounded" style="border: 1px dashed #1cc88a;">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-leaf"></i> Butterfly Weed</small>
+                                <span class="badge bg-warning text-dark">Growing</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Garden Stats -->
+          <div class="col-xl-4 col-lg-5">
+            <div class="card shadow-sm mb-4" style="position: sticky;
+                        top: 1rem;
+                        background: white;
+                        border: 1px solid rgba(28, 200, 138, 0.2);
+                        border-radius: 1rem !important;
+                        border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+              <div class="card-body p-4">
+                <h4 class="text-success mb-4">Garden Overview</h4>
+
+                <div class="mb-4">
+                  <h6 class="text-muted mb-2">Growing Zone</h6>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-map-marker-alt text-success me-2"></i>
+                    <span>USDA Zone 6b (-5°F to 0°F)</span>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <h6 class="text-muted mb-2">Active Zones</h6>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-layer-group text-success me-2"></i>
+                    <span>3 Garden Zones</span>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <h6 class="text-muted mb-2">Plant Count</h6>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-leaf text-success me-2"></i>
+                    <span>9 Active Plants</span>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <h6 class="text-muted mb-2">Last Updated</h6>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-clock text-success me-2"></i>
+                    <span>Today at 2:30 PM</span>
+                  </div>
+                </div>
+
+                <!-- New Upcoming Tasks Section -->
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted mb-0">Upcoming Tasks</h6>
+                    <a href="#" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
+                              color: #1cc88a; 
+                              border: 1px solid rgba(28, 200, 138, 0.2);
+                              transition: all 0.2s ease;">
+                      <i class="fas fa-calendar-alt me-1"></i>
+                      View All
+                    </a>
+                  </div>
+                  <div class="task-list">
+                    <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success"><i class="fas fa-tasks"></i> Water Vegetable Zone</small>
+                        <span class="badge bg-warning text-dark">Today</span>
+                      </div>
+                    </div>
+                    <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success"><i class="fas fa-tasks"></i> Harvest Tomatoes</small>
+                        <span class="badge bg-info">Tomorrow</span>
+                      </div>
+                    </div>
+                    <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success"><i class="fas fa-tasks"></i> Fertilize Herbs</small>
+                        <span class="badge bg-secondary">In 2 days</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="btn w-100 mt-2" style="background: rgba(28, 200, 138, 0.1); 
+                               color: #1cc88a; 
+                               border: 1px solid rgba(28, 200, 138, 0.2);
+                               transition: all 0.2s ease;">
+                  <i class="fas fa-sync-alt me-2"></i>
+                  Update Garden Status
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- End of container-fluid -->
+
+      <!-- Footer -->
+      <footer class="sticky-footer" style="padding: 1rem 0;
+                                         margin-top: 2rem;
+                                         border-top: 1px solid rgba(28, 200, 138, 0.2);">
+        <div class="container">
+          <div class="text-center" style="color: #858796; font-size: 0.8rem;">
+            <span>Copyright &copy; GreenByte 2023</span>
+          </div>
+        </div>
+      </footer>
+
+    </div> <!-- End of content-wrapper -->
+
+
+  </div>
+
+  <!-- Optional JavaScript; choose one of the two! -->
+
+  <!-- Option 1: Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+
+  <!-- Sidebar Toggle Script -->
+  <script>
+    document.getElementById('sidebarToggle').addEventListener('click', function () {
+      document.body.classList.toggle('sidebar-toggled');
+      // Remove icon changing logic - keep hamburger icon
+    });
+  </script>
+
+  <!-- Add user dropdown functionality -->
+  <script>
+    const userBtn = document.getElementById('userDropdownBtn');
+    const userDropdown = document.getElementById('userDropdown');
+
+    userBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      userDropdown.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (e) {
+      if (!userDropdown.contains(e.target) && !userBtn.contains(e.target)) {
+        userDropdown.classList.remove('show');
+      }
+    });
+  </script>
+
+  <!-- Add window resize handler -->
+  <script>
+    window.addEventListener('resize', function () {
+      const width = window.innerWidth;
+      const body = document.body;
+      const sidebar = document.querySelector('.sidebar');
+
+      // Auto collapse on small screens
+      if (width <= 768) {
+        body.classList.add('sidebar-toggled');
+        sidebar.classList.add('toggled');
+      } else {
+        body.classList.remove('sidebar-toggled');
+        sidebar.classList.remove('toggled');
+      }
+
+      // Hide completely on very small screens
+      if (width <= 480) {
+        sidebar.style.overflow = 'hidden';
+      } else {
+        sidebar.style.overflow = '';
+      }
+    });
+
+    // Trigger resize handler on load
+    window.dispatchEvent(new Event('resize'));
+  </script>
+
+  <!-- Option 2: Separate Popper and Bootstrap JS -->
+  <!--
+      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+      -->
+  </script>
+</body>
+
+</html>
+
+<style>
+  body {
+    background: url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f8f9fc;
+    /* Light gray from your variables */
+    backdrop-filter: blur(5px);
+    z-index: -1;
+  }
+
+  #content-wrapper {
+    margin-left: calc(80px + 1.5rem);
+    /* sidebar width + just enough gap */
+    padding: 0;
+    max-width: calc(100% - (80px + 1.5rem));
+  }
+
+  /* Clean, static card styling */
+  .card {
+    border: 1px solid #e3e6f0;
+    border-radius: 0.5rem;
+    background: white;
+    margin-bottom: 1rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Basic card header */
+  .card-header {
+    padding: 0.75rem;
+    background-color: transparent;
+    border-bottom: 1px solid #e3e6f0;
+  }
+
+  /* Simple card body */
+  .card-body {
+    padding: 0.75rem;
+  }
+
+  /* Basic typography */
+  .card-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .card-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+
+  /* Remove all transitions and hover states */
+  .card,
+  .card-header,
+  .card-body,
+  .card-footer {
+    transition: none;
+  }
+
+  /* Reset any bootstrap shadow classes with neutral shadows */
+  .shadow {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+  }
+
+  .shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+  }
+
+  /* Compact grid spacing */
+  .row>[class*="col-"] {
+    padding: 0.5rem;
+  }
+
+  /* Content wrapper alignment */
+  #content-wrapper {
+    margin-top: 0.5rem !important;
+    /* Added small margin */
+    padding: 0 !important;
+  }
+
+  /* Container fluid alignment */
+  .container-fluid {
+    padding: 1rem !important;
+    padding-top: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    #content-wrapper {
+      margin-left: calc(80px + 1rem);
+      max-width: calc(100% - (80px + 1rem));
+    }
+  }
+
+  @media (max-width: 480px) {
+    #content-wrapper {
+      margin-left: 1rem;
+      max-width: 100%;
+    }
+  }
+</style>
