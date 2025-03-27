@@ -22,14 +22,17 @@ def createApp(configClass=Config):
     login_manager.init_app(app) 
     mail.init_app(app)  
 
+
     from greenbyte.users.routes import users 
     from greenbyte.posts.routes import posts 
     from greenbyte.main.routes import main 
     from greenbyte.errors.handlers import errors 
+    from greenbyte.gardens.routes import gardens 
 
     app.register_blueprint(users)
     app.register_blueprint(posts)
     app.register_blueprint(main)
     app.register_blueprint(errors)
+    app.register_blueprint(gardens)
 
     return app

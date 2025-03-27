@@ -72,9 +72,9 @@
                 </a>
                 <div id="collapseFarm" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="#">Nursery</a>
-                        <a class="collapse-item" href="#">Tower</a>
-                        <a class="collapse-item" href="#" disabled>MicroGreens</a>
+                        <a class="collapse-item" href="{{ url_for('gardens.create_garden') }}" >create garden</a>
+                        <a class="collapse-item" href="{{ url_for('gardens.gardenHome') }}" >garden home</a>
+                        <a class="collapse-item" href="{{ url_for('gardens.add_zone') }}">add zone</a>
                     </div>
                 </div>
             </li>

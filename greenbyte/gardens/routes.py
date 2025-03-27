@@ -1,63 +1,49 @@
-from flask import Blueprint
-from flask import abort, render_template, flash, redirect, url_for, request 
-from greenbyte.models import Post
-from greenbyte.posts.forms import PostForm
-from greenbyte import db
+from flask import Blueprint, render_template, flash, redirect, url_for
 from flask_login import current_user, login_required
+from greenbyte import db
+from greenbyte.gardens.forms import GardenForm, ZoneForm
+from greenbyte.models import Garden, Zone
 
+gardens = Blueprint('gardens', __name__)
 
-
-posts = Blueprint('posts', __name__)
-
-@posts.route("/post/<int:postId>" )
-def post(postId):
-    post = Post.query.get_or_404(postId)
-    return render_template("post.html", post=post)
-
-@posts.route("/post/<int:postId>/update", methods=['GET', 'POST'] )
+@gardens.route("/garden/new", methods=['GET', 'POST'])
 @login_required
-def updatePost(postId):
-    post = Post.query.get_or_404(postId)
-    if post.author != current_user:
-        abort(403)
-    form=PostForm()
+def create_garden():
+    form = GardenForm()
     if form.validate_on_submit():
-         post.title = form.title.data
-         post.content = form.content.data
-         db.session.commit()
-         flash("Your post has been updated!", "success")
-         return redirect(url_for('posts.post', postId=post.id))
-    elif request.method == "GET": 
-        form.title.data = post.title
-        form.content.data = post.content
-
-    return render_template("createPost.html", form=form, legend="Update Post")
-
-
-
-@posts.route("/post/new", methods=['GET', 'POST'])
-@login_required
-def newPost():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data, author=current_user)
-        db.session.add(post)
+        garden = Garden(
+            name=form.name.data,
+            location=form.location.data,
+            owner_id=current_user.id
+        )
+        garden.members.append(current_user)  # Add the creator as a member
+        db.session.add(garden)
         db.session.commit()
-        flash("Your post has been created!", "success")
+        flash('Your garden has been created!', 'success')
         return redirect(url_for('main.index'))
-    return render_template("createPost.html", form=form, legend="Create Post")
+    return render_template('create_garden.html', form=form)
 
 
-@posts.route("/post/<int:postId>/delete", methods=['POST'] )
+@gardens.route('/gardenHome')
+def gardenHome():
+    gardens = Garden.query.all()
+    return render_template('gardens.html', gardens=gardens)
+
+
+@gardens.route('/add_zone', methods=['GET', 'POST'])
 @login_required
-def deletePost(postId):
-    post = Post.query.get_or_404(postId)
-    if post.author != current_user:
-        abort(403)
-    db.session.delete(post)
-    db.session.commit()
-    flash("Your post has been deleted!", "success")
-
-    return redirect(url_for('main.index'))
-
-
+def add_zone():
+    # Fetch gardens where the current user is a member
+    user_gardens = current_user.gardens
+    form = ZoneForm(user_gardens)
+    if form.validate_on_submit():
+        # Create a new zone
+        zone = Zone(
+            name=form.name.data,
+            garden_id=form.garden.data  # Selected garden ID from the form
+        )
+        db.session.add(zone)
+        db.session.commit()
+        flash('Zone added successfully!', 'success')
+        return redirect(url_for('gardens.gardenHome'))
+    return render_template('add_zone.html', form=form)

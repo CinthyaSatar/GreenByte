@@ -1,8 +1,14 @@
 from flask import Blueprint
 from flask import  render_template, flash, redirect, url_for, request 
 from greenbyte.models import User, Post
-from greenbyte.users.forms import RegistrationForm, LoginForm, UpdateAccountForm, requestResetForm, ResetPasswordForm
-from greenbyte import bcrypt,db
+from greenbyte.users.forms import (
+    RegistrationForm, 
+    LoginForm, 
+    UpdateAccountForm, 
+    RequestResetForm,  # Changed from requestResetForm
+    ResetPasswordForm
+)
+from greenbyte import bcrypt, db
 from flask_login import login_user, current_user, logout_user, login_required
 from greenbyte.users.utils import savePicture, sendResetEmail
 
@@ -16,14 +22,14 @@ def register():
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit(): 
-        hashedPassword = bcrypt. generate_password_hash(form.password.data).decode('utf-8')
+        hashedPassword = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User(
+            username = form.username.data,
             firstName = form.firstName.data,
             lastName = form.lastName.data,
             email = form.email.data,
             password = hashedPassword 
         )
-
         db.session.add(user)
         db.session.commit()  
          
@@ -44,12 +50,11 @@ def login():
             flash("You have been logged in", "success")
             return redirect(nextPage) if nextPage else redirect(url_for('main.index'))
         else:
-            flash("Login Failed ", "danger")
+            flash("Login Failed. Please check email and password", "danger")
     return render_template("login.html", form=form)
 
 @users.route("/logout ", methods=['GET','POST'])
 def logout():
-    print("here")
     logout_user()
     return redirect(url_for('main.index'))
 
@@ -59,10 +64,10 @@ def account():
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
-            print("here")
             pictureFile = savePicture(form.picture.data)
             current_user.image_file = pictureFile 
 
+        current_user.username = form.username.data
         current_user.firstName = form.firstName.data
         current_user.lastName = form.lastName.data
         current_user.email = form.email.data
@@ -70,6 +75,7 @@ def account():
         flash("Account has been updated!", "success")
         return redirect(url_for("users.account"))
     elif request.method == "GET":
+        form.username.data = current_user.username
         form.firstName.data = current_user.firstName
         form.lastName.data = current_user.lastName
         form.email.data = current_user.email
@@ -81,7 +87,7 @@ def account():
 def userPosts(email):
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(email=email).first_or_404()
-    posts = Post.query.filter_by(author=user).order_by(Post.datePosted.desc()).paginate(page=page, per_page=5)
+    posts = Post.query.filter_by(author=user).order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
     return render_template("userPosts.html", posts=posts, user=user)
 
 @users.route("/resetPassword", methods=['GET', 'POST'])
@@ -89,7 +95,7 @@ def resetRequest():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     
-    form = requestResetForm()
+    form = RequestResetForm()  # Changed from requestResetForm
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         sendResetEmail(user)
