@@ -1,0 +1,19 @@
+<!-- filepath: /Users/jakejewell/Documents/programing/GreenByte/greenbyte/templates/add_zone.html -->
+{% extends "layout.html" %}
+{% block content %}
+<h1>Add Zone</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.name.label }}<br>
+        {{ form.name(class="form-control") }}
+    </div>
+    <div>
+        {{ form.garden.label }}<br>
+        {{ form.garden(class="form-control") }}
+    </div>
+    <div>
+        {{ form.submit(class="btn btn-primary") }}
+    </div>
+</form>
+{% endblock content %}

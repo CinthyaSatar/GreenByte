@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Home Feed</h1>
+    <a href="{{url_for('posts.newPost')}}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
+            class="fas fa-download fa-sm text-white-50"></i> Create Post!</a>
+</div>
+<div class="row">
+{% for post in posts.items %}
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                Posted by <a href="{{url_for('users.userPosts', email=post.author.email)}}">{{post.author.firstName}}</a> on {{post.date_posted.strftime('%Y-%m-%d')}}
+            </div>
+            <div class="card-body">
+              <h5 class="card-title">{{post.title}}</h5>
+              <p class="card-text">{{post.content}}</p>
+              <a href="{{url_for('posts.post', postId=post.id)}}" class="btn btn-primary btn-sm float-right">Read More</a>
+            </div>
+          </div>
+    </div>
+{% endfor%}
+</div>
+{% if posts.page > 1 %}
+    <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=1) }}">1</a>
+    ...
+    {% if posts.page > 2 %}
+        <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=posts.page - 1) }}">{{ posts.page - 1 }}</a>
+    {% endif %}
+{% endif %}
+
+<!-- Current page -->
+<a class="btn btn-info mb-4" href="{{ url_for('main.index', page=posts.page) }}">{{ posts.page }}</a>
+
+{% if posts.page < posts.pages %}
+    {% if posts.page < posts.pages - 1 %}
+        <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=posts.page + 1) }}">{{ posts.page + 1 }}</a>
+    {% endif %}
+    ...
+    <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=posts.pages) }}">{{ posts.pages }}</a>
+{% endif %}
+</div>
+</div>
+
+{% endblock content%}

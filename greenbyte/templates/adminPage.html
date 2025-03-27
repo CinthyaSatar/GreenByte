@@ -1,0 +1,208 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>
+    {{title}}
+
+</h1>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Clients</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">4</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-tie fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Orders on standby</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">4</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hourglass-start fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Orders in Progress</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">15</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Orders Completed</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">75</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-hourglass-end fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+<!-- DataTales Example -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Farms</h6>
+        <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                <div class="dropdown-header">Action:</div>
+                <!-- Button trigger modal -->
+                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#createFarmModal">
+                    Create Farm
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Location</th>
+                        <td>
+                            Actions
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for farm in farms %}
+                    <tr>
+                        <td>{{ farm.Title }}</td>
+                        <td>{{ farm.Location }}</td>
+                        <td>
+                            <a href="#" class="btn btn-success btn-sm">
+                                <i class="fa fa-solid fa-pen"></i>
+                            </a>
+                            <a href="#" class="btn btn-danger btn-sm">
+                                <i class="fa fa-solid fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                   {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal form for ORDERS-->
+<div class="modal fade " id="createFarmModal" tabindex="-1" role="dialog" aria-labelledby="Farm_table"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="Farm_table">Create an Order</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <form action="/createFarm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <textfield class="form-control" id="name" name="name" rows="3" placeholder="Enter name of the farm..."></textfield>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textfield class="form-control" id="address" name="address" rows="3" placeholder="Enter address of the farm..."></textfield>
+                    </div>
+                    <div class="mb-3">
+                        <label for="number" class="form-label">Number</label>
+                        <textfield class="form-control" id="number" name="number" rows="3" placeholder="Enter phone number of the farm..."></textfield>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Place Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Set today's date as default in the Order Date field
+    document.getElementById("orderDate").valueAsDate = new Date();
+
+    // Add plant fields dynamically
+    let plantCount = 1;
+    document.getElementById("addPlant").addEventListener("click", function () {
+        plantCount++;
+        const plantList = document.getElementById("plantList");
+
+        const newPlantEntry = document.createElement("div");
+        newPlantEntry.classList.add("plant-entry", "card", "p-3", "mb-3");
+        newPlantEntry.innerHTML = `
+            <div class="mb-3">
+                <label class="form-label">Select Plant</label>
+                <select class="form-select plant-dropdown" name="plantDropdown[]">
+                    <option value="1">Lettuce</option>
+                    <option value="2">Kale</option>
+                    <option value="3">Basil</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" name="quantity[]" min="1">
+            </div>
+            <button type="button" class="btn btn-danger removePlant">Remove</button>
+        `;
+        plantList.appendChild(newPlantEntry);
+    });
+
+    // Remove plant fields dynamically
+    document.getElementById("plantList").addEventListener("click", function (e) {
+        if (e.target.classList.contains("removePlant")) {
+            e.target.parentElement.remove();
+        }
+    });
+</script>
+{% endblock content%}

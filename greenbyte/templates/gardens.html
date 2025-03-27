@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>Gardens</h1>
+<div class="garden-cards">
+    {% for garden in gardens %}
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ garden.name }}</h2>
+            </div>
+            <div class="card-body">
+                <p><strong>Location:</strong> {{ garden.location }}</p>
+                <div class="zones">
+                    <h3>Zones</h3>
+                    {% if garden.grow_spaces %}
+                        <ul>
+                            {% for zone in garden.grow_spaces %}
+                                <li>
+                                    <strong>{{ zone.name }}</strong>
+                                    {% if zone.section %}
+                                        - Section: {{ zone.section }}
+                                    {% endif %}
+                                    {% if zone.planting_date %}
+                                        - Planted on: {{ zone.planting_date.strftime('%Y-%m-%d') }}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No zones available for this garden.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p>No gardens available.</p>
+    {% endfor %}
+</div>
+{% endblock content %}

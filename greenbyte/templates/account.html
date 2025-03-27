@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% block content %}
+   <h1>Account Settings</h1>
+
+   <div class="card o-hidden border-0 shadow-lg my-5">
+    <div class="card-body p-0">
+        <div class="row">
+            <div class="col-lg-5 d-none d-lg-block bg-register-image">
+                <img class="rounded-circle account-img" src="{{ imageFile }}">
+            </div>
+            <div class="col-lg-7">
+                <div class="p-5">
+                    <form method="POST" action="" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        <div class="form-group">
+                            {% if form.username.errors %}
+                            {{ form.username(class="form-control form-control-user is-invalid", placeholder="Username")}}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors%}
+                                <span>{{error}}</span>
+                                {% endfor%}
+                            </div>
+                            {% else %}
+                            {{ form.username(class="form-control form-control-user", placeholder="Username")}}
+                            {% endif%}
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                {% if form.firstName.errors %}
+                                {{ form.firstName(class="form-control form-control-user is-invalid", placeholder="First Name")}}
+                                <div class="invalid-feedback">
+                                    {% for error in form.firstName.errors%}
+                                    <span>{{error}}</span>
+                                    {% endfor%}
+                                </div>
+                                {% else %}
+                                {{ form.firstName(class="form-control form-control-user", placeholder="First Name")}}
+                                {% endif%}
+                            </div>
+                            <div class="col-sm-6">
+                                {% if form.lastName.errors %}
+                                {{ form.lastName(class="form-control form-control-user is-invalid", placeholder="Last Name")}}
+                                <div class="invalid-feedback">
+                                    {% for error in form.lastName.errors%}
+                                    <span>{{error}}</span>
+                                    {% endfor%}
+                                </div>
+                                {% else %}
+                                {{ form.lastName(class="form-control form-control-user", placeholder="Last Name")}}
+                                {% endif%}
+                            </div>
+                        </div>
+                        <div class="form-group">  
+                            {% if form.email.errors %}
+                            {{ form.email(class="form-control form-control-user is-invalid", placeholder="Email Address")}}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors%}
+                                <span>{{error}}</span>
+                                {% endfor%}
+                            </div>
+                            {% else %}
+                            {{ form.email(class="form-control form-control-user", placeholder="Email Address")}}
+                            {% endif%}
+                        </div>
+                        <div class="form-group">  
+                            {{ form.picture.label(class="form-label") }}
+                            {{ form.picture(class="form-control-file") }}
+                            {% if form.picture.errors %}
+                            {% for error in form.picture.errors%}
+                            <span class="text-danger">{{error}}</span></br>
+                            {% endfor%}
+                            {% endif %}
+                        </div>
+                        {{ form.submit(class="btn btn-primary btn-user btn-block")}}
+                    </form>
+                    <hr>
+                    <div class="text-center">
+                        <a class="small" href="{{ url_for('users.resetRequest') }}">Reset Password</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
