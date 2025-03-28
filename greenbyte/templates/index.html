@@ -1,47 +1,333 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<!-- Page Heading -->
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Home Feed</h1>
-    <a href="{{url_for('posts.newPost')}}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-            class="fas fa-download fa-sm text-white-50"></i> Create Post!</a>
-</div>
 <div class="row">
-{% for post in posts.items %}
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                Posted by <a href="{{url_for('users.userPosts', email=post.author.email)}}">{{post.author.firstName}}</a> on {{post.date_posted.strftime('%Y-%m-%d')}}
+    <!-- Left Column - Blog Posts -->
+    <div class="col-xl-8 col-lg-7">
+        <!-- Function Bar -->
+        <div class="card shadow-sm mb-4" style="background: white;
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  border-radius: 1rem !important;
+                  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+            <div class="card-body p-3">
+                <div class="row align-items-center">
+                    <!-- Search Box -->
+                    <div class="col-lg-6 mb-2 mb-lg-0">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search posts..."
+                                style="border-radius: 0.5rem 0 0 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                            <button class="btn btn-light"
+                                style="border-radius: 0 0.5rem 0.5rem 0; border: 1px solid rgba(28, 200, 138, 0.2);">
+                                <i class="fas fa-search text-success"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Filter Options -->
+                    <div class="col-lg-6">
+                        <div class="d-flex gap-2 justify-content-lg-end">
+                            <select class="form-select bg-white"
+                                style="width: auto; border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                                <option selected>All Categories</option>
+                                <option>Vegetables</option>
+                                <option>Herbs</option>
+                                <option>Flowers</option>
+                            </select>
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                                    <i class="fas fa-sort-amount-down text-success"></i> Sort
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-clock"></i> Most Recent</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-fire"></i> Most Popular</a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-thumbs-up"></i> Most
+                                            Liked</a></li>
+                                </ul>
+                            </div>
+                            <button class="btn btn-light"
+                                style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                                <i class="fas fa-filter text-success"></i> Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-              <h5 class="card-title">{{post.title}}</h5>
-              <p class="card-text">{{post.content}}</p>
-              <a href="{{url_for('posts.post', postId=post.id)}}" class="btn btn-primary btn-sm float-right">Read More</a>
+        </div>
+
+
+        {% for post in posts.items %}
+        <div class="card shadow-sm mb-4" style="background: white; 
+                  border-radius: 1.5rem !important; 
+                  box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;">
+            <div class="position-relative">
+                <div class="position-absolute top-0 end-0 m-3">
+                    <span class="badge rounded-pill bg-success px-3 py-2">{{ post.garden_type }}</span>
+                </div>
+                
+                {% if post.images %}
+                <!-- Image Carousel -->
+                <div id="carousel{{ post.id }}" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for image in post.images %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ url_for('static', filename='post_pics/' + image.image_file) }}"
+                                 class="d-block w-100" alt="{{ image.caption }}"
+                                 style="border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; object-fit: cover; height: 300px;">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Custom Carousel Controls -->
+                {% if post.images|length > 1 %}
+                <div class="d-flex justify-content-between align-items-center px-4 py-2" 
+                     style="background-color: #f8f9fc; border-bottom: 1px solid #e3e6f0;">
+                    <!-- Left Control -->
+                    <button type="button" 
+                            data-bs-target="#carousel{{ post.id }}" 
+                            data-bs-slide="prev"
+                            class="btn btn-sm btn-light rounded-circle" 
+                            style="width: 32px; height: 32px; padding: 0; border: 1px solid #e3e6f0;">
+                        <i class="fas fa-chevron-left text-success"></i>
+                    </button>
+                    
+                    <!-- Indicators -->
+                    <div class="carousel-indicators position-relative bottom-0 m-0" style="z-index: 0;">
+                        {% for image in post.images %}
+                        <button type="button" 
+                                data-bs-target="#carousel{{ post.id }}" 
+                                data-bs-slide-to="{{ loop.index0 }}" 
+                                class="{% if loop.first %}active{% endif %}"
+                                style="width: 8px; height: 8px; border-radius: 50%; background-color: #1cc88a;"
+                                {% if loop.first %}aria-current="true"{% endif %} 
+                                aria-label="Slide {{ loop.index }}"></button>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Right Control -->
+                    <button type="button" 
+                            data-bs-target="#carousel{{ post.id }}" 
+                            data-bs-slide="next"
+                            class="btn btn-sm btn-light rounded-circle" 
+                            style="width: 32px; height: 32px; padding: 0; border: 1px solid #e3e6f0;">
+                        <i class="fas fa-chevron-right text-success"></i>
+                    </button>
+                </div>
+                {% endif %}
+                {% endif %}
             </div>
-          </div>
+            
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-2">
+                    <img src="{{ url_for('static', filename='profilePics/' + post.author.image_file) }}"
+                        class="rounded-circle me-2" alt="{{ post.author.firstName }} {{ post.author.lastName }}"
+                        style="width: 40px; height: 40px;">
+                    <div>
+                        <h6 class="mb-0 fw-bold">
+                            <a href="{{ url_for('users.userPosts', username=post.author.username) }}" 
+                               class="text-decoration-none text-dark hover-success">
+                                {{ post.author.firstName }} {{ post.author.lastName }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">{{ post.formatted_date }} · {{ post.formatted_read }}</small>
+                    </div>
+                </div>
+                <h4 class="font-weight-bold text-success mb-2">{{ post.title }}</h4>
+
+                <!-- Garden Details Tags -->
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                        <i class="fas fa-map-marker-alt"></i> {{ post.garden.name }}
+                    </span>
+                    <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                        <i class="fas fa-ruler-combined"></i> {{ post.garden_size }} sq ft
+                    </span>
+                    <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                        <i class="fas fa-seedling"></i> {{ post.plant_count }} Plants
+                    </span>
+                    <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                        <i class="fas fa-clock"></i> Started {{ post.start_date_formatted }}
+                    </span>
+                </div>
+
+                <p class="mb-3">{{ post.content }}</p>
+
+                <!-- Plant/Garden Data Section -->
+                <div class="border-top pt-3">
+                    <!-- Growing Conditions -->
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                            <i class="fas fa-sun text-warning"></i> {{ post.sunlight }}
+                        </span>
+                        <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                            <i class="fas fa-tint text-primary"></i> {{ post.watering }}
+                        </span>
+                        <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                            <i class="fas fa-thermometer-half text-danger"></i> {{ post.zone }}
+                        </span>
+                    </div>
+
+                    <!-- Plants List -->
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for plant in post.plants %}
+                        <div class="bg-light p-2 rounded" style="border: 1px dashed #1cc88a;">
+                            <small class="text-success">
+                                <i class="fas fa-leaf"></i> {{ plant.name }}
+                                <span class="badge bg-warning ms-1">{{ plant.status }}</span>
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Post Category and Engagement -->
+                <div class="border-top mt-3 pt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-success p-2">
+                            <i class="fas fa-tag"></i> {{ post.category }}
+                        </span>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-sm btn-light">
+                                <i class="far fa-heart text-success"></i> Like
+                            </button>
+                            <button class="btn btn-sm btn-light">
+                                <i class="far fa-comment text-success"></i> Comment
+                            </button>
+                            <button class="btn btn-sm btn-light">
+                                <i class="far fa-share-square text-success"></i> Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if posts.pages > 1 %}
+        <div class="d-flex justify-content-center gap-2 mb-4">
+            {% if posts.page > 1 %}
+            <a class="btn btn-outline-success" 
+               href="{{ url_for('main.index', page=1) }}"
+               style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a class="btn btn-outline-success" 
+               href="{{ url_for('main.index', page=posts.page - 1) }}"
+               style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                <i class="fas fa-angle-left"></i>
+            </a>
+            {% endif %}
+
+            {% for num in range(max(1, posts.page - 2), min(posts.pages + 1, posts.page + 3)) %}
+                {% if num == posts.page %}
+                <a class="btn btn-success" 
+                   href="{{ url_for('main.index', page=num) }}"
+                   style="border-radius: 0.5rem; min-width: 40px;">
+                    {{ num }}
+                </a>
+                {% else %}
+                <a class="btn btn-outline-success" 
+                   href="{{ url_for('main.index', page=num) }}"
+                   style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2); min-width: 40px;">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if posts.page < posts.pages %}
+            <a class="btn btn-outline-success" 
+               href="{{ url_for('main.index', page=posts.page + 1) }}"
+               style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a class="btn btn-outline-success" 
+               href="{{ url_for('main.index', page=posts.pages) }}"
+               style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div> <!-- Closing div for left column -->
+
+    <!-- Right Column - Garden Events -->
+    <div class="col-xl-4 col-lg-5">
+        <!-- Events Card -->
+        <div class="card shadow-sm mb-4" style="position: sticky;
+                      top: 1rem;
+                      max-height: calc(100vh - 2rem);
+                      overflow-y: auto;
+                      background: white;
+                      border: 1px solid rgba(28, 200, 138, 0.2);
+                      border-radius: 1rem !important;
+                      border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+                      box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+            <div class="card-body p-4">
+                <h4 class="text-success mb-3">Upcoming Garden Events</h4>
+    
+                <!-- Event Items remain the same -->
+    
+                <!-- Event Item 1 -->
+                <div class="d-flex align-items-start mb-3 pb-3" style="border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
+                    <div class="text-center me-3" style="min-width: 45px;">
+                        <h5 class="text-success mb-0">15</h5>
+                        <small class="text-muted">JUN</small>
+                    </div>
+                    <div>
+                        <h6 class="text-success mb-1">Community Garden Workshop</h6>
+                        <p class="text-muted mb-1 small">Learn about companion planting and natural pest control</p>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-success me-2"></i>
+                            <small class="text-muted">2:00 PM - 4:00 PM</small>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Event Item 2 -->
+                <div class="d-flex align-items-start mb-3 pb-3" style="border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
+                    <div class="text-center me-3" style="min-width: 45px;">
+                        <h5 class="text-success mb-0">18</h5>
+                        <small class="text-muted">JUN</small>
+                    </div>
+                    <div>
+                        <h6 class="text-success mb-1">Seed Swap Meet</h6>
+                        <p class="text-muted mb-1 small">Bring your extra seeds to trade with other gardeners</p>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-success me-2"></i>
+                            <small class="text-muted">10:00 AM - 12:00 PM</small>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Event Item 3 -->
+                <div class="d-flex align-items-start mb-3">
+                    <div class="text-center me-3" style="min-width: 45px;">
+                        <h5 class="text-success mb-0">22</h5>
+                        <small class="text-muted">JUN</small>
+                    </div>
+                    <div>
+                        <h6 class="text-success mb-1">Garden Tour & Tea</h6>
+                        <p class="text-muted mb-1 small">Tour our herb garden and enjoy fresh herbal tea</p>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-success me-2"></i>
+                            <small class="text-muted">3:00 PM - 5:00 PM</small>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- View All Button -->
+                <button class="btn w-100 mt-2" style="background: rgba(28, 200, 138, 0.1); 
+                             color: #1cc88a; 
+                             border: 1px solid rgba(28, 200, 138, 0.2);
+                             transition: all 0.2s ease;">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    View All Events
+                </button>
+            </div>
+        </div>
     </div>
-{% endfor%}
-</div>
-{% if posts.page > 1 %}
-    <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=1) }}">1</a>
-    ...
-    {% if posts.page > 2 %}
-        <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=posts.page - 1) }}">{{ posts.page - 1 }}</a>
-    {% endif %}
-{% endif %}
-
-<!-- Current page -->
-<a class="btn btn-info mb-4" href="{{ url_for('main.index', page=posts.page) }}">{{ posts.page }}</a>
-
-{% if posts.page < posts.pages %}
-    {% if posts.page < posts.pages - 1 %}
-        <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=posts.page + 1) }}">{{ posts.page + 1 }}</a>
-    {% endif %}
-    ...
-    <a class="btn btn-outline-info mb-4" href="{{ url_for('main.index', page=posts.pages) }}">{{ posts.pages }}</a>
-{% endif %}
-</div>
-</div>
-
+</div> <!-- Closing div for row -->
 {% endblock content%}
