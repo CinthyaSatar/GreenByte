@@ -1,38 +1,503 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1>Gardens</h1>
-<div class="garden-cards">
-    {% for garden in gardens %}
-        <div class="card">
-            <div class="card-header">
-                <h2>{{ garden.name }}</h2>
-            </div>
-            <div class="card-body">
-                <p><strong>Location:</strong> {{ garden.location }}</p>
-                <div class="zones">
-                    <h3>Zones</h3>
-                    {% if garden.grow_spaces %}
-                        <ul>
-                            {% for zone in garden.grow_spaces %}
-                                <li>
-                                    <strong>{{ zone.name }}</strong>
-                                    {% if zone.section %}
-                                        - Section: {{ zone.section }}
-                                    {% endif %}
-                                    {% if zone.planting_date %}
-                                        - Planted on: {{ zone.planting_date.strftime('%Y-%m-%d') }}
-                                    {% endif %}
-                                </li>
+
+<div class="row">
+    <!-- Left Column - Gardens -->
+    <div class="col-xl-8 col-lg-7">
+        {% if gardens|length == 0 %}
+        <div class="text-center py-5">
+            <i class="fas fa-leaf text-success mb-3" style="font-size: 3rem;"></i>
+            <h5 class="text-muted">No gardens yet</h5>
+            <p class="text-muted">Start by creating your first garden!</p>
+            <a href="{{ url_for('gardens.create_garden') }}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Create Garden
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Individual Gardens -->
+        {% for garden in gardens %}
+        <div class="card mb-4" style="border: 1px solid rgba(28, 200, 138, 0.2);
+                    border-radius: 1rem !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
+                 style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
+                        border-top-left-radius: 1rem !important;
+                        border-top-right-radius: 1rem !important;">
+                <div>
+                    <h4 class="text-success m-0">{{ garden.name }}</h4>
+                    <div class="text-muted small">
+                        <i class="fas fa-map-marker-alt"></i> {{ garden.location }}
+                        <span class="ms-3">
+                            <i class="fas fa-user"></i> 
+                            {% for member in garden.members %}
+                                {% if member.id == garden.owner_id %}
+                                    <a href="{{ url_for('users.userPosts', username=member.username) }}" 
+                                       class="text-success text-decoration-none">
+                                        {{ member.firstName }} {{ member.lastName }}
+                                    </a>
+                                {% endif %}
                             {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p>No zones available for this garden.</p>
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if garden.owner_id == current_user.id %}
+                    <a href="#" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
+                                color: #1cc88a; 
+                                border: 1px solid rgba(28, 200, 138, 0.2);">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{{ url_for('gardens.add_zone') }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
+                                color: #1cc88a; 
+                                border: 1px solid rgba(28, 200, 138, 0.2);">
+                        <i class="fas fa-plus"></i> Add Zone
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Garden Zones -->
+            <div class="card-body p-4">
+                <div class="row">
+                    {% for zone in garden.zones %}
+                    <div class="col-12 mb-4">  <!-- Changed from col-md-6 to col-12 -->
+                        <div class="card h-100" style="background: white; 
+                                    border-radius: 1rem !important; 
+                                    border: 1px solid rgba(28, 200, 138, 0.2);
+                                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center" 
+                                style="border-top-left-radius: 1rem;
+                                        border-top-right-radius: 1rem;
+                                        border-bottom: 1px solid rgba(28, 200, 138, 0.2);">
+                                <h5 class="text-success m-0">{{ zone.name }}</h5>
+                                <div class="d-flex gap-2">
+                                    <span class="badge rounded-pill bg-success px-3 py-2">
+                                        {{ zone.plants|length }} Plants
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="card-body">
+                                <!-- Growing Conditions -->
+                                <div class="mb-3">
+                                    <h6 class="text-muted mb-2">Growing Conditions</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% if zone.sunlight %}
+                                        <span class="badge bg-light text-success">
+                                            <i class="fas fa-sun text-warning"></i> {{ zone.sunlight }}
+                                        </span>
+                                        {% endif %}
+                                        {% if zone.temperature %}
+                                        <span class="badge bg-light text-success">
+                                            <i class="fas fa-thermometer-half text-danger"></i> {{ zone.temperature }}
+                                        </span>
+                                        {% endif %}
+                                        {% if zone.watering %}
+                                        <span class="badge bg-light text-success">
+                                            <i class="fas fa-tint text-primary"></i> {{ zone.watering }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Soil Information -->
+                                <div class="mb-3">
+                                    <h6 class="text-muted mb-2">Soil Details</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% if zone.soil_type %}
+                                        <span class="badge bg-light text-success">
+                                            <i class="fas fa-layer-group"></i> {{ zone.soil_type }}
+                                        </span>
+                                        {% endif %}
+                                        {% if zone.ph_level %}
+                                        <span class="badge bg-light text-success">
+                                            <i class="fas fa-flask"></i> pH {{ zone.ph_level }}
+                                        </span>
+                                        {% endif %}
+                                        {% if zone.organic_matter %}
+                                        <span class="badge bg-light text-success">
+                                            <i class="fas fa-leaf"></i> {{ zone.organic_matter }} Organic
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Plants List -->
+                                <div>
+                                    <h6 class="text-muted mb-2">Plants</h6>
+                                    {% if zone.plants %}
+                                    <div class="list-group list-group-flush">
+                                        {% for plant in zone.plants %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <span class="text-success">
+                                                    <span class="badge bg-light text-success me-2" style="border: 1px solid rgba(28, 200, 138, 0.2);">
+                                                        <i class="fas fa-seedling"></i> {{ plant.quantity }}
+                                                    </span>
+                                                    {{ plant.name }}
+                                                </span>
+                                                {% if plant.variety %}
+                                                <small class="text-muted">({{ plant.variety }})</small>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <!-- Status Badge -->
+                                                <span class="badge bg-{{ {
+                                                    'Seedling': 'primary',
+                                                    'Growing': 'warning',
+                                                    'Mature': 'success',
+                                                    'Blooming': 'info',
+                                                    'Fruiting': 'danger',
+                                                    'Ready': 'success',
+                                                    'Harvesting': 'warning',
+                                                    'Dormant': 'dark',
+                                                    'Diseased': 'danger',
+                                                    'Completed': 'secondary',
+                                                    'Regrowth': 'info'
+                                                }[plant.status|default('Seedling')] }} rounded-pill">
+                                                    {{ plant.status|default('Seedling') }}
+                                                </span>
+                                                <!-- Status Update Dropdown -->
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm dropdown-toggle" type="button" 
+                                                            style="background: rgba(28, 200, 138, 0.1); 
+                                                                           color: #1cc88a; 
+                                                                           border: 1px solid rgba(28, 200, 138, 0.2);"
+                                                            id="dropdownPlantStatus{{ plant.id }}" 
+                                                            data-bs-toggle="dropdown" 
+                                                            aria-expanded="false">
+                                                        <i class="fas fa-sync-alt"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownPlantStatus{{ plant.id }}">
+                                                        <li><h6 class="dropdown-header">Update Status</h6></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Seedling') }}">
+                                                            <i class="fas fa-seedling me-2"></i>Seedling
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Growing') }}">
+                                                            <i class="fas fa-leaf me-2"></i>Growing
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Mature') }}">
+                                                            <i class="fas fa-tree me-2"></i>Mature
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Blooming') }}">
+                                                            <i class="fas fa-spa me-2"></i>Blooming
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Fruiting') }}">
+                                                            <i class="fas fa-apple-alt me-2"></i>Fruiting
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Ready') }}">
+                                                            <i class="fas fa-check-circle me-2"></i>Ready
+                                                        </a></li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Harvesting') }}">
+                                                            <i class="fas fa-cut me-2"></i>Harvesting
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Dormant') }}">
+                                                            <i class="fas fa-moon me-2"></i>Dormant
+                                                        </a></li>
+                                                        <li><a class="dropdown-item text-danger" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Diseased') }}">
+                                                            <i class="fas fa-biohazard me-2"></i>Diseased
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Completed') }}">
+                                                            <i class="fas fa-check-double me-2"></i>Completed
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status='Regrowth') }}">
+                                                            <i class="fas fa-sync-alt me-2"></i>Regrowth
+                                                        </a></li>
+                                                    </ul>
+                                                </div>
+
+                                                <!-- Move Plant Dropdown -->
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm dropdown-toggle" type="button" 
+                                                            style="background: rgba(28, 200, 138, 0.1); 
+                                                                           color: #1cc88a; 
+                                                                           border: 1px solid rgba(28, 200, 138, 0.2);"
+                                                            id="dropdownPlantMove{{ plant.id }}" 
+                                                            data-bs-toggle="dropdown" 
+                                                            aria-expanded="false">
+                                                        <i class="fas fa-exchange-alt"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownPlantMove{{ plant.id }}">
+                                                        <li><h6 class="dropdown-header">Move Plant</h6></li>
+                                                        {% for available_zone in garden.zones %}
+                                                            {% if available_zone.id != plant.zone_id %}
+                                                            <li>
+                                                                <a class="dropdown-item" href="{{ url_for('gardens.move_plant', plant_id=plant.id, zone_id=available_zone.id) }}">
+                                                                    <i class="fas fa-exchange-alt me-2"></i>
+                                                                    {{ available_zone.name }}
+                                                                </a>
+                                                            </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted small">No plants in this zone</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Zone Actions -->
+                            <div class="card-footer bg-white border-top d-flex justify-content-end gap-2">
+                                <a href="#" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
+                                            color: #1cc88a; 
+                                            border: 1px solid rgba(28, 200, 138, 0.2);">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="#" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
+                                            color: #1cc88a; 
+                                            border: 1px solid rgba(28, 200, 138, 0.2);">
+                                    <i class="fas fa-plus"></i> Add Plant
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if garden.zones|length == 0 %}
+                    <div class="col-12">
+                        <div class="text-center py-4">
+                            <p class="text-muted">No zones in this garden yet</p>
+                            <a href="#" class="btn btn-sm btn-success">
+                                <i class="fas fa-plus me-2"></i>Add First Zone
+                            </a>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-    {% else %}
-        <p>No gardens available.</p>
-    {% endfor %}
+        {% endfor %}
+    </div>
+
+    <!-- Right Column - Overall Stats -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow-sm mb-4" style="position: sticky;
+                    top: 1rem;
+                    background: white;
+                    border: 1px solid rgba(28, 200, 138, 0.2);
+                    border-radius: 1rem !important;
+                    border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="text-success">Garden Overview</h4>
+                    <a href="{{ url_for('gardens.create_garden') }}" class="btn" style="background: rgba(28, 200, 138, 0.1); 
+                                color: #1cc88a; 
+                                border: 1px solid rgba(28, 200, 138, 0.2);
+                                border-radius: 0.5rem;
+                                transition: all 0.2s ease;">
+                        <i class="fas fa-plus"></i> New Garden
+                    </a>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">Total Gardens</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-home text-success me-2"></i>
+                        <span>{{ gardens|length }} Garden{{ 's' if gardens|length != 1 }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">Active Zones</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-layer-group text-success me-2"></i>
+                        {% set total_zones = namespace(count=0) %}
+                        {% for garden in gardens %}
+                            {% set total_zones.count = total_zones.count + garden.zones|length %}
+                        {% endfor %}
+                        <span>{{ total_zones.count }} Garden Zone{{ 's' if total_zones.count != 1 }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">Plant Count</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-leaf text-success me-2"></i>
+                        {% set total_plants = namespace(count=0) %}
+                        {% for garden in gardens %}
+                            {% for zone in garden.zones %}
+                                {% set total_plants.count = total_plants.count + zone.plants|length %}
+                            {% endfor %}
+                        {% endfor %}
+                        <span>{{ total_plants.count }} Active Plant{{ 's' if total_plants.count != 1 }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">Last Updated</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clock text-success me-2"></i>
+                        <span>
+                            {% if gardens %}
+                                {% set latest_garden = gardens|sort(attribute='last_updated', reverse=true)|first %}
+                                {% if latest_garden.last_updated %}
+                                    {{ latest_garden.last_updated.strftime('%B %d, %Y at %I:%M %p %Z') }}
+                                {% else %}
+                                    No updates yet
+                                {% endif %}
+                            {% else %}
+                                No gardens yet
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Upcoming Tasks Section -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-muted mb-0">Plant Status</h6>
+                       
+                    </div>
+                    <div class="task-list">
+                        {% set status_counts = namespace(growing=0, mature=0, blooming=0, fruiting=0) %}
+                        {% for garden in gardens %}
+                            {% for zone in garden.zones %}
+                                {% for plant in zone.plants %}
+                                    {% if plant.status == 'Growing' %}
+                                        {% set status_counts.growing = status_counts.growing + 1 %}
+                                    {% elif plant.status == 'Mature' %}
+                                        {% set status_counts.mature = status_counts.mature + 1 %}
+                                    {% elif plant.status == 'Blooming' %}
+                                        {% set status_counts.blooming = status_counts.blooming + 1 %}
+                                    {% elif plant.status == 'Fruiting' %}
+                                        {% set status_counts.fruiting = status_counts.fruiting + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        {% endfor %}
+
+                        {% if status_counts.growing > 0 %}
+                        <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-seedling"></i> Growing Plants</small>
+                                <span class="badge bg-warning text-dark">{{ status_counts.growing }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if status_counts.mature > 0 %}
+                        <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-leaf"></i> Mature Plants</small>
+                                <span class="badge bg-success">{{ status_counts.mature }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if status_counts.blooming > 0 %}
+                        <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-seedling"></i> Blooming Plants</small>
+                                <span class="badge bg-info">{{ status_counts.blooming }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if status_counts.fruiting > 0 %}
+                        <div class="bg-light p-2 rounded mb-2" style="border: 1px dashed #1cc88a;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-success"><i class="fas fa-apple-alt"></i> Fruiting Plants</small>
+                                <span class="badge bg-danger">{{ status_counts.fruiting }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <a href="{{ url_for('gardens.create_garden') }}" class="btn w-100 mt-2" style="background: rgba(28, 200, 138, 0.1); 
+                               color: #1cc88a; 
+                               border: 1px solid rgba(28, 200, 138, 0.2);
+                               transition: all 0.2s ease;">
+                    <i class="fas fa-plus me-2"></i>
+                    Create New Garden
+                </a>
+            </div>
+        </div>
+    </div>
+</div> <!-- Closing div for row -->
+{% endblock content%}
+
+<!-- Members Modal -->
+{% for garden in gardens %}
+<div class="modal fade" id="membersModal{{ garden.id }}" tabindex="-1" aria-labelledby="membersModalLabel{{ garden.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 1rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);">
+                <h5 class="modal-title text-success" id="membersModalLabel{{ garden.id }}">
+                    <i class="fas fa-users me-2"></i>{{ garden.name }} - Members
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Add this for debugging -->
+                <p class="text-muted small">Total Members: {{ garden.members|length }}</p>
+                
+                <div class="list-group list-group-flush">
+                    {% for member in garden.members %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename='profilePics/' + member.image_file) }}" 
+                                 class="rounded-circle me-3"
+                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                 alt="{{ member.username }}">
+                            <div>
+                                <h6 class="mb-0">{{ member.username }}</h6>
+                                <small class="text-muted">
+                                    {% if member.id == garden.owner_id %}
+                                        <a href="{{ url_for('users.userPosts', username=member.username) }}" 
+                                           class="text-success">Garden Owner</a>
+                                    {% else %}
+                                        Member
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(28, 200, 138, 0.2);">
+                {% if garden.owner_id == current_user.id %}
+                <button type="button" 
+                        class="btn btn-sm"
+                        style="background: rgba(28, 200, 138, 0.1); 
+                               color: #1cc88a; 
+                               border: 1px solid rgba(28, 200, 138, 0.2);">
+                    <i class="fas fa-user-plus me-1"></i> Add Member
+                </button>
+                {% endif %}
+                <button type="button" 
+                        class="btn btn-sm" 
+                        data-bs-dismiss="modal"
+                        style="background: rgba(28, 200, 138, 0.1); 
+                               color: #1cc88a; 
+                               border: 1px solid rgba(28, 200, 138, 0.2);">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock content %}
+{% endfor %}
+
+<!-- Add this debugging JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug modal functionality
+    const memberButtons = document.querySelectorAll('[data-bs-toggle="modal"]');
+    memberButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-bs-target');
+            console.log('Opening modal:', modalId);
+        });
+    });
+});
+</script>

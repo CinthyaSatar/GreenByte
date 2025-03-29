@@ -1,8 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from itsdangerous import Serializer, BadSignature, SignatureExpired
 from greenbyte import db, login_manager
 from flask_login import UserMixin
 from flask import current_app
+from sqlalchemy_utils import TimezoneType
+from .utils.timezone import now_in_timezone, get_current_timezone
 
 @login_manager.user_loader
 def loadUser(userId):
@@ -17,13 +19,15 @@ user_garden = db.Table('user_garden',
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username  = db.Column(db.String(50), nullable=False, unique=True)
-    firstName  = db.Column(db.String(25), nullable=False )
-    lastName  = db.Column(db.String(25), nullable=False )
-    email  = db.Column(db.String(120), unique=True, nullable=False )
-    image_file = db.Column(db.String(25),  nullable=False, default='default.jpg')
+    username = db.Column(db.String(50), nullable=False, unique=True)
+    firstName = db.Column(db.String(25), nullable=False)
+    lastName = db.Column(db.String(25), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    image_file = db.Column(db.String(25), nullable=False, default='default.jpg')
     password = db.Column(db.String(60), nullable=False)
-    posts = db.relationship('Post', backref='author', lazy=True )
+    location = db.Column(db.String(100))
+    bio = db.Column(db.Text)
+    posts = db.relationship('Post', backref='author', lazy=True)
     gardens = db.relationship('Garden', secondary='user_garden', back_populates='members')
 
     def get_reset_token(self, expires_sec=1800):
@@ -63,12 +67,21 @@ class User(db.Model, UserMixin):
         return f"User({self.firstName} {self.lastName}, {self.email}, {self.image_file})"
 
 class Garden(db.Model):
+    __tablename__ = 'garden'  # Explicitly define table name
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     location = db.Column(db.String(200), nullable=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Tracks original creator
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    garden_type = db.Column(db.String(50), nullable=True)
+    garden_size = db.Column(db.Float, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    timezone = db.Column(db.String(50), nullable=True)
 
-    members = db.relationship('User', secondary=user_garden, back_populates='gardens')
+    # Relationships
+    owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_gardens')
+    members = db.relationship('User', secondary='user_garden', back_populates='gardens')
     zones = db.relationship('Zone', backref='garden', lazy=True)
     posts = db.relationship('Post', backref='garden', lazy=True)
 
@@ -132,24 +145,61 @@ class Garden(db.Model):
         return f"Garden({self.name}, {self.location})"
 
 class Zone(db.Model):
+    __tablename__ = 'zone'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=False)
-    planting_date = db.Column(db.DateTime, default=datetime.utcnow)
-
+    
+    # Growing conditions
+    sunlight = db.Column(db.String(50))  # e.g., "Full Sun", "Partial Shade"
+    soil_type = db.Column(db.String(50))  # e.g., "Loamy", "Clay"
+    watering = db.Column(db.String(50))   # e.g., "Daily", "Weekly"
+    temperature = db.Column(db.String(50)) # e.g., "65-85°F"
+    
+    # Soil information
+    ph_level = db.Column(db.String(20))   # e.g., "6.5-7.0"
+    organic_matter = db.Column(db.String(20)) # e.g., "High", "Medium"
+    
     plants = db.relationship('Plant', backref='zone', lazy=True)
 
     def __repr__(self):
         return f"Zone({self.name}, Garden ID: {self.garden_id})"
 
 class Plant(db.Model):
+    __tablename__ = 'plant'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    variety = db.Column(db.String(100))
     zone_id = db.Column(db.Integer, db.ForeignKey('zone.id'), nullable=False)
-    planting_date = db.Column(db.DateTime, default=datetime.utcnow)
-
+    status = db.Column(db.String(50), nullable=True)
+    quantity = db.Column(db.Integer, nullable=False, default=1)  # Added quantity field
+    
+    # Plant lifecycle dates
+    planting_date = db.Column(db.DateTime)
+    maturity_date = db.Column(db.DateTime)
+    flowering_date = db.Column(db.DateTime)
+    fruiting_date = db.Column(db.DateTime)
+    
+    # Recurring harvest information
+    is_recurring_harvest = db.Column(db.Boolean, default=False)
+    harvest_frequency_days = db.Column(db.Integer)  # Days between harvests
+    next_harvest_date = db.Column(db.DateTime)     # Next expected harvest
+    total_harvests = db.Column(db.Integer, default=0)  # Count of harvests
+    
     growth_stages = db.relationship('PlantTracking', backref='plant', lazy=True)
-    harvests = db.relationship('Harvest', backref='plant', lazy=True)  # ✅ Multiple harvests per plant
+    harvests = db.relationship('Harvest', backref='plant', lazy=True)
+
+    def get_harvest_stats(self):
+        """Get statistics about plant harvests"""
+        total_amount = sum(h.amount_collected for h in self.harvests)
+        avg_amount = total_amount / len(self.harvests) if self.harvests else 0
+        return {
+            'total_harvests': len(self.harvests),
+            'total_amount': total_amount,
+            'average_amount': avg_amount,
+            'first_harvest': min(h.date for h in self.harvests) if self.harvests else None,
+            'last_harvest': max(h.date for h in self.harvests) if self.harvests else None
+        }
 
 class PlantTracking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -166,9 +216,18 @@ class PlantTracking(db.Model):
 class Harvest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow)  # When the harvest occurred
-    amount_collected = db.Column(db.Float, nullable=False)  # Yield amount (weight, count, etc.)
-    notes = db.Column(db.Text, nullable=True)  # Optional harvest notes
+    date = db.Column(db.DateTime, default=datetime.utcnow)  # When the harvest started
+    completed_date = db.Column(db.DateTime)  # When the harvest was completed
+    amount_collected = db.Column(db.Float, nullable=False)  # Yield amount
+    notes = db.Column(db.Text, nullable=True)
+    harvest_number = db.Column(db.Integer)  # Which harvest this is for the plant
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.plant_id:
+            plant = Plant.query.get(self.plant_id)
+            plant.total_harvests += 1
+            self.harvest_number = plant.total_harvests
 
     def __repr__(self):
         return f"Harvest(Date: {self.date}, Amount: {self.amount_collected})"
@@ -178,8 +237,27 @@ class Post(db.Model):
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    read_time = db.Column(db.Integer, nullable=False, default=5)  # in minutes
+    category = db.Column(db.String(50), nullable=False)  # e.g., 'Herbs', 'Vegetables', 'Flowers'
+    
+    # Foreign Keys
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=True)  # Link posts to gardens
+    garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=True)
+
+    # Garden Details
+    garden_type = db.Column(db.String(50), nullable=True)  # e.g., 'Balcony Garden', 'Backyard Garden'
+    garden_size = db.Column(db.Float, nullable=True)  # in square feet
+    plant_count = db.Column(db.Integer, nullable=True)
+    start_date = db.Column(db.DateTime, nullable=True)
+
+    # Growing Conditions
+    sunlight = db.Column(db.String(50), nullable=True)  # e.g., 'Full Sun', 'Partial Shade'
+    watering = db.Column(db.String(50), nullable=True)  # e.g., 'Daily Watering'
+    zone = db.Column(db.String(20), nullable=True)  # e.g., 'Zone 6'
+
+    # Relationships
+    images = db.relationship('PostImage', backref='post', lazy=True, cascade='all, delete-orphan')
+    plants = db.relationship('PostPlant', backref='post', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"Post({self.title}, {self.date_posted})"
@@ -349,3 +427,17 @@ class Payment(db.Model):
 
     def __repr__(self):
         return f"Payment(Order ID: {self.order_id}, Amount: {self.amount}, Status: {self.status})"
+
+class PostImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    image_file = db.Column(db.String(100), nullable=False)
+    caption = db.Column(db.String(200), nullable=True)
+    order = db.Column(db.Integer, nullable=False, default=0)  # For carousel order
+
+class PostPlant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    name = db.Column(db.String(50), nullable=False)  # e.g., 'Basil', 'Tomatoes'
+    status = db.Column(db.String(20), nullable=False)  # e.g., 'Growing', 'Fruiting'
+    plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)  # Optional link to actual plant

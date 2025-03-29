@@ -1,353 +1,284 @@
+from datetime import datetime, timedelta
 from greenbyte import db
 from run import app
 from greenbyte.models import (
-    User, Garden, Zone, Plant, PlantTracking, Post, Harvest,
-    Client, Order, OrderItem, Delivery, Payment
+    User, Garden, Zone, Plant, PlantTracking, Post, PostImage, PostPlant,
+    Harvest, Client, Order, OrderItem, Delivery, Payment
 )
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import random
+from flask_bcrypt import Bcrypt
+import faker
+from greenbyte.utils.timezone import now_in_timezone, get_current_timezone
 
-def generate_sample_data():
-    """Generate sample data for the application"""
+bcrypt = Bcrypt(app)
+fake = faker.Faker()
+
+def generate_database():
     with app.app_context():
+        # Get current time in configured timezone
+        current_time = now_in_timezone()
+        
         # Clear existing data
         db.drop_all()
         db.session.commit()
         db.create_all()
         
-        current_time = datetime.now(UTC)
+        # Sample profile and garden images
+        profile_images = [f"profile_{i}.jpg" for i in range(1, 11)]
+        garden_images = [f"garden_{i}.jpg" for i in range(1, 11)]
+        post_images = [f"post_{i}.jpg" for i in range(1, 21)]  # Make sure this matches the number of images downloaded
 
         # Create sample users (50)
         users = []
-        for i in range(50):
+        hashed_password = bcrypt.generate_password_hash('password123').decode('utf-8')
+        
+        # Create one admin user
+        admin = User(
+            username="admin",
+            firstName="Admin",
+            lastName="User",
+            email="admin@example.com",
+            password=hashed_password,
+            location="San Francisco, CA",
+            bio="Garden enthusiast and sustainability advocate. Managing multiple urban farming projects.",
+            image_file="default.jpg"  # Set default profile picture
+        )
+        users.append(admin)
+
+        # Create regular users
+        for i in range(49):
+            first_name = fake.first_name()
+            last_name = fake.last_name()
             user = User(
-                username=f"gardener{i+1}",
-                firstName=f"FirstName{i+1}",
-                lastName=f"LastName{i+1}",
-                email=f"user{i+1}@example.com",
-                password="hashedpassword"  # In production, use proper password hashing
+                username=f"{first_name.lower()}{last_name.lower()}{random.randint(1,999)}",
+                firstName=first_name,
+                lastName=last_name,
+                email=f"{first_name.lower()}.{last_name.lower()}@example.com",
+                password=hashed_password,
+                location=fake.city() + ", " + fake.state_abbr(),
+                bio=fake.paragraph(nb_sentences=3),
+                image_file="default.jpg"  # Set default profile picture
             )
             users.append(user)
         db.session.add_all(users)
         db.session.commit()
 
-        # Create gardens (100) with owners and members
+        # Create gardens (100)
         gardens = []
-        locations = ["California", "Oregon", "Washington", "Texas", "Florida", "New York", "Illinois"]
+        garden_types = [
+            "Backyard Garden",
+            "Community Garden",
+            "Commercial Farm",
+            "Urban Garden",
+            "Greenhouse",
+            "Rooftop Garden",
+            "Indoor Garden"
+        ]
         
         for i in range(100):
-            # Select an owner for the garden
             owner = random.choice(users)
+            garden_size = round(random.uniform(100, 1000), 2)
+            
+            # Create timestamps in the correct timezone
+            created_at = current_time - timedelta(days=random.randint(30, 365))
+            updated_at = created_at + timedelta(days=random.randint(0, 30))
+            
+            # Convert timezone to string
+            timezone_str = str(get_current_timezone())  # This will convert ZoneInfo to string like 'America/Montreal'
             
             garden = Garden(
-                name=f"Garden {i+1}",
-                location=random.choice(locations),
-                owner_id=owner.id
+                name=fake.company() + " " + random.choice(["Garden", "Farm", "Greenhouse", "Nursery"]),
+                location=fake.address(),
+                owner_id=owner.id,
+                garden_type=random.choice(garden_types),
+                garden_size=garden_size,
+                created_at=created_at,
+                updated_at=updated_at,
+                last_updated=updated_at,
+                timezone=timezone_str  # Use the string version
             )
-            db.session.add(garden)
-            db.session.commit()
-
-            # Add owner as manager
-            garden.add_member(owner, role='manager')
-
-            # Add 2-5 additional members with different roles
-            available_users = [u for u in users if u.id != owner.id]
-            num_additional_members = random.randint(2, 5)
-            selected_members = random.sample(available_users, num_additional_members)
-
-            for member in selected_members:
-                # Distribute roles: 15% commercial, 10% manager, 75% member
-                role_chance = random.random()
-                if role_chance < 0.15:
-                    role = "commercial"
-                elif role_chance < 0.25:
-                    role = "manager"
-                else:
-                    role = "member"
-                garden.add_member(member, role=role)
-
             gardens.append(garden)
+            
+            # Add owner as a member
+            garden.members.append(owner)
+            
+            # Add 1-3 random members
+            num_members = random.randint(1, 3)
+            potential_members = [u for u in users if u != owner]
+            members = random.sample(potential_members, num_members)
+            for member in members:
+                garden.members.append(member)
+        
+        # Add all gardens at once and commit
+        db.session.add_all(gardens)
+        db.session.commit()
 
-        # Create zones (150)
+        # Create zones (300)
         zones = []
-        zone_names = ["Tomato Section", "Lettuce Section", "Pepper Greenhouse", "Herb Garden", 
-                     "Root Vegetables", "Fruit Trees", "Berry Patch", "Cucumber Zone"]
-        for i in range(150):
+        sunlight_types = ["Full Sun", "Partial Sun", "Partial Shade", "Full Shade"]
+        soil_types = ["Loamy", "Sandy", "Clay", "Silt", "Peat", "Chalky"]
+        watering_schedules = ["Daily", "Twice Daily", "Every Other Day", "Weekly"]
+        temperature_ranges = ["55-65°F", "65-75°F", "75-85°F", "85-95°F"]
+        ph_levels = ["5.5-6.0", "6.0-6.5", "6.5-7.0", "7.0-7.5"]
+        organic_matter_levels = ["Low", "Medium", "High", "Very High"]
+        
+        for i in range(300):
+            # Get a random garden that's already in the database
             garden = random.choice(gardens)
+            
             zone = Zone(
-                name=random.choice(zone_names),
-                garden_id=garden.id,
-                planting_date=current_time - timedelta(days=random.randint(1, 90))
+                name=fake.word() + " Zone",
+                garden_id=garden.id,  # This will now have a valid ID
+                sunlight=random.choice(sunlight_types),
+                soil_type=random.choice(soil_types),
+                watering=random.choice(watering_schedules),
+                temperature=random.choice(temperature_ranges),
+                ph_level=random.choice(ph_levels),
+                organic_matter=random.choice(organic_matter_levels)
             )
             zones.append(zone)
+        
+        # Add all zones at once
         db.session.add_all(zones)
         db.session.commit()
 
-        # Create plants (300)
+        # Updated plant types with recurring harvest information
+        plant_types = [
+            ("Tomato", ["Cherry", "Beefsteak", "Roma", "Grape"], True, 14),
+            ("Pepper", ["Bell", "Jalapeño", "Habanero", "Sweet"], True, 14),
+            ("Lettuce", ["Romaine", "Butterhead", "Iceberg"], True, 7),
+            ("Basil", ["Sweet", "Thai", "Purple"], True, 10),
+            ("Mint", ["Spearmint", "Peppermint"], True, 14),
+            ("Carrot", ["Nantes", "Imperator", "Danvers"], False, None),
+            ("Potato", ["Russet", "Yukon Gold", "Red"], False, None),
+            ("Cucumber", ["English", "Persian", "Pickling"], True, 7),
+            ("Kale", ["Curly", "Dinosaur", "Red Russian"], True, 10),
+            ("Spinach", ["Savoy", "Flat-leaf", "Baby"], True, 7),
+        ]
+
+        # Create plants (600)
         plants = []
-        plant_names = ["Tomato", "Cucumber", "Lettuce", "Pepper", "Carrot", "Basil", "Strawberry", "Blueberry"]
-        for i in range(300):
+        plant_statuses = ['Seedling', 'Growing', 'Mature', 'Blooming', 'Fruiting', 'Ready', 'Harvesting', 'Regrowth']
+        
+        for i in range(600):
+            zone = random.choice(zones)
+            plant_info = random.choice(plant_types)
+            plant_type, varieties, is_recurring, harvest_freq = plant_info
+            
+            planting_date = current_time - timedelta(days=random.randint(30, 120))
+            maturity_date = planting_date + timedelta(days=random.randint(60, 120))
+            
             plant = Plant(
-                name=random.choice(plant_names),
-                zone_id=random.choice(zones).id,
-                planting_date=current_time - timedelta(days=random.randint(1, 60))
+                name=plant_type,
+                variety=random.choice(varieties),
+                zone_id=zone.id,
+                quantity=random.randint(5, 50),  # Added random quantity between 5 and 50
+                planting_date=planting_date,
+                maturity_date=maturity_date,
+                flowering_date=planting_date + timedelta(days=random.randint(20, 40)),
+                fruiting_date=planting_date + timedelta(days=random.randint(40, 80)),
+                status=random.choice(plant_statuses),
+                is_recurring_harvest=is_recurring,
+                harvest_frequency_days=harvest_freq,
+                total_harvests=0
             )
+            
             plants.append(plant)
+
+        # First commit all plants to get their IDs
         db.session.add_all(plants)
         db.session.commit()
 
-        # Create tracking entries (450)
-        tracking_entries = []
-        stages = ["Seeded", "Sprouted", "Growing", "Flowering", "Fruiting", "Ready for Harvest"]
-        for i in range(450):
+        # Now create harvests and tracking entries
+        for plant in plants:
+            # Generate some harvest records for mature plants
+            if plant.status in ['Harvesting', 'Regrowth'] and plant.is_recurring_harvest:
+                num_harvests = random.randint(1, 5)
+                plant.total_harvests = num_harvests
+                
+                for h in range(num_harvests):
+                    harvest_date = plant.planting_date + timedelta(days=(60 + (h * plant.harvest_frequency_days)))
+                    harvest = Harvest(
+                        plant_id=plant.id,
+                        date=harvest_date,
+                        completed_date=harvest_date + timedelta(days=random.randint(1, 3)),
+                        amount_collected=round(random.uniform(0.5, 5.0), 2),
+                        notes=f"Harvest #{h+1}",
+                        harvest_number=h+1
+                    )
+                    db.session.add(harvest)
+                
+                # Set next harvest date if plant is still active
+                if plant.status != 'Completed':
+                    plant.next_harvest_date = current_time + timedelta(days=random.randint(1, plant.harvest_frequency_days))
+            
+            # Add plant tracking entries
             tracking = PlantTracking(
-                plant_id=random.choice(plants).id,
-                date_logged=current_time - timedelta(days=random.randint(1, 45)),
-                stage=random.choice(stages),
-                notes=f"Plant tracking note {i+1}"
-            )
-            tracking_entries.append(tracking)
-        db.session.add_all(tracking_entries)
-        db.session.commit()
-
-        # Create harvests (200)
-        harvests = []
-        for i in range(200):
-            plant = random.choice(plants)
-            harvest = Harvest(
                 plant_id=plant.id,
-                date=current_time - timedelta(days=random.randint(1, 30)),
-                amount_collected=round(random.uniform(0.5, 10.0), 2),
-                notes=f"Harvest note {i+1}"
+                stage=plant.status,
+                date_logged=current_time - timedelta(days=random.randint(1, 30)),
+                notes=f"Plant reached {plant.status} stage"
             )
-            harvests.append(harvest)
-        db.session.add_all(harvests)
+            db.session.add(tracking)
+
+        # Commit all harvests and tracking entries
         db.session.commit()
 
-        # Create posts (150)
+        # Create sample posts (150)
         posts = []
         post_titles = [
-            "Weekly Garden Update", "New Plants Added", "Harvest Report", 
-            "Pest Management Success", "Weather Impact Report", "Growth Progress",
-            "Composting Update", "Irrigation System Check", "Seasonal Planning"
+            "My Garden Journey", "Growing Success", "Garden Update", 
+            "Harvest Time", "Planting Season", "Garden Tips"
         ]
         post_contents = [
-            "Great progress in the garden this week!", 
-            "Added some new varieties to our collection.", 
-            "Successful harvest season continues.",
-            "Natural pest control methods working well.",
-            "Garden thriving despite weather challenges.",
-            "Plants showing excellent growth rates."
+            "Today I'm excited to share my progress with {plants}...",
+            "Finally harvested my {plants} and they turned out great!",
+            "Started growing some new {plants} in the garden...",
+            "Here's what I learned about growing {plants}..."
         ]
+        categories = ["Vegetables", "Herbs", "Flowers", "Fruits", "Maintenance", "Planning"]
         
         for i in range(150):
             author = random.choice(users)
-            # Only create posts for gardens where the user is a member
             if author.gardens:
                 garden = random.choice(author.gardens)
+                
+                # Format content with random plant names
+                content_template = random.choice(post_contents)
+                plant_names = [p.name for p in random.sample(plants, 2)]
+                content = content_template.format(plants=", ".join(plant_names))
+                
                 post = Post(
                     title=f"{random.choice(post_titles)} #{i+1}",
-                    content=f"{random.choice(post_contents)} Update #{i+1}",
+                    content=content,
                     user_id=author.id,
                     garden_id=garden.id,
-                    date_posted=current_time - timedelta(days=random.randint(1, 90))
+                    date_posted=current_time - timedelta(days=random.randint(1, 90)),
+                    read_time=random.randint(2, 10),
+                    category=random.choice(categories)
                 )
+                db.session.add(post)
+                db.session.flush()  # This ensures post.id is available
+                
+                # Add 1-3 images to the post
+                num_images = random.randint(1, 3)
+                for j in range(num_images):
+                    post_image = PostImage(
+                        post_id=post.id,
+                        image_file=random.choice(post_images),
+                        caption=f"Garden photo #{j+1}",
+                        order=j
+                    )
+                    db.session.add(post_image)
+                
                 posts.append(post)
-        
-        db.session.add_all(posts)
-        db.session.commit()
-
-        # Create clients (100)
-        clients = []
-        for i in range(100):
-            client = Client(
-                name=f"Client {i+1}",
-                email=f"client{i+1}@example.com",
-                phone=f"555-{random.randint(1000,9999)}",
-                address=f"{random.randint(100,999)} {random.choice(['Main', 'Market', 'Oak', 'Pine'])} St, {random.choice(locations)}"
-            )
-            clients.append(client)
-        db.session.add_all(clients)
-        db.session.commit()
-
-        # Create orders (200) - Only for commercial/manager users
-        orders = []
-        order_statuses = ["pending", "processing", "completed", "cancelled"]
-        recurring_frequencies = ["weekly", "monthly"]
-        plant_prices = {plant.id: round(random.uniform(2.0, 15.0), 2) for plant in plants}  # Random prices for plants
-
-        for i in range(200):
-            # Get a random garden with its commercial members
-            garden = random.choice(gardens)
-            commercial_members = garden.get_commercial_members()
-            
-            if not commercial_members:
-                continue  # Skip if no commercial members in this garden
-            
-            creator = random.choice(commercial_members)
-            client = random.choice(clients)
-            is_recurring = random.choice([True, False, False])  # 1/3 chance of recurring order
-            
-            try:
-                order = Order(
-                    client_id=client.id,
-                    garden_id=garden.id,
-                    created_by=creator.id,
-                    date_placed=current_time - timedelta(days=random.randint(1, 90)),
-                    status=random.choice(order_statuses),
-                    recurring=is_recurring,
-                    recurring_frequency=random.choice(recurring_frequencies) if is_recurring else None,
-                    total_amount=0  # Will be calculated after adding items
-                )
                 
-                # Add 1-5 order items
-                num_items = random.randint(1, 5)
-                garden_plants = [plant for plant in plants if plant.zone.garden_id == garden.id]
-                
-                if not garden_plants:
-                    continue  # Skip if no plants in this garden
-                
-                # Create OrderItems
-                for _ in range(num_items):
-                    plant = random.choice(garden_plants)
-                    quantity = random.randint(1, 10)
-                    price = plant_prices[plant.id]
-                    
-                    order_item = OrderItem(
-                        plant_id=plant.id,
-                        quantity=quantity,
-                        price_per_unit=price
-                    )
-                    order.order_items.append(order_item)
-                
-                # Calculate total and save
-                db.session.add(order)
-                db.session.flush()  # Get order ID
-                order.calculate_total()
-                
-                # Add delivery for completed orders
-                if order.status == "completed":
-                    delivery = Delivery(
-                        order_id=order.id,
-                        delivery_date=order.date_placed + timedelta(days=random.randint(1, 7)),
-                        status="delivered",
-                        tracking_number=f"TRACK{random.randint(100000, 999999)}",
-                        address=client.address  # Now this will work with the updated model
-                    )
-                    db.session.add(delivery)
-                
-                # Add payments
-                payment_amount = order.total_amount
-                if order.status == "completed":
-                    payment_status = "completed"
-                elif order.status == "cancelled":
-                    payment_status = "refunded"
-                else:
-                    payment_status = "pending"
-                
-                payment = Payment(
-                    order_id=order.id,
-                    amount=payment_amount,
-                    payment_method=random.choice(["credit_card", "bank_transfer", "cash"]),
-                    status=payment_status,
-                    payment_date=order.date_placed  # Changed from 'date' to 'payment_date'
-                )
-                db.session.add(payment)
-                
-                # Generate next order if recurring
-                if is_recurring and order.status == "completed":
-                    next_order = order.generate_next_order()
-                    if next_order:
-                        orders.append(next_order)
-                
-                orders.append(order)
-                
-            except ValueError as e:
-                print(f"Skipping order creation due to: {e}")
-                continue
-        
-        db.session.add_all(orders)
-        db.session.commit()
+                if len(posts) % 10 == 0:  # Commit every 10 posts
+                    db.session.commit()
 
-        # Create order items (400)
-        order_items = []
-        for i in range(400):
-            order = random.choice(orders)
-            order_item = OrderItem(
-                order_id=order.id,
-                plant_id=random.choice(plants).id,
-                quantity=random.randint(1, 10),
-                price_per_unit=round(random.uniform(2.0, 15.0), 2)
-            )
-            order_items.append(order_item)
-        db.session.add_all(order_items)
-        db.session.commit()
-
-        # Create deliveries (200)
-        deliveries = []
-        delivery_statuses = ["Pending", "Processing", "In Transit", "Delivered", "Failed"]
-        for i in range(min(200, len(orders))):  # Use the smaller of 200 or number of orders
-            order = random.choice(orders)  # Use random.choice instead of indexing
-            delivery = Delivery(
-                order_id=order.id,
-                delivery_date=current_time + timedelta(days=random.randint(1, 14)),
-                status=random.choice(delivery_statuses),
-                tracking_number=f"TRACK{random.randint(100000,999999)}",
-                address=order.client.address
-            )
-            deliveries.append(delivery)
-        db.session.add_all(deliveries)
-        db.session.commit()
-
-        # Create payments (200)
-        payments = []
-        payment_methods = ["Credit Card", "PayPal", "Bank Transfer", "Cash"]
-        payment_statuses = ["Pending", "Processing", "Completed", "Failed"]
-        for i in range(min(200, len(orders))):  # Use the smaller of 200 or number of orders
-            order = random.choice(orders)  # Use random.choice instead of indexing
-            payment = Payment(
-                order_id=order.id,
-                amount=round(random.uniform(10.0, 200.0), 2),
-                payment_date=current_time - timedelta(days=random.randint(1, 30)),
-                payment_method=random.choice(payment_methods),
-                status=random.choice(payment_statuses)
-            )
-            payments.append(payment)
-        db.session.add_all(payments)
-        db.session.commit()
-
-        # Update order totals
-        for order in orders:
-            order.calculate_total()
-        db.session.commit()
-
-        # Print statistics
-        print("\nSample data generated successfully!")
-        print(f"Created {len(users)} users")
-        print(f"Created {len(gardens)} gardens")
-        print(f"Created {len(zones)} zones")
-        print(f"Created {len(plants)} plants")
-        print(f"Created {len(tracking_entries)} tracking entries")
-        print(f"Created {len(harvests)} harvests")
-        print(f"Created {len(posts)} posts")
-        print(f"Created {len(clients)} clients")
-        print(f"Created {len(orders)} orders")
-
-        # Print role statistics
-        print("\nRole Statistics:")
-        role_counts = {"member": 0, "commercial": 0, "manager": 0}
-        total_memberships = 0
-        
-        for garden in gardens:
-            for member in garden.members:
-                role = garden.get_member_role(member)
-                if role:
-                    role_counts[role] += 1
-                    total_memberships += 1
-
-        for role, count in role_counts.items():
-            percentage = (count / total_memberships) * 100 if total_memberships > 0 else 0
-            print(f"{role.capitalize()}: {count} ({percentage:.1f}%)")
+        print("Sample data generated successfully!")
 
 if __name__ == "__main__":
-    generate_sample_data()
+    generate_database()
