@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <h1>Admin Dashboard</h1>
+    
+    {% for table_name, table_data in tables_data.items() %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>{{ table_name }}</h2>
+            <button class="btn btn-primary" onclick="showCreateForm('{{ table_name }}')">
+                Create New {{ table_name[:-1] if table_name.endswith('s') else table_name }}
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Create Form -->
+            <div id="createForm_{{ table_name }}" style="display: none;" class="mb-3">
+                <form id="form_{{ table_name }}" onsubmit="handleCreate(event, '{{ table_name }}')">
+                    {% for column in table_data.columns %}
+                    <div class="form-group">
+                        <label for="{{ column.name }}">{{ column.name|replace('_', ' ')|title }}</label>
+                        {% if column.type.startswith('VARCHAR') or column.type == 'TEXT' %}
+                            <input type="text" class="form-control" name="{{ column.name }}" 
+                                   {% if not column.nullable %}required{% endif %}>
+                        {% elif column.type == 'INTEGER' %}
+                            <input type="number" class="form-control" name="{{ column.name }}"
+                                   {% if not column.nullable %}required{% endif %}>
+                        {% elif column.type == 'BOOLEAN' %}
+                            <select class="form-control" name="{{ column.name }}">
+                                <option value="true">True</option>
+                                <option value="false">False</option>
+                            </select>
+                        {% elif column.type == 'DATETIME' %}
+                            <input type="datetime-local" class="form-control" name="{{ column.name }}"
+                                   {% if not column.nullable %}required{% endif %}>
+                        {% else %}
+                            <input type="text" class="form-control" name="{{ column.name }}"
+                                   {% if not column.nullable %}required{% endif %}>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success mt-3">Create</button>
+                    <button type="button" class="btn btn-secondary mt-3" 
+                            onclick="hideCreateForm('{{ table_name }}')">Cancel</button>
+                </form>
+            </div>
+
+            <!-- Data Table -->
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        {% for column in table_data.columns %}
+                        <th>{{ column.name|replace('_', ' ')|title }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table_data.data %}
+                    <tr>
+                        {% for column in table_data.columns %}
+                        <td>{{ row[column.name] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function showCreateForm(tableName) {
+    document.getElementById(`createForm_${tableName}`).style.display = 'block';
+}
+
+function hideCreateForm(tableName) {
+    document.getElementById(`createForm_${tableName}`).style.display = 'none';
+}
+
+function handleCreate(event, tableName) {
+    event.preventDefault();
+    
+    const form = document.getElementById(`form_${tableName}`);
+    const formData = new FormData(form);
+    const data = {};
+    
+    formData.forEach((value, key) => {
+        // Handle boolean values
+        if (value === 'true') data[key] = true;
+        else if (value === 'false') data[key] = false;
+        // Handle empty values
+        else if (value === '') data[key] = null;
+        else data[key] = value;
+    });
+
+    fetch(`/admin/create/${tableName}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(`Error: ${data.error}`);
+        } else {
+            alert('Record created successfully!');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        alert(`Error: ${error}`);
+    });
+}
+
+// Initialize DataTables
+document.addEventListener('DOMContentLoaded', function() {
+    const tables = document.querySelectorAll('.table');
+    tables.forEach(table => {
+        $(table).DataTable({
+            pageLength: 10,
+            ordering: true,
+            responsive: true
+        });
+    });
+});
+</script>
+{% endblock content %}

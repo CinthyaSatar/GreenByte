@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-12 col-md-9">
+            <div class="card o-hidden border-0 shadow-lg my-5">
+                <div class="card-body p-0">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="p-5">
+                                <div class="text-center">
+                                    <h1 class="h4 text-gray-900 mb-4">Add Plant to {{ zone.name }}</h1>
+                                </div>
+                                
+                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                    {% if messages %}
+                                        {% for category, message in messages %}
+                                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endwith %}
+
+                                <form method="POST" action="{{ url_for('gardens.add_plant', garden_id=garden.id, zone_id=zone.id) }}">
+                                    {{ form.hidden_tag() }}
+                                    <div class="form-group mb-3">
+                                        {{ form.plant_detail_id.label(class="form-label") }}
+                                        {% if form.plant_detail_id.errors %}
+                                            {% for error in form.plant_detail_id.errors %}
+                                                <span class="text-danger">{{ error }}</span><br>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {{ form.plant_detail_id(class="form-control") }}
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        {{ form.variety_id.label(class="form-label") }}
+                                        {% if form.variety_id.errors %}
+                                            {% for error in form.variety_id.errors %}
+                                                <span class="text-danger">{{ error }}</span><br>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {{ form.variety_id(class="form-control") }}
+                                    </div>
+
+                                    <div id="new-variety-container" style="display: none;" class="form-group mb-3">
+                                        <label for="variety_name" class="form-label">New Variety Name</label>
+                                        <input type="text" class="form-control" id="variety_name" name="variety_name">
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        {{ form.quantity.label(class="form-label") }}
+                                        {% if form.quantity.errors %}
+                                            {% for error in form.quantity.errors %}
+                                                <span class="text-danger">{{ error }}</span><br>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {{ form.quantity(class="form-control") }}
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        {{ form.planting_date.label(class="form-label") }}
+                                        {% if form.planting_date.errors %}
+                                            {% for error in form.planting_date.errors %}
+                                                <span class="text-danger">{{ error }}</span><br>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {{ form.planting_date(class="form-control", type="date") }}
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        {{ form.submit(class="btn btn-primary w-100") }}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const plantSelect = document.getElementById('plant_detail_id');
+    const varietySelect = document.getElementById('variety_id');
+
+    plantSelect.addEventListener('change', async function() {
+        const plantDetailId = this.value;
+        
+        if (plantDetailId == 0) {
+            varietySelect.innerHTML = '<option value="0">Select a variety...</option>';
+            varietySelect.disabled = true;
+            return;
+        }
+        
+        try {
+            varietySelect.disabled = true;
+            varietySelect.innerHTML = '<option value="0">Loading varieties...</option>';
+            
+            const response = await fetch(`/gardens/get_varieties/${plantDetailId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            let options = '<option value="0">Select a variety...</option>';
+            data.varieties.forEach(variety => {
+                options += `<option value="${variety.id}">${variety.name}</option>`;
+            });
+            
+            // Add option for creating new variety
+            options += '<option value="-1">Add new variety...</option>';
+            
+            varietySelect.innerHTML = options;
+            varietySelect.disabled = false;
+            
+        } catch (error) {
+            console.error('Error fetching varieties:', error);
+            varietySelect.innerHTML = '<option value="0">Error loading varieties</option>';
+            varietySelect.disabled = true;
+        }
+    });
+
+    // Handle new variety creation
+    varietySelect.addEventListener('change', function() {
+        const newVarietyContainer = document.getElementById('new-variety-container');
+        if (this.value == -1) {
+            newVarietyContainer.style.display = 'block';
+        } else {
+            newVarietyContainer.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock content %}

@@ -1,4 +1,4 @@
-<!-- filepath: /Users/jakejewell/Documents/programing/GreenByte/greenbyte/templates/add_zone.html -->
+
 {% extends "layout.html" %}
 {% block content %}
 <div class="row justify-content-center">
@@ -10,15 +10,14 @@
                  style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
                         border-top-left-radius: 1rem !important;
                         border-top-right-radius: 1rem !important;">
-                <h4 class="text-success m-0">Create a New Zone in {{ garden.name }}</h4>
+                <h4 class="text-success m-0">Create a New Garden</h4>
             </div>
             <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('gardens.add_zone', garden_id=garden.id) }}">
+                <form method="POST" action="">
                     {{ form.hidden_tag() }}
                     <div class="mb-4">
-                        {{ form.name.label(class="form-label") }}
                         {% if form.name.errors %}
-                            {{ form.name(class="form-control is-invalid", placeholder="Zone Name", 
+                            {{ form.name(class="form-control is-invalid", placeholder="Garden Name", 
                                        style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
                             <div class="invalid-feedback">
                                 {% for error in form.name.errors %}
@@ -26,8 +25,22 @@
                                 {% endfor %}
                             </div>
                         {% else %}
-                            {{ form.name(class="form-control", placeholder="Zone Name", 
+                            {{ form.name(class="form-control", placeholder="Garden Name",
                                        style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                        {% endif %}
+                    </div>
+                    <div class="mb-4">
+                        {% if form.location.errors %}
+                            {{ form.location(class="form-control is-invalid", placeholder="Location",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.location.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.location(class="form-control", placeholder="Location",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
                         {% endif %}
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
