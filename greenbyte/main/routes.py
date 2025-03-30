@@ -23,3 +23,7 @@ def index():
                          min=min)  # Also add min since we're using both
 
 
+@main.route("/calendar")
+def calendar():
+    return render_template('calendar.html', title='Calendar')
+
