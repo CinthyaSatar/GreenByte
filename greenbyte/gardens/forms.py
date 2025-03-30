@@ -1,7 +1,8 @@
+
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, SelectField
+from wtforms import StringField, SubmitField, TextAreaField, SelectField, IntegerField, DateField
 from wtforms.validators import DataRequired, Length, ValidationError
-from greenbyte.models import Garden
+from greenbyte.models import Garden, PlantDetail
 
 class GardenForm(FlaskForm):
     name = StringField('Garden Name', 
@@ -9,26 +10,56 @@ class GardenForm(FlaskForm):
                                 Length(min=2, max=100)])
     location = StringField('Location', 
                          validators=[Length(max=200)])
-    submit = SubmitField('Create Garden')
+    submit = SubmitField('Update Garden')  # This will be used for both create and edit
 
     def validate_name(self, name):
         garden = Garden.query.filter_by(name=name.data).first()
         if garden:
             raise ValidationError('That garden name is already taken. Please choose a different one.')
-        
-
 
 class ZoneForm(FlaskForm):
     name = StringField('Zone Name', 
-                       validators=[DataRequired(), 
-                                   Length(min=2, max=100)])
-    garden = SelectField('Garden', 
-                         coerce=int, 
-                         validators=[DataRequired()])
+                      validators=[DataRequired(), 
+                                Length(min=2, max=100)])
     submit = SubmitField('Add Zone')
 
-    def __init__(self, user_gardens, *args, **kwargs):
-        super(ZoneForm, self).__init__(*args, **kwargs)
-        # Populate the garden dropdown with gardens the user is part of
-        self.garden.choices = [(garden.id, garden.name) for garden in user_gardens]
+class PlantForm(FlaskForm):
+    plant_detail_id = SelectField('Plant Type', 
+                                coerce=int,
+                                validators=[DataRequired()])
+    variety_id = SelectField('Variety',
+                           coerce=int,
+                           validators=[DataRequired()],
+                           validate_choice=False)  # Add this to prevent validation error
+    quantity = IntegerField('Quantity',
+                          validators=[DataRequired()])
+    planting_date = DateField('Planting Date',
+                            validators=[DataRequired()])
+    submit = SubmitField('Add Plant')
+
+    def __init__(self, *args, **kwargs):
+        super(PlantForm, self).__init__(*args, **kwargs)
+        # Get all plant details and populate the choices
+        plant_details = PlantDetail.query.order_by(PlantDetail.name).all()
+        self.plant_detail_id.choices = [(0, 'Select a plant...')] + \
+                                     [(plant.id, plant.name) for plant in plant_details]
+        
+        # Initialize variety choices with default option and special "new variety" option
+        self.variety_id.choices = [(0, 'Select a variety...'), (-1, 'Add new variety...')]
+        
+        # If plant_detail_id is provided, populate varieties
+        if 'plant_detail_id' in kwargs.get('data', {}):
+            plant_detail = PlantDetail.query.get(kwargs['data']['plant_detail_id'])
+            if plant_detail:
+                self.variety_id.choices = [(0, 'Select a variety...')] + \
+                                        [(v.id, v.name) for v in plant_detail.varieties] + \
+                                        [(-1, 'Add new variety...')]
+
+    def validate_plant_detail_id(self, field):
+        if field.data == 0:
+            raise ValidationError('Please select a plant type')
+
+    def validate_variety_id(self, field):
+        if field.data == 0:
+            raise ValidationError('Please select a variety')
 
