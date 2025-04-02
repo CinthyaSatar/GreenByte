@@ -27,18 +27,20 @@
                 <div>
                     <h4 class="text-success m-0">{{ garden.name }}</h4>
                     <div class="text-muted small">
-                        <i class="fas fa-map-marker-alt"></i> {{ garden.location }}
-                        <span class="ms-3">
-                            <i class="fas fa-user"></i> 
-                            {% for member in garden.members %}
-                                {% if member.id == garden.owner_id %}
-                                    <a href="{{ url_for('users.userPosts', username=member.username) }}" 
-                                       class="text-success text-decoration-none">
-                                        {{ member.firstName }} {{ member.lastName }}
-                                    </a>
-                                {% endif %}
-                            {% endfor %}
-                        </span>
+                        <i class="fas fa-user"></i> 
+                        {% for member in garden.members %}
+                            {% if member.id == garden.owner_id %}
+                                <a href="{{ url_for('users.userPosts', username=member.username) }}" 
+                                   class="text-success text-decoration-none">
+                                    {{ member.firstName }} {{ member.lastName }}
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                        {% if garden.location %}
+                            <span class="ms-3">
+                                <i class="fas fa-map-marker-alt"></i> {{ garden.location }}
+                            </span>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="d-flex gap-2">
@@ -331,7 +333,9 @@
                         {% set total_plants = namespace(count=0) %}
                         {% for garden in gardens %}
                             {% for zone in garden.zones %}
-                                {% set total_plants.count = total_plants.count + zone.plants|length %}
+                                {% for plant in zone.plants %}
+                                    {% set total_plants.count = total_plants.count + plant.quantity %}
+                                {% endfor %}
                             {% endfor %}
                         {% endfor %}
                         <span>{{ total_plants.count }} Active Plant{{ 's' if total_plants.count != 1 }}</span>
