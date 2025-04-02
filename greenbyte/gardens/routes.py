@@ -4,8 +4,8 @@ from flask_login import current_user, login_required
 from greenbyte import db
 from greenbyte.gardens.forms import GardenForm, ZoneForm, PlantForm
 from greenbyte.models import (
-    Garden, Zone, user_garden, User, Plant, PlantTracking, 
-    Harvest, PlantDetail, PlantVariety  # Changed Variety to PlantVariety
+    Garden, Zone, Plant, PlantTracking, 
+    Harvest, user_garden, PlantDetail, PlantVariety
 )
 from datetime import datetime, timedelta
 from flask import current_app
@@ -23,12 +23,21 @@ def add_garden():
             location=form.location.data,
             owner_id=current_user.id
         )
-        garden.members.append(current_user)  # Add the creator as a member
+        # Add current user as a member
+        garden.members.append(current_user)
+        
         db.session.add(garden)
         db.session.commit()
+        
+        # Create default zone
+        db.session.commit()
+        
         flash('Your garden has been created!', 'success')
-        return redirect(url_for('gardens.view_gardens'))  # Changed from 'main.index'
-    return render_template('add_garden.html', form=form)
+        return redirect(url_for('gardens.view_gardens'))
+    
+    return render_template('add_garden.html', 
+                         title='New Garden',
+                         form=form)
 
 
 @gardens.route("/gardens")
@@ -38,7 +47,41 @@ def view_gardens():
         user_garden.c.user_id == current_user.id
     ).order_by(Garden.last_updated.desc()).all()
     
-    return render_template('gardens.html', gardens=gardens)
+    # Add status style mapping
+    status_style_mapping = {
+        'Seedling': {
+            'bg': 'bg-info',
+            'icon': 'seedling',
+            'extra_style': ''
+        },
+        'Growing': {
+            'bg': 'bg-primary',
+            'icon': 'leaf',
+            'extra_style': ''
+        },
+        'Mature': {
+            'bg': 'bg-success',
+            'icon': 'tree',
+            'extra_style': ''
+        },
+        'Harvesting': {
+            'bg': 'bg-warning',
+            'icon': 'harvest',
+            'extra_style': ''
+        }
+    }
+    
+    # Add default style
+    default_style = {
+        'bg': 'bg-secondary',
+        'icon': 'circle',
+        'extra_style': ''
+    }
+    
+    return render_template('gardens.html', 
+                         gardens=gardens,
+                         status_style_mapping=status_style_mapping,
+                         default_style=default_style)
 
 
 @gardens.route('/garden/<int:garden_id>/add_zone', methods=['GET', 'POST'])
@@ -59,8 +102,28 @@ def add_zone(garden_id):
         )
         db.session.add(zone)
         db.session.commit()
-        flash('Zone added successfully!', 'success')
-        return redirect(url_for('gardens.view_gardens'))
+
+        # Get statuses from form
+        statuses = []
+        for status_field in form.plant_statuses:
+            if status_field.data and status_field.data.strip():
+                statuses.append(status_field.data.strip())
+        
+        # Remove duplicates while preserving order
+        statuses = list(dict.fromkeys(statuses))
+        
+        if statuses:
+            try:
+                zone.set_plant_statuses(statuses)
+                db.session.commit()
+                flash('Zone added successfully!', 'success')
+                return redirect(url_for('gardens.view_gardens'))
+            except Exception as e:
+                db.session.rollback()
+                flash('Error setting zone statuses.', 'danger')
+        else:
+            flash('At least one plant status is required.', 'danger')
+            
     return render_template('add_zone.html', form=form, garden=garden)
 
 
@@ -95,43 +158,84 @@ def move_plant(plant_id, zone_id):
 @login_required
 def edit_garden(garden_id):
     garden = Garden.query.get_or_404(garden_id)
-    
-    # Check if user is the owner of the garden
-    if garden.owner_id != current_user.id:
+    if garden.owner_id != current_user.id:  # Changed from garden.owner to garden.owner_id
         abort(403)
-    
     form = GardenForm()
+    form.garden_id = garden_id  # For validation
+    
     if form.validate_on_submit():
-        garden.name = form.name.data
-        garden.location = form.location.data
-        garden.last_updated = now_in_timezone()
+        if form.name.data:  # Only update name if provided
+            garden.name = form.name.data
+        if form.location.data:  # Only update location if provided
+            garden.location = form.location.data
         db.session.commit()
         flash('Your garden has been updated!', 'success')
         return redirect(url_for('gardens.view_gardens'))
     elif request.method == 'GET':
         form.name.data = garden.name
         form.location.data = garden.location
+    
     return render_template('edit_garden.html', form=form, garden=garden)
 
 
 @gardens.route("/garden/<int:garden_id>/delete", methods=['POST'])
 @login_required
 def delete_garden(garden_id):
+    print(f"Delete garden route called for garden_id: {garden_id}")  # Debug log
+    
+    # Get the garden or return 404
     garden = Garden.query.get_or_404(garden_id)
+    
+    print(f"Current user id: {current_user.id}")  # Debug log
+    print(f"Garden owner id: {garden.owner_id}")  # Debug log
     
     # Check if user is the owner of the garden
     if garden.owner_id != current_user.id:
+        print("Permission denied - user is not owner")  # Debug log
         abort(403)
     
-    # Delete all zones associated with this garden
-    Zone.query.filter_by(garden_id=garden.id).delete()
-    
-    # Delete the garden
-    db.session.delete(garden)
-    db.session.commit()
-    
-    flash('Your garden has been deleted!', 'success')
-    return redirect(url_for('gardens.view_gardens'))
+    try:
+        # First, delete all plants and their related data in all zones
+        for zone in garden.zones:
+            # Get all plants in this zone
+            plants = Plant.query.filter_by(zone_id=zone.id).all()
+            
+            for plant in plants:
+                # Delete plant tracking records
+                PlantTracking.query.filter_by(plant_id=plant.id).delete()
+                print(f"Deleted tracking records for plant {plant.id}")
+                
+                # Delete harvests
+                Harvest.query.filter_by(plant_id=plant.id).delete()
+                print(f"Deleted harvests for plant {plant.id}")
+                
+                # Delete the plant itself
+                db.session.delete(plant)
+                print(f"Deleted plant {plant.id}")
+            
+            # Delete the zone
+            db.session.delete(zone)
+            print(f"Deleted zone {zone.id}")
+        
+        # Remove all garden-user associations
+        garden.members = []
+        print("Removed all garden members")
+        
+        # Finally delete the garden
+        db.session.delete(garden)
+        print("Garden marked for deletion")
+        
+        db.session.commit()
+        print("Garden and all related data deleted successfully")
+        
+        flash('Your garden and all its contents have been deleted!', 'success')
+        return redirect(url_for('gardens.view_gardens'))
+        
+    except Exception as e:
+        print(f"Error deleting garden: {str(e)}")  # Debug log
+        db.session.rollback()
+        flash('Error deleting garden. Please try again.', 'danger')
+        return redirect(url_for('gardens.view_gardens'))
 
 
 @gardens.route("/zone/<int:zone_id>/edit", methods=['GET', 'POST'])
@@ -140,20 +244,51 @@ def edit_zone(zone_id):
     zone = Zone.query.get_or_404(zone_id)
     garden = Garden.query.get(zone.garden_id)
     
-    # Check if user is a member of the garden
-    if current_user not in garden.members:
+    # Check permissions
+    if garden.owner_id != current_user.id:
         abort(403)
     
     form = ZoneForm()
-    if form.validate_on_submit():
-        zone.name = form.name.data
-        garden.last_updated = now_in_timezone()
-        db.session.commit()
-        flash('Your zone has been updated!', 'success')
-        return redirect(url_for('gardens.view_gardens'))
-    elif request.method == 'GET':
-        form.name.data = zone.name
-    return render_template('edit_zone.html', form=form, zone=zone, garden=garden)
+    
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            # Update zone name
+            zone.name = form.name.data
+            
+            # Get statuses from form
+            statuses = []
+            for status_field in form.plant_statuses:
+                if status_field.data and status_field.data.strip():
+                    statuses.append(status_field.data.strip())
+            
+            # Remove duplicates while preserving order
+            statuses = list(dict.fromkeys(statuses))
+            
+            print("Submitted statuses:", statuses)  # Debug print
+            
+            if statuses:
+                try:
+                    zone.set_plant_statuses(statuses)
+                    db.session.commit()
+                    flash('Zone has been updated successfully!', 'success')
+                    return redirect(url_for('gardens.view_gardens'))
+                except Exception as e:
+                    print(f"Error saving statuses: {e}")  # Debug print
+                    db.session.rollback()
+                    flash('Error updating zone statuses.', 'danger')
+            else:
+                flash('At least one plant status is required.', 'danger')
+    
+    # GET request or form validation failed
+    form.name.data = zone.name
+    current_statuses = zone.get_plant_statuses()
+    print("Current zone statuses:", current_statuses)  # Debug print
+    form.load_zone_statuses(zone)
+    
+    return render_template('edit_zone.html', 
+                         title='Edit Zone',
+                         form=form,
+                         zone=zone)  # Add garden to template context
 
 
 @gardens.route("/zone/<int:zone_id>/delete", methods=['POST'])
@@ -267,3 +402,26 @@ def debug_plant_status(plant_id):
         ]
     }
     return jsonify(debug_info)
+
+
+@gardens.route("/plant/<int:plant_id>/status/<status>")
+@login_required
+def update_plant_status(plant_id, status):
+    plant = Plant.query.get_or_404(plant_id)
+    zone = Zone.query.get(plant.zone_id)
+    garden = Garden.query.get(zone.garden_id)
+    
+    # Ensure user has permission
+    if current_user not in garden.members:
+        abort(403)
+    
+    # Verify the status is valid for this zone
+    if status not in zone.get_plant_statuses():
+        abort(400)
+    
+    plant.update_status(status, notes=f"Status updated to {status}")
+    garden.last_updated = now_in_timezone()
+    db.session.commit()
+    
+    flash('Plant status updated successfully!', 'success')
+    return redirect(url_for('gardens.view_gardens'))

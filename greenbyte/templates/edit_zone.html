@@ -1,87 +1,205 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-xl-8 col-lg-7">
-        <div class="card mb-4" style="border: 1px solid rgba(28, 200, 138, 0.2);
-                    border-radius: 1rem !important;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
-                 style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
-                        border-top-left-radius: 1rem !important;
-                        border-top-right-radius: 1rem !important;">
-                <h4 class="text-success m-0">Edit Zone in {{ garden.name }}</h4>
+<div class="container-fluid">
+    <!-- Card Container -->
+    <div class="card shadow-sm border-0" style="border-radius: 1rem; border: 1px solid rgba(28, 200, 138, 0.2) !important;">
+        <div class="card-body p-4">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <h2 class="mb-0 text-dark">Edit Zone</h2>
+                <span class="ms-3 badge" style="background: rgba(28, 200, 138, 0.1); color: #1cc88a;">
+                    {{ zone.name }}
+                </span>
             </div>
-            <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('gardens.edit_zone', zone_id=zone.id) }}">
-                    {{ form.hidden_tag() }}
-                    <div class="mb-4">
-                        {{ form.name.label(class="form-label") }}
-                        {% if form.name.errors %}
-                            {{ form.name(class="form-control is-invalid", placeholder="Zone Name", 
-                                       style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
-                            <div class="invalid-feedback">
-                                {% for error in form.name.errors %}
-                                    <span>{{ error }}</span>
-                                {% endfor %}
+            
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                
+                <!-- Zone Name Field -->
+                <div class="mb-4">
+                    {{ form.name.label(class="form-label fw-bold") }}
+                    {{ form.name(class="form-control", 
+                                style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                                       border-radius: 0.75rem;
+                                       padding: 0.75rem;
+                                       background: rgba(255, 255, 255, 0.9);") }}
+                </div>
+
+                <!-- Plant Status Flow Section -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Plant Status Flow</label>
+                    <div class="status-list">
+                        {% for status_field in form.plant_statuses %}
+                            <div class="input-group mb-2">
+                                {{ status_field(class="form-control", 
+                                              style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                     border-radius: 0.75rem;
+                                                     padding: 0.75rem;
+                                                     background: rgba(255, 255, 255, 0.9);") }}
+                                {% if not loop.first %}
+                                    <button type="button" class="btn btn-outline-danger remove-status ms-2" 
+                                            style="border-radius: 0.75rem;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                {% endif %}
                             </div>
-                        {% else %}
-                            {{ form.name(class="form-control", placeholder="Zone Name", 
-                                       style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
-                        {% endif %}
+                        {% endfor %}
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <a href="{{ url_for('gardens.view_gardens') }}" class="btn" 
-                               style="background: rgba(28, 200, 138, 0.1); 
-                                      color: #1cc88a; 
-                                      border: 1px solid rgba(28, 200, 138, 0.2);
-                                      border-radius: 0.5rem;
-                                      transition: all 0.2s ease;">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Gardens
-                            </a>
-                            <button type="button" class="btn ms-2" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#deleteZoneModal"
-                                    style="background: rgba(231, 74, 59, 0.1); 
-                                           color: #e74a3b; 
-                                           border: 1px solid rgba(231, 74, 59, 0.2);
-                                           border-radius: 0.5rem;
-                                           transition: all 0.2s ease;">
-                                <i class="fas fa-trash me-2"></i>Delete Zone
-                            </button>
-                        </div>
-                        {{ form.submit(class="btn",
+                    
+                    <!-- Add Status Button -->
+                    <button type="button" class="btn btn-sm mt-3" id="add-status"
+                            style="background: rgba(28, 200, 138, 0.1); 
+                                   color: #1cc88a; 
+                                   border: 1px solid rgba(28, 200, 138, 0.2);
+                                   border-radius: 0.75rem;
+                                   padding: 0.5rem 1rem;">
+                        <i class="fas fa-plus me-2"></i>Add Status
+                    </button>
+                </div>
+
+                <!-- Submit and Delete Buttons -->
+                <div class="mt-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('gardens.view_gardens') }}" class="btn"
+                           style="background: rgba(133, 135, 150, 0.1);
+                                  color: #858796;
+                                  border: 1px solid rgba(133, 135, 150, 0.2);
+                                  border-radius: 0.75rem;
+                                  padding: 0.5rem 1.5rem;">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                    </div>
+                    <div>
+                        {{ form.submit(class="btn", 
                                      style="background: rgba(28, 200, 138, 0.1); 
                                             color: #1cc88a; 
                                             border: 1px solid rgba(28, 200, 138, 0.2);
-                                            border-radius: 0.5rem;
-                                            transition: all 0.2s ease;") }}
+                                            border-radius: 0.75rem;
+                                            padding: 0.5rem 1.5rem;") }}
+                        
+                        <!-- Delete Button -->
+                        <button type="button" 
+                                class="btn ms-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteConfirmModal"
+                                style="background: rgba(231, 74, 59, 0.1);
+                                       color: #e74a3b;
+                                       border: 1px solid rgba(231, 74, 59, 0.2);
+                                       border-radius: 0.75rem;
+                                       padding: 0.5rem 1.5rem;">
+                            <i class="fas fa-trash me-2"></i>Delete
+                        </button>
                     </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 15px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteConfirmModalLabel" style="color: #e74a3b;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this zone? This action cannot be undone and will delete all plants within this zone.
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn" data-bs-dismiss="modal"
+                        style="background: rgba(133, 135, 150, 0.1);
+                               color: #858796;
+                               border: 1px solid rgba(133, 135, 150, 0.2);
+                               border-radius: 0.75rem;
+                               padding: 0.5rem 1.5rem;">
+                    Cancel
+                </button>
+                <form action="{{ url_for('gardens.delete_zone', zone_id=zone.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn ms-2"
+                            style="background: rgba(231, 74, 59, 0.1);
+                                   color: #e74a3b;
+                                   border: 1px solid rgba(231, 74, 59, 0.2);
+                                   border-radius: 0.75rem;
+                                   padding: 0.5rem 1.5rem;">
+                        <i class="fas fa-trash me-2"></i>Delete Zone
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Delete Zone Modal -->
-<div class="modal fade" id="deleteZoneModal" tabindex="-1" aria-labelledby="deleteZoneModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteZoneModalLabel">Delete Zone</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to delete this zone? This action cannot be undone.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('gardens.delete_zone', zone_id=zone.id) }}" method="POST" class="d-inline">
-                    {{ form.hidden_tag() }}
-                    <button type="submit" class="btn btn-danger">Delete Zone</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock content %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusList = document.querySelector('.status-list');
+    const addStatusBtn = document.getElementById('add-status');
+    const form = document.querySelector('form');
+
+    // Add new status field
+    addStatusBtn.addEventListener('click', function() {
+        const newField = document.createElement('div');
+        newField.className = 'input-group mb-2';
+        const fieldCount = statusList.children.length;
+        newField.innerHTML = `
+            <input class="form-control" 
+                   name="plant_statuses-${fieldCount}" 
+                   style="border: 1px solid rgba(28, 200, 138, 0.2);
+                          border-radius: 0.75rem;
+                          padding: 0.75rem;
+                          background: rgba(255, 255, 255, 0.9);"
+                   type="text">
+            <button type="button" class="btn btn-outline-danger remove-status ms-2"
+                    style="border-radius: 0.75rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        statusList.appendChild(newField);
+    });
+
+    // Remove status field
+    statusList.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-status')) {
+            const inputGroup = e.target.closest('.input-group');
+            if (statusList.children.length > 1) {
+                inputGroup.remove();
+                Array.from(statusList.children).forEach((group, index) => {
+                    const input = group.querySelector('input');
+                    if (input) {
+                        input.name = `plant_statuses-${index}`;
+                    }
+                });
+            }
+        }
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const statusInputs = statusList.querySelectorAll('input');
+        let hasValue = false;
+        statusInputs.forEach(input => {
+            if (input.value.trim()) {
+                hasValue = true;
+            }
+        });
+        
+        if (!hasValue) {
+            e.preventDefault();
+            alert('At least one plant status is required.');
+        }
+    });
+});
+</script>
+
+<style>
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+</style>
+{% endblock %}

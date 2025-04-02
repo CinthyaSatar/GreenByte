@@ -1,27 +1,52 @@
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, SelectField, IntegerField, DateField
+from wtforms import (
+    StringField, 
+    SubmitField, 
+    SelectField, 
+    IntegerField,
+    DateField,
+    FieldList
+)
 from wtforms.validators import DataRequired, Length, ValidationError
-from greenbyte.models import Garden, PlantDetail
+from greenbyte.models import PlantDetail
+from datetime import date
 
 class GardenForm(FlaskForm):
     name = StringField('Garden Name', 
-                      validators=[DataRequired(), 
-                                Length(min=2, max=100)])
+                      validators=[DataRequired(), Length(min=2, max=100)])
     location = StringField('Location', 
-                         validators=[Length(max=200)])
-    submit = SubmitField('Update Garden')  # This will be used for both create and edit
-
-    def validate_name(self, name):
-        garden = Garden.query.filter_by(name=name.data).first()
-        if garden:
-            raise ValidationError('That garden name is already taken. Please choose a different one.')
+                         validators=[Length(max=100)])
+    submit = SubmitField('Save Garden')  # Changed from 'Create Garden' to 'Save Garden'
 
 class ZoneForm(FlaskForm):
     name = StringField('Zone Name', 
                       validators=[DataRequired(), 
                                 Length(min=2, max=100)])
-    submit = SubmitField('Add Zone')
+    plant_statuses = FieldList(StringField('Status'), min_entries=1)
+    submit = SubmitField('Save Zone')
+
+    def __init__(self, *args, **kwargs):
+        super(ZoneForm, self).__init__(*args, **kwargs)
+        # If no statuses are set (new form), populate with defaults
+        if len(self.plant_statuses) <= 1:
+            default_statuses = ['Seedling', 'Growing', 'Mature', 'Harvesting']
+            # Clear existing entries
+            while len(self.plant_statuses):
+                self.plant_statuses.pop_entry()
+            # Add default statuses
+            for status in default_statuses:
+                self.plant_statuses.append_entry(status)
+
+    def load_zone_statuses(self, zone):
+        """Load existing statuses from zone into the form"""
+        # Clear existing entries
+        while len(self.plant_statuses):
+            self.plant_statuses.pop_entry()
+        
+        # Add current zone statuses
+        for status in zone.get_plant_statuses():
+            self.plant_statuses.append_entry(status)
 
 class PlantForm(FlaskForm):
     plant_detail_id = SelectField('Plant Type', 
@@ -30,11 +55,12 @@ class PlantForm(FlaskForm):
     variety_id = SelectField('Variety',
                            coerce=int,
                            validators=[DataRequired()],
-                           validate_choice=False)  # Add this to prevent validation error
+                           validate_choice=False)
     quantity = IntegerField('Quantity',
                           validators=[DataRequired()])
     planting_date = DateField('Planting Date',
-                            validators=[DataRequired()])
+                            validators=[DataRequired()],
+                            default=date.today)
     submit = SubmitField('Add Plant')
 
     def __init__(self, *args, **kwargs):

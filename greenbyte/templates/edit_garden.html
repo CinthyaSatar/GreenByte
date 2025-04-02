@@ -1,102 +1,157 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-xl-8 col-lg-7">
-        <div class="card mb-4" style="border: 1px solid rgba(28, 200, 138, 0.2);
-                    border-radius: 1rem !important;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
-                 style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
-                        border-top-left-radius: 1rem !important;
-                        border-top-right-radius: 1rem !important;">
-                <h4 class="text-success m-0">Edit Garden</h4>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" action="">
-                    {{ form.hidden_tag() }}
-                    <div class="mb-4">
-                        {% if form.name.errors %}
-                            {{ form.name(class="form-control is-invalid", placeholder="Garden Name", 
-                                       style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
-                            <div class="invalid-feedback">
-                                {% for error in form.name.errors %}
-                                    <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            {{ form.name(class="form-control", placeholder="Garden Name",
-                                       style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
-                        {% endif %}
-                    </div>
-                    <div class="mb-4">
-                        {% if form.location.errors %}
-                            {{ form.location(class="form-control is-invalid", placeholder="Location",
-                                           style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
-                            <div class="invalid-feedback">
-                                {% for error in form.location.errors %}
-                                    <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            {{ form.location(class="form-control", placeholder="Location",
-                                           style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
-                        {% endif %}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <a href="{{ url_for('gardens.view_gardens') }}" class="btn" 
-                               style="background: rgba(28, 200, 138, 0.1); 
-                                      color: #1cc88a; 
-                                      border: 1px solid rgba(28, 200, 138, 0.2);
-                                      border-radius: 0.5rem;
-                                      transition: all 0.2s ease;">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Gardens
-                            </a>
-                            <button type="button" class="btn ms-2" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#deleteModal"
-                                    style="background: rgba(231, 74, 59, 0.1); 
-                                           color: #e74a3b; 
-                                           border: 1px solid rgba(231, 74, 59, 0.2);
-                                           border-radius: 0.5rem;
-                                           transition: all 0.2s ease;">
-                                <i class="fas fa-trash me-2"></i>Delete Garden
-                            </button>
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0" style="color: #1cc88a;">Edit Garden</h1>
+    </div>
+
+    <!-- Edit Garden Card -->
+    <div class="card shadow mb-4" style="border-radius: 15px;">
+        <div class="card-header py-3 d-flex align-items-center" style="background-color: white; border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
+            <h6 class="m-0 font-weight-bold" style="color: #1cc88a;">
+                <i class="fas fa-edit me-2"></i>Garden Details
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {% if form.name.errors %}
+                                {{ form.name(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.name(class="form-control", style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
                         </div>
-                        <button type="submit" class="btn"
-                                style="background: rgba(28, 200, 138, 0.1); 
-                                       color: #1cc88a; 
-                                       border: 1px solid rgba(28, 200, 138, 0.2);
-                                       border-radius: 0.5rem;
-                                       transition: all 0.2s ease;">
-                            Update Garden
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            {{ form.location.label(class="form-label") }}
+                            {% if form.location.errors %}
+                                {{ form.location(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.location.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.location(class="form-control", style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div>
+                        <a href="{{ url_for('gardens.view_gardens') }}" class="btn" 
+                           style="background: rgba(133, 135, 150, 0.1);
+                                  color: #858796;
+                                  border: 1px solid rgba(133, 135, 150, 0.2);
+                                  border-radius: 0.75rem;
+                                  padding: 0.5rem 1.5rem;">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                    </div>
+                    <div>
+                        {{ form.submit(class="btn", 
+                                     style="background: rgba(28, 200, 138, 0.1); 
+                                            color: #1cc88a; 
+                                            border: 1px solid rgba(28, 200, 138, 0.2);
+                                            border-radius: 0.75rem;
+                                            padding: 0.5rem 1.5rem;") }}
+                        
+                        <!-- Delete Button -->
+                        <button type="button" 
+                                class="btn ms-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteConfirmModal"
+                                style="background: rgba(231, 74, 59, 0.1);
+                                       color: #e74a3b;
+                                       border: 1px solid rgba(231, 74, 59, 0.2);
+                                       border-radius: 0.75rem;
+                                       padding: 0.5rem 1.5rem;">
+                            <i class="fas fa-trash me-2"></i>Delete
                         </button>
                     </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 15px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteConfirmModalLabel" style="color: #e74a3b;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this garden? This action cannot be undone and will delete all zones and plants within this garden.
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn" data-bs-dismiss="modal"
+                        style="background: rgba(133, 135, 150, 0.1);
+                               color: #858796;
+                               border: 1px solid rgba(133, 135, 150, 0.2);
+                               border-radius: 0.75rem;
+                               padding: 0.5rem 1.5rem;">
+                    Cancel
+                </button>
+                <form action="{{ url_for('gardens.delete_garden', garden_id=garden.id) }}" method="POST" class="d-inline">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="btn ms-2"
+                            style="background: rgba(231, 74, 59, 0.1);
+                                   color: #e74a3b;
+                                   border: 1px solid rgba(231, 74, 59, 0.2);
+                                   border-radius: 0.75rem;
+                                   padding: 0.5rem 1.5rem;">
+                        <i class="fas fa-trash me-2"></i>Delete Garden
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Delete Garden</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to delete this garden? This action cannot be undone.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('gardens.delete_garden', garden_id=garden.id) }}" method="POST" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">Delete Garden</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    .form-control:focus {
+        border-color: rgba(28, 200, 138, 0.5);
+        box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .form-label {
+        color: #5a5c69;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-content {
+        border: none;
+    }
+
+    .modal-header, .modal-footer {
+        border: none;
+    }
+</style>
 {% endblock content %}
+
+<!-- Make sure these scripts are included -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>

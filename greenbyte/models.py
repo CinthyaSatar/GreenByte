@@ -18,17 +18,18 @@ user_garden = db.Table('user_garden',
 )
 
 class User(db.Model, UserMixin):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), nullable=False, unique=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
     firstName = db.Column(db.String(25), nullable=False)
     lastName = db.Column(db.String(25), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
     image_file = db.Column(db.String(25), nullable=False, default='default.jpg')
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
-    location = db.Column(db.String(100))
-    bio = db.Column(db.Text)
+
+    # Define the relationship with gardens using back_populates
+    gardens = db.relationship('Garden', secondary=user_garden, back_populates='members')
     posts = db.relationship('Post', backref='author', lazy=True)
-    gardens = db.relationship('Garden', secondary='user_garden', back_populates='members')
 
     def get_reset_token(self, expires_sec=1800):
         """Generate a token that expires after a set time (default: 30 minutes)."""
@@ -98,12 +99,12 @@ class DynamicAttributeMixin:
         attr = DynamicAttribute.query.filter_by(
             entity_type=self.entity_type,
             entity_id=self.id,
-            name=name
+            name=name,
+            category=category
         ).first()
         
         if attr:
             attr.value = value
-            attr.category = category
         else:
             attr = DynamicAttribute(
                 entity_type=self.entity_type,
@@ -116,12 +117,13 @@ class DynamicAttributeMixin:
         
         db.session.commit()
 
-    def get_attribute(self, name):
+    def get_attribute(self, name, category='default'):
         """Get a dynamic attribute value"""
         attr = DynamicAttribute.query.filter_by(
             entity_type=self.entity_type,
             entity_id=self.id,
-            name=name
+            name=name,
+            category=category
         ).first()
         return attr.value if attr else None
 
@@ -149,80 +151,44 @@ class DynamicAttributeMixin:
         return result
 
 class Garden(db.Model, DynamicAttributeMixin):
-    __tablename__ = 'garden'  # Explicitly define table name
+    __tablename__ = 'garden'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    location = db.Column(db.String(200), nullable=True)
+    location = db.Column(db.String(100))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
-    garden_type = db.Column(db.String(50), nullable=True)
-    garden_size = db.Column(db.Float, nullable=True)
-    timezone = db.Column(db.String(50), nullable=True)
-
-    # Relationships
+    
+    # Add owner relationship
     owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_gardens')
-    members = db.relationship('User', secondary='user_garden', back_populates='gardens')
+    
+    # Existing relationships
+    members = db.relationship('User', secondary=user_garden, back_populates='gardens')
     zones = db.relationship('Zone', backref='garden', lazy=True)
-    posts = db.relationship('Post', backref='garden', lazy=True)
 
-    def add_member(self, user, role='member'):
-        """Add a member to the garden with a specific role."""
-        if role not in ('member', 'commercial', 'manager'):
-            raise ValueError("Invalid role. Must be 'member', 'commercial', or 'manager'")
-        
-        # Remove existing membership if it exists
-        self.remove_member(user)
-        
-        # Add new membership with specified role
-        stmt = user_garden.insert().values(
-            user_id=user.id,
-            garden_id=self.id,
-            role=role
-        )
-        db.session.execute(stmt)
-        db.session.commit()
+    def get_plant_statuses(self):
+        """Get a combined list of all unique plant statuses across all zones"""
+        all_statuses = set()
+        for zone in self.zones:
+            all_statuses.update(zone.get_plant_statuses())
+        return sorted(list(all_statuses))
 
-    def remove_member(self, user):
-        """Remove a member from the garden."""
-        stmt = user_garden.delete().where(
-            user_garden.c.user_id == user.id,
-            user_garden.c.garden_id == self.id
-        )
-        db.session.execute(stmt)
-        db.session.commit()
+    def set_plant_statuses(self, statuses):
+        """Set the available plant statuses for all zones in this garden"""
+        for zone in self.zones:
+            zone.set_plant_statuses(statuses)
 
-    def update_member_role(self, user, new_role):
-        """Update a member's role in the garden."""
-        if new_role not in ('member', 'commercial', 'manager'):
-            raise ValueError("Invalid role. Must be 'member', 'commercial', or 'manager'")
-        
-        stmt = user_garden.update().where(
-            user_garden.c.user_id == user.id,
-            user_garden.c.garden_id == self.id
-        ).values(role=new_role)
-        db.session.execute(stmt)
-        db.session.commit()
+    def add_plant_status(self, status):
+        """Add a new plant status to all zones in this garden"""
+        for zone in self.zones:
+            zone.add_plant_status(status)
 
-    def get_members_by_role(self, role):
-        """Get all members with a specific role."""
-        return User.query.join(user_garden).filter(
-            user_garden.c.garden_id == self.id,
-            user_garden.c.role == role
-        ).all()
-
-    def get_commercial_members(self):
-        """Get all members with commercial access (commercial and manager roles)."""
-        return User.query.join(user_garden).filter(
-            user_garden.c.garden_id == self.id,
-            user_garden.c.role.in_(['commercial', 'manager'])
-        ).all()
-
-    def get_member_role(self, user):
-        """Get a member's role in the garden."""
-        return user.get_role_in_garden(self.id)
+    def remove_plant_status(self, status):
+        """Remove a plant status from all zones in this garden"""
+        for zone in self.zones:
+            zone.remove_plant_status(status)
 
     def __repr__(self):
-        return f"Garden({self.name}, {self.location})"
+        return f"Garden({self.name})"
 
 class Zone(db.Model, DynamicAttributeMixin):
     __tablename__ = 'zone'
@@ -231,6 +197,37 @@ class Zone(db.Model, DynamicAttributeMixin):
     garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=False)
     
     plants = db.relationship('Plant', backref='zone', lazy=True)
+
+    def set_plant_statuses(self, statuses):
+        """Set the available plant statuses for this zone"""
+        if not statuses:
+            raise ValueError("At least one status is required")
+        status_string = ','.join(statuses)
+        print(f"Setting statuses for zone {self.id}: {status_string}")  # Debug print
+        self.set_attribute('plant_statuses', status_string, category='plant_tracking')
+
+    def get_plant_statuses(self):
+        """Get the list of available plant statuses"""
+        default_statuses = ['Seedling', 'Growing', 'Mature', 'Harvesting']
+        stored_statuses = self.get_attribute('plant_statuses', category='plant_tracking')
+        if stored_statuses:
+            return stored_statuses.split(',')
+        return default_statuses
+
+    def add_plant_status(self, status):
+        """Add a new plant status to the existing list"""
+        current_statuses = self.get_plant_statuses()
+        if status not in current_statuses:
+            current_statuses.append(status)
+            self.set_plant_statuses(current_statuses)
+
+    def remove_plant_status(self, status):
+        """Remove a plant status from the list"""
+        current_statuses = self.get_plant_statuses()
+        if status in current_statuses:
+            current_statuses.remove(status)
+            if current_statuses:  # Ensure we still have at least one status
+                self.set_plant_statuses(current_statuses)
 
     def set_growing_condition(self, name, value):
         """Helper method to set growing conditions"""
@@ -406,9 +403,7 @@ class Plant(db.Model):
             .order_by(PlantTracking.date_logged.desc())\
             .first()
         if latest_stage:
-            print(f"Found latest stage for plant {self.id}: {latest_stage.stage}")
             return latest_stage.stage
-        print(f"No stage found for plant {self.id}, returning Seedling")
         return 'Seedling'
 
     def update_status(self, new_status, notes=None, image_file=None):

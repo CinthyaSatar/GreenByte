@@ -15,8 +15,10 @@
             <div class="card-body p-4">
                 <form method="POST" action="{{ url_for('gardens.add_zone', garden_id=garden.id) }}">
                     {{ form.hidden_tag() }}
+                    
+                    <!-- Zone Name Field -->
                     <div class="mb-4">
-                        {{ form.name.label(class="form-label") }}
+                        {{ form.name.label(class="form-label fw-bold") }}
                         {% if form.name.errors %}
                             {{ form.name(class="form-control is-invalid", placeholder="Zone Name", 
                                        style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
@@ -30,7 +32,42 @@
                                        style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
                         {% endif %}
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
+
+                    <!-- Plant Status Flow Section -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Plant Status Flow</label>
+                        <p class="text-muted small mb-3">Define the progression of plant statuses in this zone. Plants will follow this flow from top to bottom.</p>
+                        <div class="status-list">
+                            {% for status_field in form.plant_statuses %}
+                                <div class="input-group mb-2">
+                                    {{ status_field(class="form-control", 
+                                                  style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                         border-radius: 0.75rem;
+                                                         padding: 0.75rem;
+                                                         background: rgba(255, 255, 255, 0.9);") }}
+                                    {% if not loop.first %}
+                                        <button type="button" class="btn btn-outline-danger remove-status ms-2" 
+                                                style="border-radius: 0.75rem;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Add Status Button -->
+                        <button type="button" class="btn btn-sm mt-3" id="add-status"
+                                style="background: rgba(28, 200, 138, 0.1); 
+                                       color: #1cc88a; 
+                                       border: 1px solid rgba(28, 200, 138, 0.2);
+                                       border-radius: 0.75rem;
+                                       padding: 0.5rem 1rem;">
+                            <i class="fas fa-plus me-2"></i>Add Status
+                        </button>
+                    </div>
+
+                    <!-- Form Buttons -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
                         <a href="{{ url_for('gardens.view_gardens') }}" class="btn" 
                            style="background: rgba(28, 200, 138, 0.1); 
                                   color: #1cc88a; 
@@ -51,4 +88,86 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusList = document.querySelector('.status-list');
+    const addStatusBtn = document.getElementById('add-status');
+    const form = document.querySelector('form');
+
+    // Add new status field
+    addStatusBtn.addEventListener('click', function() {
+        const newField = document.createElement('div');
+        newField.className = 'input-group mb-2';
+        const fieldCount = statusList.children.length;
+        newField.innerHTML = `
+            <input class="form-control" 
+                   name="plant_statuses-${fieldCount}" 
+                   style="border: 1px solid rgba(28, 200, 138, 0.2);
+                          border-radius: 0.75rem;
+                          padding: 0.75rem;
+                          background: rgba(255, 255, 255, 0.9);"
+                   type="text">
+            <button type="button" class="btn btn-outline-danger remove-status ms-2"
+                    style="border-radius: 0.75rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        statusList.appendChild(newField);
+    });
+
+    // Remove status field
+    statusList.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-status')) {
+            const inputGroup = e.target.closest('.input-group');
+            if (statusList.children.length > 1) {
+                inputGroup.remove();
+                // Update field names
+                Array.from(statusList.children).forEach((group, index) => {
+                    const input = group.querySelector('input');
+                    if (input) {
+                        input.name = `plant_statuses-${index}`;
+                    }
+                });
+            }
+        }
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const statusInputs = statusList.querySelectorAll('input');
+        let hasValue = false;
+        statusInputs.forEach(input => {
+            if (input.value.trim()) {
+                hasValue = true;
+            }
+        });
+        
+        if (!hasValue) {
+            e.preventDefault();
+            alert('At least one plant status is required.');
+        }
+    });
+});
+</script>
+
+<style>
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.status-list .input-group:not(:last-child):after {
+    content: '\f078';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    color: #1cc88a;
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+</style>
 {% endblock content %}
