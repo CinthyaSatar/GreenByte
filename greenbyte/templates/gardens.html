@@ -27,10 +27,10 @@
                 <div>
                     <h4 class="text-success m-0">{{ garden.name }}</h4>
                     <div class="text-muted small">
-                        <i class="fas fa-user"></i> 
+                        <i class="fas fa-user"></i>
                         {% for member in garden.members %}
                             {% if member.id == garden.owner_id %}
-                                <a href="{{ url_for('users.page_user', username=member.username) }}" 
+                                <a href="{{ url_for('users.page_user', username=member.username) }}"
                                    class="text-success text-decoration-none">
                                     {{ member.firstName }} {{ member.lastName }}
                                 </a>
@@ -45,13 +45,13 @@
                 </div>
                 <div class="d-flex gap-2">
                     {% if garden.owner_id == current_user.id %}
-                    <a href="{{ url_for('gardens.edit_garden', garden_id=garden.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
-                                color: #1cc88a; 
+                    <a href="{{ url_for('gardens.edit_garden', garden_id=garden.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1);
+                                color: #1cc88a;
                                 border: 1px solid rgba(28, 200, 138, 0.2);">
                         <i class="fas fa-edit"></i>
                     </a>
                     <a href="{{ url_for('gardens.add_zone', garden_id=garden.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1);
-                        color: #1cc88a; 
+                        color: #1cc88a;
                         border: 1px solid rgba(28, 200, 138, 0.2);
                         border-radius: 0.5rem;
                         transition: all 0.2s ease;">
@@ -60,7 +60,7 @@
                     {% endif %}
                 </div>
             </div>
-            
+
 
             <!-- Garden Zones -->
             <div class="card-body p-4">
@@ -69,35 +69,35 @@
                     <div class="col-12">
                         <div class="card shadow mb-4">
                             <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 d-flex align-items-center gap-2" 
-                                    style="color: #1cc88a; 
+                                <h6 class="m-0 d-flex align-items-center gap-2"
+                                    style="color: #1cc88a;
                                            font-size: 1.1rem;
                                            font-weight: 600;
                                            letter-spacing: 0.5px;">
-                                    <i class="fas fa-map-marked-alt" 
+                                    <i class="fas fa-map-marked-alt"
                                        style="color: rgba(28, 200, 138, 0.6);"></i>
                                     {{ zone.name }}
                                 </h6>
                                 <div class="d-flex gap-2">
                                     {% if garden.owner_id == current_user.id %}
-                          
-                                    <a href="{{ url_for('gardens.edit_zone', zone_id=zone.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
-                                    color: #1cc88a; 
+
+                                    <a href="{{ url_for('gardens.edit_zone', zone_id=zone.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1);
+                                    color: #1cc88a;
                                     border: 1px solid rgba(28, 200, 138, 0.2);">
                                      <i class="fas fa-edit"></i></a>
-                                        <a href="{{ url_for('gardens.add_plant', garden_id=garden.id, zone_id=zone.id) }}" 
-                                           class="btn btn-sm" 
-                                           style="background: rgba(28, 200, 138, 0.1); 
-                                                  color: #1cc88a; 
+                                        <a href="{{ url_for('gardens.add_plant', garden_id=garden.id, zone_id=zone.id) }}"
+                                           class="btn btn-sm"
+                                           style="background: rgba(28, 200, 138, 0.1);
+                                                  color: #1cc88a;
                                                   border: 1px solid rgba(28, 200, 138, 0.2);
                                                   font-size: 0.8rem;">
                                             <i class="fas fa-seedling me-1"></i>Add Plant
                                         </a>
-                                  
+
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             <!-- Status Flow Visualization -->
                             <div class="border-bottom" style="border-color: rgba(28, 200, 138, 0.2) !important;">
                                 <div class="d-flex align-items-center gap-2 overflow-auto py-2 px-4" style="scrollbar-width: thin;">
@@ -136,7 +136,7 @@
                                             {% if not loop.first %}
                                                 <i class="fas fa-chevron-right text-muted mx-2"></i>
                                             {% endif %}
-                                            <span class="badge {{ style.bg }} d-flex align-items-center gap-1" 
+                                            <span class="badge {{ style.bg }} d-flex align-items-center gap-1"
                                                   style="font-size: 0.8rem; padding: 0.5rem 1rem; {{ style.get('extra_style', '') }}">
                                                 <i class="fas fa-{{ style.icon }}"></i>
                                                 {{ status }}
@@ -149,14 +149,14 @@
                             <div class="plants-container">
                                 {% if zone.plants %}
                                     <!-- Column Headers -->
-                                    <div class="d-flex align-items-center py-2 px-4 border-bottom" 
+                                    <div class="d-flex align-items-center py-2 px-4 border-bottom"
                                          style="background-color: rgba(28, 200, 138, 0.05); font-weight: 500;">
                                         <div class="col-4">Plant</div>
                                         <div class="col-2">Quantity</div>
                                         <div class="col-4">Status</div>
                                         <div class="col-2">Actions</div>
                                     </div>
-                                    
+
                                     {% for plant in zone.plants %}
                                     {% set status_index = zone.get_plant_statuses().index(plant.status) if plant.status in zone.get_plant_statuses() else 0 %}
                                     {% set color_sequence = [
@@ -189,7 +189,7 @@
                                         'icon': status_icons[plant.status] if plant.status in status_icons else 'circle',
                                         'extra_style': 'background-color: ' ~ color_sequence[color_index].color ~ ' !important;'
                                     } %}
-                                    <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom" 
+                                    <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom"
                                          style="border-color: rgba(28, 200, 138, 0.1) !important;
                                                     background-color: rgba(28, 200, 138, 0.08);
                                                     transition: background-color 0.2s ease;">
@@ -212,8 +212,8 @@
 
                                         <!-- Status -->
                                         <div class="col-4 d-flex">
-                                            <span class="badge {{ style.bg }} d-inline-flex align-items-center gap-1" 
-                                                  style="font-size: 0.8rem; 
+                                            <span class="badge {{ style.bg }} d-inline-flex align-items-center gap-1"
+                                                  style="font-size: 0.8rem;
                                                          padding: 0.35rem 0.75rem;
                                                          {{ style.extra_style }}
                                                          white-space: nowrap;
@@ -232,8 +232,11 @@
                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                     {% for status in zone.get_plant_statuses() %}
                                                     <li>
-                                                        <a class="dropdown-item py-1" 
-                                                           href="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status=status) }}">
+                                                        <a class="dropdown-item py-1 status-update-link"
+                                                           href="#"
+                                                           data-plant-id="{{ plant.id }}"
+                                                           data-status="{{ status }}"
+                                                           data-csrf-token="{{ csrf_token() }}">
                                                             {{ status }}
                                                         </a>
                                                     </li>
@@ -249,7 +252,7 @@
                                                     {% for available_zone in garden.zones %}
                                                         {% if available_zone.id != plant.zone_id %}
                                                         <li>
-                                                            <a class="dropdown-item py-1" 
+                                                            <a class="dropdown-item py-1"
                                                                href="{{ url_for('gardens.move_plant', plant_id=plant.id, zone_id=available_zone.id) }}">
                                                                 {{ available_zone.name }}
                                                             </a>
@@ -271,7 +274,7 @@
                         </div>
                     </div>
                     {% endfor %}
-                    
+
                     {% if garden.zones|length == 0 %}
                     <div class="col-12">
                         <div class="text-center py-4">
@@ -297,8 +300,8 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="text-success">Garden Overview</h4>
-                    <a href="{{ url_for('gardens.add_garden') }}" class="btn" style="background: rgba(28, 200, 138, 0.1); 
-                                color: #1cc88a; 
+                    <a href="{{ url_for('gardens.add_garden') }}" class="btn" style="background: rgba(28, 200, 138, 0.1);
+                                color: #1cc88a;
                                 border: 1px solid rgba(28, 200, 138, 0.2);
                                 border-radius: 0.5rem;
                                 transition: all 0.2s ease;">
@@ -365,7 +368,7 @@
                 <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="text-muted mb-0">Plant Status</h6>
-                       
+
                     </div>
                     <div class="task-list">
                         {% set status_counts = namespace(growing=0, mature=0, blooming=0, fruiting=0) %}
@@ -423,12 +426,107 @@
                     </div>
                 </div>
 
-              
+
             </div>
         </div>
     </div>
 </div> <!-- Closing div for row -->
 {% endblock content%}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all status update links
+        const statusLinks = document.querySelectorAll('.status-update-link');
+
+        statusLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const plantId = this.getAttribute('data-plant-id');
+                const newStatus = this.getAttribute('data-status');
+                const csrfToken = this.getAttribute('data-csrf-token');
+
+                // Find the plant's status badge to update later
+                const plantRow = this.closest('.plant-row');
+                const statusBadge = plantRow.querySelector('.col-4.d-flex .badge');
+                const statusIcon = statusBadge.querySelector('i');
+
+                // Show loading indicator
+                statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+                // Send AJAX request
+                fetch(`/api/plant/${plantId}/status/${newStatus}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the status badge with new status
+                        statusBadge.className = `badge ${data.style.bg} d-inline-flex align-items-center gap-1`;
+                        statusBadge.style.cssText = `
+                            font-size: 0.8rem;
+                            padding: 0.35rem 0.75rem;
+                            ${data.style.extra_style}
+                            white-space: nowrap;
+                            max-width: fit-content;
+                        `;
+                        statusBadge.innerHTML = `
+                            <i class="fas fa-${data.style.icon}"></i>
+                            ${data.status}
+                        `;
+
+                        // Show success message
+                        const toast = document.createElement('div');
+                        toast.className = 'toast align-items-center text-white bg-success border-0';
+                        toast.setAttribute('role', 'alert');
+                        toast.setAttribute('aria-live', 'assertive');
+                        toast.setAttribute('aria-atomic', 'true');
+                        toast.innerHTML = `
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    ${data.message}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        `;
+
+                        // Add toast to the document
+                        const toastContainer = document.createElement('div');
+                        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                        toastContainer.appendChild(toast);
+                        document.body.appendChild(toastContainer);
+
+                        // Initialize and show the toast
+                        const bsToast = new bootstrap.Toast(toast);
+                        bsToast.show();
+
+                        // Remove toast container after toast is hidden
+                        toast.addEventListener('hidden.bs.toast', function() {
+                            document.body.removeChild(toastContainer);
+                        });
+                    } else {
+                        // Show error message and revert to original status
+                        console.error('Error updating status:', data.error);
+                        alert('Error updating status: ' + data.error);
+                        location.reload(); // Reload the page to ensure correct state
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the status. Please try again.');
+                    location.reload(); // Reload the page to ensure correct state
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
 
 <!-- Members Modal -->
 {% for garden in gardens %}
@@ -444,12 +542,12 @@
             <div class="modal-body">
                 <!-- Add this for debugging -->
                 <p class="text-muted small">Total Members: {{ garden.members|length }}</p>
-                
+
                 <div class="list-group list-group-flush">
                     {% for member in garden.members %}
                     <div class="list-group-item d-flex justify-content-between align-items-center py-3">
                         <div class="d-flex align-items-center">
-                            <img src="{{ url_for('static', filename='profilePics/' + member.image_file) }}" 
+                            <img src="{{ url_for('static', filename='profilePics/' + member.image_file) }}"
                                  class="rounded-circle me-3"
                                  style="width: 40px; height: 40px; object-fit: cover;"
                                  alt="{{ member.username }}">
@@ -457,7 +555,7 @@
                                 <h6 class="mb-0">{{ member.username }}</h6>
                                 <small class="text-muted">
                                     {% if member.id == garden.owner_id %}
-                                        <a href="{{ url_for('users.page_user', username=member.username) }}" 
+                                        <a href="{{ url_for('users.page_user', username=member.username) }}"
                                            class="text-success">Garden Owner</a>
                                     {% else %}
                                         Member
@@ -471,19 +569,19 @@
             </div>
             <div class="modal-footer" style="border-top: 1px solid rgba(28, 200, 138, 0.2);">
                 {% if garden.owner_id == current_user.id %}
-                <button type="button" 
+                <button type="button"
                         class="btn btn-sm"
-                        style="background: rgba(28, 200, 138, 0.1); 
-                               color: #1cc88a; 
+                        style="background: rgba(28, 200, 138, 0.1);
+                               color: #1cc88a;
                                border: 1px solid rgba(28, 200, 138, 0.2);">
                     <i class="fas fa-user-plus me-1"></i> Add Member
                 </button>
                 {% endif %}
-                <button type="button" 
-                        class="btn btn-sm" 
+                <button type="button"
+                        class="btn btn-sm"
                         data-bs-dismiss="modal"
-                        style="background: rgba(28, 200, 138, 0.1); 
-                               color: #1cc88a; 
+                        style="background: rgba(28, 200, 138, 0.1);
+                               color: #1cc88a;
                                border: 1px solid rgba(28, 200, 138, 0.2);">
                     Close
                 </button>
