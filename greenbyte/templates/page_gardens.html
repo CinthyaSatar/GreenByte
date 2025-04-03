@@ -1,0 +1,456 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="row">
+    <!-- Left Column - Gardens -->
+    <div class="col-xl-8 col-lg-7">
+        {% if gardens|length == 0 %}
+        <div class="text-center py-5">
+            <i class="fas fa-leaf text-success mb-3" style="font-size: 3rem;"></i>
+            <h5 class="text-muted">No gardens yet</h5>
+            <p class="text-muted">Start by creating your first garden!</p>
+            <a href="{{ url_for('gardens.add_garden') }}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Create Garden
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Individual Gardens -->
+        {% for garden in gardens %}
+        <div class="card mb-4" style="border: 1px solid rgba(28, 200, 138, 0.2);
+                    border-radius: 1rem !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
+                 style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
+                        border-top-left-radius: 1rem !important;
+                        border-top-right-radius: 1rem !important;">
+                <div>
+                    <h4 class="text-success m-0">{{ garden.name }}</h4>
+                    <div class="text-muted small">
+                        <i class="fas fa-user"></i> 
+                        {% for member in garden.members %}
+                            {% if member.id == garden.owner_id %}
+                                <a href="{{ url_for('users.page_user', username=member.username) }}" 
+                                   class="text-success text-decoration-none">
+                                    {{ member.firstName }} {{ member.lastName }}
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                        {% if garden.location %}
+                            <span class="ms-3">
+                                <i class="fas fa-map-marker-alt"></i> {{ garden.location }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if garden.owner_id == current_user.id %}
+                    <a href="{{ url_for('gardens.edit_garden', garden_id=garden.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1); 
+                                color: #1cc88a; 
+                                border: 1px solid rgba(28, 200, 138, 0.2);">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{{ url_for('gardens.add_zone', garden_id=garden.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1);
+                        color: #1cc88a; 
+                        border: 1px solid rgba(28, 200, 138, 0.2);
+                        border-radius: 0.5rem;
+                        transition: all 0.2s ease;">
+                        <i class="fas fa-plus me-2"></i>Add Zone
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+
+            <!-- Garden Zones -->
+            <div class="card-body p-4">
+                <div class="row">
+                    {% for zone in garden.zones %}
+                    <div class="col-12">
+                        <div class="card shadow mb-4" data-zone-id="{{ zone.id }}">
+                            <div class="card-header">
+                                <h5 class="mb-0">{{ zone.name }}</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if zone.plants %}
+                                    {% for plant in zone.plants %}
+                                        <div class="plant-row row align-items-center mb-2 py-2 border-bottom">
+                                            <div class="col-4">
+                                                {% if status_colors %}
+                                                    <span class="badge status-badge {{ style.bg }}">
+                                                        <i class="fas fa-{{ style.icon }}"></i>
+                                                        {{ plant.status }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-success text-white d-inline-flex align-items-center gap-2">
+                                                        <span>
+                                                            <i class="fas fa-{{ status_icons.get(plant.status, 'circle') }}"></i> 
+                                                            {{ plant.status }}
+                                                        </span>
+                                                        <small class="opacity-75 border-start ps-2" style="font-size: 0.75em;">
+                                                            <!-- Debug info -->
+                                                            {% if plant.growth_stages %}
+                                                                {% if plant.growth_stages[0] %}
+                                                                    {{ plant.growth_stages[0].date_logged.strftime('%m/%d/%y %I:%M %p') }}
+                                                                {% else %}
+                                                                    (no first entry)
+                                                                {% endif %}
+                                                            {% else %}
+                                                                (no stages)
+                                                            {% endif %}
+                                                        </small>
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-4">
+                                                {{ plant.name }}
+                                            </div>
+                                            <div class="col-4">
+                                                {% if garden.owner_id == current_user.id or current_user in garden.members %}
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                                type="button" 
+                                                                data-bs-toggle="dropdown" 
+                                                                aria-expanded="false">
+                                                            Update Status
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            {% for status in zone.get_plant_statuses() %}
+                                                                <li>
+                                                                    <button type="button" 
+                                                                            class="dropdown-item update-status-link" 
+                                                                            data-plant-id="{{ plant.id }}"
+                                                                            data-status="{{ status }}"
+                                                                            data-url="{{ url_for('gardens.update_plant_status', plant_id=plant.id, status=status) }}">
+                                                                        <i class="fas fa-{{ status_icons.get(status, 'circle') }}"></i>
+                                                                        {{ status }}
+                                                                    </button>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-2">
+                                        <small class="text-muted">No plants in this zone yet</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if garden.zones|length == 0 %}
+                    <div class="col-12">
+                        <div class="text-center py-4">
+                            <p class="text-muted">No zones in this garden yet</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Right Column - Overall Stats -->
+    <div class="col-xl-4 col-lg-5" style="height: calc(100vh - 4.375rem);
+                top: 4.375rem;">
+        <!-- Garden Overview Card -->
+        <div class="card mb-4" style="background: white;
+                    border: 1px solid rgba(28, 200, 138, 0.2);
+                    border-radius: 1rem !important;
+                    border-bottom: 4px solid rgba(28, 200, 138, 0.2);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="text-success">Garden Overview</h4>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('gardens.add_garden') }}" class="btn" style="background: rgba(28, 200, 138, 0.1); 
+                                    color: #1cc88a; 
+                                    border: 1px solid rgba(28, 200, 138, 0.2);
+                                    border-radius: 0.5rem;
+                                    transition: all 0.2s ease;">
+                            <i class="fas fa-plus"></i> New Garden
+                        </a>
+                      
+                        <button class="btn" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#overviewCollapse" 
+                                style="background: rgba(28, 200, 138, 0.1); 
+                                       color: #1cc88a; 
+                                       border: 1px solid rgba(28, 200, 138, 0.2);
+                                       border-radius: 0.5rem;
+                                       transition: all 0.2s ease;">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="collapse show" id="overviewCollapse">
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Total Gardens</h6>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-home text-success me-2"></i>
+                            <span>{{ gardens|length }} Garden{{ 's' if gardens|length != 1 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Active Zones</h6>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-layer-group text-success me-2"></i>
+                            {% set total_zones = namespace(count=0) %}
+                            {% for garden in gardens %}
+                                {% set total_zones.count = total_zones.count + garden.zones|length %}
+                            {% endfor %}
+                            <span>{{ total_zones.count }} Garden Zone{{ 's' if total_zones.count != 1 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Plant Count</h6>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-leaf text-success me-2"></i>
+                            {% set total_plants = namespace(count=0) %}
+                            {% for garden in gardens %}
+                                {% for zone in garden.zones %}
+                                    {% for plant in zone.plants %}
+                                        {% set total_plants.count = total_plants.count + plant.quantity %}
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endfor %}
+                            <span>{{ total_plants.count }} Active Plant{{ 's' if total_plants.count != 1 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Last Updated</h6>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-success me-2"></i>
+                            <span>
+                                {% if gardens %}
+                                    {% set latest_garden = gardens|sort(attribute='last_updated', reverse=true)|first %}
+                                    {% if latest_garden.last_updated %}
+                                        {{ latest_garden.last_updated.strftime('%B %d, %Y at %I:%M %p %Z') }}
+                                    {% else %}
+                                        No updates yet
+                                    {% endif %}
+                                {% else %}
+                                    No gardens yet
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Plants Card -->
+        <div class="card mb-4" style="background: white;
+                    border: 1px solid rgba(28, 200, 138, 0.2);
+                    border-radius: 1rem !important;
+                    border-bottom: 4px solid rgba(28, 200, 138, 0.2);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="text-success">Available Plants</h4>
+                    <div class="d-flex gap-2">
+                        <a href="" class="btn" 
+                           style="background: rgba(28, 200, 138, 0.1); 
+                                  color: #1cc88a; 
+                                  border: 1px solid rgba(28, 200, 138, 0.2);
+                                  border-radius: 0.5rem;
+                                  transition: all 0.2s ease;">
+                            <i class="fas fa-seedling"></i> New Plant
+                        </a>
+                        <button class="btn" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#plantsCollapse" 
+                                style="background: rgba(28, 200, 138, 0.1); 
+                                       color: #1cc88a; 
+                                       border: 1px solid rgba(28, 200, 138, 0.2);
+                                       border-radius: 0.5rem;
+                                       transition: all 0.2s ease;">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="collapse show" id="plantsCollapse">
+                    <div class="plant-list" style="max-height: 400px; overflow-y: auto;">
+                        {% for plant_detail in plant_details %}
+                        <div class="plant-item mb-3 p-3" 
+                             style="border: 1px solid rgba(28, 200, 138, 0.1);
+                                    border-radius: 0.75rem;
+                                    background: rgba(28, 200, 138, 0.02);">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1 text-success">
+                                        <i class="fas fa-leaf me-2"></i>{{ plant_detail.name }}
+                                    </h6>
+                                    {% if plant_detail.varieties %}
+                                    <div class="varieties mt-2">
+                                        {% for variety in plant_detail.varieties %}
+                                        <span class="badge me-1 mb-1" 
+                                              style="background: rgba(28, 200, 138, 0.1); 
+                                                     color: #1cc88a; 
+                                                     border: 1px solid rgba(28, 200, 138, 0.2);
+                                                     border-radius: 0.5rem;">
+                                            {{ variety.name }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-light text-success">
+                                    {{ plant_detail.varieties|length }} varieties
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- Closing div for row -->
+
+<!-- Members Modal -->
+{% for garden in gardens %}
+<div class="modal fade" id="membersModal{{ garden.id }}" tabindex="-1" aria-labelledby="membersModalLabel{{ garden.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 1rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);">
+                <h5 class="modal-title text-success" id="membersModalLabel{{ garden.id }}">
+                    <i class="fas fa-users me-2"></i>{{ garden.name }} - Members
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Add this for debugging -->
+                <p class="text-muted small">Total Members: {{ garden.members|length }}</p>
+                
+                <div class="list-group list-group-flush">
+                    {% for member in garden.members %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename='profilePics/' + member.image_file) }}" 
+                                 class="rounded-circle me-3"
+                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                 alt="{{ member.username }}">
+                            <div>
+                                <h6 class="mb-0">{{ member.username }}</h6>
+                                <small class="text-muted">
+                                    {% if member.id == garden.owner_id %}
+                                        <a href="{{ url_for('users.page_user', username=member.username) }}" 
+                                           class="text-success">Garden Owner</a>
+                                    {% else %}
+                                        Member
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(28, 200, 138, 0.2);">
+                {% if garden.owner_id == current_user.id %}
+                <button type="button" 
+                        class="btn btn-sm"
+                        style="background: rgba(28, 200, 138, 0.1); 
+                               color: #1cc88a; 
+                               border: 1px solid rgba(28, 200, 138, 0.2);">
+                    <i class="fas fa-user-plus me-1"></i> Add Member
+                </button>
+                {% endif %}
+                <button type="button" 
+                        class="btn btn-sm" 
+                        data-bs-dismiss="modal"
+                        style="background: rgba(28, 200, 138, 0.1); 
+                               color: #1cc88a; 
+                               border: 1px solid rgba(28, 200, 138, 0.2);">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Setting up event handlers');  // Debug log
+    
+    document.querySelectorAll('.update-status-link').forEach(link => {
+        console.log('Found status link:', link);  // Debug log
+        
+        link.addEventListener('click', async function(e) {
+            console.log('Click event fired');  // Debug log
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const plantId = this.dataset.plantId;
+            const newStatus = this.dataset.status;
+            const url = this.dataset.url;
+            console.log('Update request:', { plantId, newStatus, url });  // Debug log
+            
+            const plantRow = this.closest('.plant-row');
+            const statusBadge = plantRow.querySelector('.badge');
+            const originalContent = statusBadge.innerHTML;
+            
+            try {
+                // Show loading state
+                statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);  // Debug log
+                
+                // Update the status badge
+                statusBadge.innerHTML = `
+                    <span>
+                        <i class="fas fa-${this.querySelector('i').className.split('fa-')[1]}"></i> 
+                        ${newStatus}
+                    </span>
+                    <small class="opacity-75 border-start ps-2" style="font-size: 0.75em;">
+                        ${data.timestamp}
+                    </small>
+                `;
+                
+                // Close the dropdown
+                const dropdownEl = this.closest('.dropdown');
+                const dropdownInstance = bootstrap.Dropdown.getInstance(dropdownEl.querySelector('.dropdown-toggle'));
+                if (dropdownInstance) {
+                    dropdownInstance.hide();
+                }
+
+                // Prevent URL from changing and page from scrolling
+                history.pushState(null, '', window.location.href);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusBadge.innerHTML = originalContent;
+                alert('Failed to update status');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

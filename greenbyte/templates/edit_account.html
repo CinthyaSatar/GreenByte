@@ -1,0 +1,227 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+    <!-- Left Column - Edit Form -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card mb-4" style="border: 1px solid rgba(28, 200, 138, 0.2);
+                    border-radius: 1rem !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
+                 style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
+                        border-top-left-radius: 1rem !important;
+                        border-top-right-radius: 1rem !important;">
+                <h4 class="text-success m-0">Account Settings</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Profile Picture -->
+                    <div class="text-center mb-4">
+                        <img class="rounded-circle account-img" src="{{ imageFile }}" 
+                             style="width: 150px; height: 150px; object-fit: cover; border: 3px solid rgba(28, 200, 138, 0.2);">
+                    </div>
+
+                    <!-- Username Field -->
+                    <div class="mb-4">
+                        {{ form.username.label(class="form-label fw-bold") }}
+                        {% if form.username.errors %}
+                            {{ form.username(class="form-control is-invalid", placeholder="Username", 
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.username(class="form-control", placeholder="Username", 
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Name Fields -->
+                    <div class="row mb-4">
+                        <div class="col-sm-6">
+                            {{ form.firstName.label(class="form-label fw-bold") }}
+                            {% if form.firstName.errors %}
+                                {{ form.firstName(class="form-control is-invalid", placeholder="First Name",
+                                                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.firstName.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.firstName(class="form-control", placeholder="First Name",
+                                                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            {{ form.lastName.label(class="form-label fw-bold") }}
+                            {% if form.lastName.errors %}
+                                {{ form.lastName(class="form-control is-invalid", placeholder="Last Name",
+                                               style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.lastName.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.lastName(class="form-control", placeholder="Last Name",
+                                               style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="mb-4">
+                        {{ form.email.label(class="form-label fw-bold") }}
+                        {% if form.email.errors %}
+                            {{ form.email(class="form-control is-invalid", placeholder="Email Address",
+                                        style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.email(class="form-control", placeholder="Email Address",
+                                        style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Picture Upload Field -->
+                    <div class="mb-4">
+                        {{ form.picture.label(class="form-label fw-bold") }}
+                        {{ form.picture(class="form-control", 
+                                      style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;") }}
+                        {% if form.picture.errors %}
+                            {% for error in form.picture.errors %}
+                                <span class="text-danger">{{ error }}</span><br>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{{ url_for('main.index') }}" class="btn" 
+                           style="background: rgba(28, 200, 138, 0.1); 
+                                  color: #1cc88a; 
+                                  border: 1px solid rgba(28, 200, 138, 0.2);
+                                  border-radius: 0.5rem;
+                                  transition: all 0.2s ease;">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                        {{ form.submit(class="btn",
+                                     style="background: rgba(28, 200, 138, 0.1); 
+                                            color: #1cc88a; 
+                                            border: 1px solid rgba(28, 200, 138, 0.2);
+                                            border-radius: 0.5rem;
+                                            transition: all 0.2s ease;") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Account Reference -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card" style="border: 1px solid rgba(28, 200, 138, 0.2);
+                    border-radius: 1rem !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    position: sticky;
+                    top: 1rem;">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
+                 style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
+                        border-top-left-radius: 1rem !important;
+                        border-top-right-radius: 1rem !important;">
+                <h5 class="text-success m-0">Account Overview</h5>
+            </div>
+            <div class="card-body p-4">
+                <!-- Account Stats -->
+                <div class="mb-4">
+                    <h6 class="text-muted mb-3">Your Activity</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-seedling text-success me-3"></i>
+                        <span>{{ current_user.posts|length }} Posts</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-leaf text-success me-3"></i>
+                        <span>{{ current_user.gardens|length }} Gardens</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-calendar-alt text-success me-3"></i>
+                        <span>Member since {{ current_user.date_joined.strftime('%B %Y') }}</span>
+                    </div>
+                </div>
+
+                <!-- Profile Tips -->
+                <div class="mb-4">
+                    <h6 class="text-muted mb-3">Profile Tips</h6>
+                    <div class="small">
+                        <div class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Use a clear profile picture to help others recognize you
+                        </div>
+                        <div class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Keep your email updated for important notifications
+                        </div>
+                        <div class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Use a unique username that represents you
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div class="mb-4">
+                    <h6 class="text-muted mb-3">Security</h6>
+                    <div class="small">
+                        <div class="mb-2">
+                            <i class="fas fa-lock text-success me-2"></i>
+                            Regular password updates recommended
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="mt-4">
+                    <h6 class="text-muted mb-3">Quick Links</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('users.resetRequest') }}" 
+                           class="btn btn-outline-success btn-sm"
+                           style="border-radius: 0.5rem;">
+                            <i class="fas fa-key me-2"></i>Reset Password
+                        </a>
+                        <button class="btn btn-outline-success btn-sm"
+                                
+                                style="border-radius: 0.5rem; opacity: 0.5; cursor: not-allowed;">
+                            <i class="fas fa-user-shield me-2"></i>Privacy Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control:focus {
+    border-color: rgba(28, 200, 138, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.form-label {
+    color: #5a5c69;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock content %}

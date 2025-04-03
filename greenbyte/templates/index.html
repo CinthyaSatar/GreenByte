@@ -126,7 +126,7 @@
                         style="width: 40px; height: 40px;">
                     <div>
                         <h6 class="mb-0 fw-bold">
-                            <a href="{{ url_for('users.userPosts', username=post.author.username) }}" 
+                            <a href="{{ url_for('users.page_user', username=post.author.username) }}" 
                                class="text-decoration-none text-dark hover-success">
                                 {{ post.author.firstName }} {{ post.author.lastName }}
                             </a>
