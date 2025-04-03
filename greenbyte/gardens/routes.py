@@ -154,6 +154,49 @@ def move_plant(plant_id, zone_id):
     return redirect(url_for('gardens.view_gardens'))
 
 
+@gardens.route("/api/plant/<int:plant_id>/move/<int:zone_id>", methods=['POST'])
+@login_required
+def move_plant_ajax(plant_id, zone_id):
+    try:
+        plant = Plant.query.get_or_404(plant_id)
+        new_zone = Zone.query.get_or_404(zone_id)
+
+        # Verify user has permission for both current and new zones
+        current_garden = Garden.query.join(Zone).join(Plant).filter(Plant.id == plant_id).first()
+        new_garden = Garden.query.join(Zone).filter(Zone.id == zone_id).first()
+
+        if not (current_user in current_garden.members and current_user in new_garden.members):
+            return jsonify({'success': False, 'error': 'Permission denied'}), 403
+
+        # Get plant details before moving
+        plant_name = plant.plant_detail.name
+        old_zone_name = plant.zone.name
+        old_zone_id = plant.zone_id
+
+        # Move the plant
+        plant.zone_id = zone_id
+
+        # Update the timestamp with correct timezone
+        current_garden.last_updated = now_in_timezone()
+        new_garden.last_updated = now_in_timezone()
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Moved {plant_name} from {old_zone_name} to {new_zone.name}!',
+            'plant_id': plant_id,
+            'plant_name': plant_name,
+            'new_zone_name': new_zone.name,
+            'new_zone_id': new_zone.id,
+            'old_zone_name': old_zone_name,
+            'old_zone_id': old_zone_id
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @gardens.route("/garden/<int:garden_id>/edit", methods=['GET', 'POST'])
 @login_required
 def edit_garden(garden_id):

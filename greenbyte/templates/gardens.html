@@ -67,7 +67,7 @@
                 <div class="row">
                     {% for zone in garden.zones %}
                     <div class="col-12">
-                        <div class="card shadow mb-4">
+                        <div id="zone-{{ zone.id }}" class="card shadow mb-4">
                             <div class="card-header py-3 d-flex justify-content-between align-items-center">
                                 <h6 class="m-0 d-flex align-items-center gap-2"
                                     style="color: #1cc88a;
@@ -252,8 +252,12 @@
                                                     {% for available_zone in garden.zones %}
                                                         {% if available_zone.id != plant.zone_id %}
                                                         <li>
-                                                            <a class="dropdown-item py-1"
-                                                               href="{{ url_for('gardens.move_plant', plant_id=plant.id, zone_id=available_zone.id) }}">
+                                                            <a class="dropdown-item py-1 move-plant-link"
+                                                               href="#"
+                                                               data-plant-id="{{ plant.id }}"
+                                                               data-zone-id="{{ available_zone.id }}"
+                                                               data-zone-name="{{ available_zone.name }}"
+                                                               data-csrf-token="{{ csrf_token() }}">
                                                                 {{ available_zone.name }}
                                                             </a>
                                                         </li>
@@ -436,6 +440,48 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Helper function to show toast notifications
+        function showToast(message, bgClass = 'bg-success') {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white ${bgClass} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            const icon = bgClass === 'bg-success' ? 'check-circle' :
+                         bgClass === 'bg-danger' ? 'exclamation-circle' : 'info-circle';
+
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${icon} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            // Add toast to the document
+            const toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.appendChild(toast);
+            document.body.appendChild(toastContainer);
+
+            // Initialize and show the toast
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 5000
+            });
+            bsToast.show();
+
+            // Remove toast container after toast is hidden
+            toast.addEventListener('hidden.bs.toast', function() {
+                document.body.removeChild(toastContainer);
+            });
+
+            return toast;
+        }
+
         // Add event listeners to all status update links
         const statusLinks = document.querySelectorAll('.status-update-link');
 
@@ -481,45 +527,91 @@
                         `;
 
                         // Show success message
-                        const toast = document.createElement('div');
-                        toast.className = 'toast align-items-center text-white bg-success border-0';
-                        toast.setAttribute('role', 'alert');
-                        toast.setAttribute('aria-live', 'assertive');
-                        toast.setAttribute('aria-atomic', 'true');
-                        toast.innerHTML = `
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    ${data.message}
-                                </div>
-                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                            </div>
-                        `;
-
-                        // Add toast to the document
-                        const toastContainer = document.createElement('div');
-                        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-                        toastContainer.appendChild(toast);
-                        document.body.appendChild(toastContainer);
-
-                        // Initialize and show the toast
-                        const bsToast = new bootstrap.Toast(toast);
-                        bsToast.show();
-
-                        // Remove toast container after toast is hidden
-                        toast.addEventListener('hidden.bs.toast', function() {
-                            document.body.removeChild(toastContainer);
-                        });
+                        showToast(data.message, 'bg-success');
                     } else {
                         // Show error message and revert to original status
                         console.error('Error updating status:', data.error);
-                        alert('Error updating status: ' + data.error);
+                        showToast('Error updating status: ' + data.error, 'bg-danger');
                         location.reload(); // Reload the page to ensure correct state
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while updating the status. Please try again.');
+                    showToast('An error occurred while updating the status. Please try again.', 'bg-danger');
+                    location.reload(); // Reload the page to ensure correct state
+                });
+            });
+        });
+
+        // Add event listeners to all move plant links
+        const moveLinks = document.querySelectorAll('.move-plant-link');
+
+        moveLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const plantId = this.getAttribute('data-plant-id');
+                const zoneId = this.getAttribute('data-zone-id');
+                const zoneName = this.getAttribute('data-zone-name');
+                const csrfToken = this.getAttribute('data-csrf-token');
+
+                // Find the plant row to remove later
+                const plantRow = this.closest('.plant-row');
+
+                // Show loading indicator
+                plantRow.style.opacity = '0.5';
+                plantRow.innerHTML = `
+                    <div class="col-12 text-center py-2">
+                        <i class="fas fa-spinner fa-spin me-2"></i> Moving plant to ${zoneName}...
+                    </div>
+                `;
+
+                // Send AJAX request
+                fetch(`/api/plant/${plantId}/move/${zoneId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the plant row with animation
+                        plantRow.style.transition = 'all 0.5s ease';
+                        plantRow.style.maxHeight = '0';
+                        plantRow.style.opacity = '0';
+                        plantRow.style.overflow = 'hidden';
+
+                        setTimeout(() => {
+                            // Remove the row after animation
+                            if (plantRow.parentNode) {
+                                plantRow.parentNode.removeChild(plantRow);
+                            }
+
+                            // Check if there are no more plants in the zone
+                            const plantsContainer = document.querySelector(`#zone-${data.old_zone_id} .plants-container`);
+                            if (plantsContainer && plantsContainer.querySelectorAll('.plant-row').length === 0) {
+                                plantsContainer.innerHTML = `
+                                    <div class="text-center py-2">
+                                        <small class="text-muted">No plants in this zone yet</small>
+                                    </div>
+                                `;
+                            }
+                        }, 500);
+
+                        // Show success message
+                        showToast(data.message, 'bg-success');
+                    } else {
+                        // Show error message and reload
+                        console.error('Error moving plant:', data.error);
+                        showToast('Error moving plant: ' + data.error, 'bg-danger');
+                        location.reload(); // Reload the page to ensure correct state
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('An error occurred while moving the plant. Please try again.', 'bg-danger');
                     location.reload(); // Reload the page to ensure correct state
                 });
             });
