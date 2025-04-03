@@ -110,11 +110,17 @@
             <div class="row text-center mb-2">
               {% for day in range(7) %}
               <div class="col px-1">
-                <div
-                  class="mini-day p-1 {% if loop.index == 3 and week == 1 %}bg-success-light{% endif %}"
-                  style="border-radius: 4px; cursor: pointer"
-                >
-                  <small>{{ loop.index + (week * 7) }}</small>
+                <div class="mini-day-wrapper">
+                  <div
+                    class="mini-day p-1 {% if loop.index == 3 and week == 1 %}bg-success-light{% endif %}"
+                    style="border-radius: 4px; cursor: pointer"
+                  >
+                    <small>{{ loop.index + (week * 7) }}</small>
+                  </div>
+                  <!-- Add event indicator dot - we'll control visibility with has-event class -->
+                  <div
+                    class="event-indicator {% if (loop.index + (week * 7)) in [11, 13, 15] %}has-event{% endif %}"
+                  ></div>
                 </div>
               </div>
               {% endfor %}
@@ -142,15 +148,15 @@
               background: rgba(28, 200, 138, 0.05);
             "
           >
-            <div class="event-date text-center mr-3">
+            <div class="event-date text-center me-3" style="min-width: 50px">
+              <small class="text-gray-500 d-block">MAR</small>
               <div class="h5 mb-0" style="color: #1cc88a">15</div>
-              <small class="text-gray-500">MAR</small>
             </div>
             <div class="event-details">
               <h6 class="mb-0">Harvest Day - Tomatoes</h6>
-              <small class="text-gray-600"
-                ><i class="fas fa-clock fa-sm mr-1"></i>9:00 AM</small
-              >
+              <small class="text-gray-600">
+                <i class="fas fa-clock fa-sm me-1"></i>9:00 AM
+              </small>
             </div>
           </div>
           <div
@@ -160,15 +166,15 @@
               background: rgba(28, 200, 138, 0.05);
             "
           >
-            <div class="event-date text-center mr-3">
+            <div class="event-date text-center me-3" style="min-width: 50px">
+              <small class="text-gray-500 d-block">MAR</small>
               <div class="h5 mb-0" style="color: #1cc88a">18</div>
-              <small class="text-gray-500">MAR</small>
             </div>
             <div class="event-details">
               <h6 class="mb-0">Planting - Lettuce</h6>
-              <small class="text-gray-600"
-                ><i class="fas fa-clock fa-sm mr-1"></i>2:00 PM</small
-              >
+              <small class="text-gray-600">
+                <i class="fas fa-clock fa-sm me-1"></i>2:00 PM
+              </small>
             </div>
           </div>
         </div>
@@ -177,7 +183,7 @@
   </div>
 </div>
 
-<!-- Add Event/Task Modal -->
+<!-- Add Event Modal -->
 <div
   class="modal fade"
   id="addEventModal"
@@ -192,7 +198,7 @@
         style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
       >
         <h5 class="modal-title" id="addEventModalLabel" style="color: #1cc88a">
-          Add New Event/Task
+          New Event
         </h5>
         <button
           type="button"
@@ -203,40 +209,188 @@
       </div>
       <div class="modal-body">
         <form id="eventForm">
+          <!-- Title and Location Section -->
           <div class="form-group mb-3">
-            <label>Type</label>
-            <select class="form-control" id="eventType">
-              <option value="event">Event</option>
-              <option value="task">Task</option>
-            </select>
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              id="eventTitle"
+              placeholder="Add title"
+              required
+            />
           </div>
           <div class="form-group mb-3">
-            <label>Title</label>
-            <input type="text" class="form-control" id="eventTitle" required />
+            <div class="input-group">
+              <span class="input-group-text"
+                ><i class="fas fa-map-marker-alt"></i
+              ></span>
+              <input
+                type="text"
+                class="form-control"
+                id="location"
+                placeholder="Add location or video call"
+              />
+            </div>
           </div>
+
+          <!-- Date and Time Section -->
           <div class="form-group mb-3">
-            <label>Date</label>
-            <input type="date" class="form-control" id="eventDate" required />
+            <div class="d-flex align-items-center mb-2">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="allDayEvent"
+                />
+                <label class="form-check-label" for="allDayEvent"
+                  >All-day</label
+                >
+              </div>
+            </div>
+
+            <div class="row mb-2">
+              <label class="col-2">Starts</label>
+              <div class="col-5">
+                <input
+                  type="date"
+                  class="form-control"
+                  id="startDate"
+                  required
+                />
+              </div>
+              <div class="col-5" id="startTimeContainer">
+                <input
+                  type="time"
+                  class="form-control"
+                  id="startTime"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <label class="col-2">Ends</label>
+              <div class="col-5">
+                <input type="date" class="form-control" id="endDate" required />
+              </div>
+              <div class="col-5" id="endTimeContainer">
+                <input type="time" class="form-control" id="endTime" required />
+              </div>
+            </div>
           </div>
+
+          <!-- Repeat Section -->
           <div class="form-group mb-3">
-            <label>Time</label>
-            <input type="time" class="form-control" id="eventTime" required />
+            <div class="row">
+              <label class="col-2">Repeat</label>
+              <div class="col-10">
+                <select class="form-select" id="repeatOption">
+                  <option value="never">Never</option>
+                  <option value="daily">Every Day</option>
+                  <option value="weekly">Every Week</option>
+                  <option value="biweekly">Every 2 Weeks</option>
+                  <option value="monthly">Every Month</option>
+                  <option value="yearly">Every Year</option>
+                  <option value="custom">Custom...</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <label class="col-2">End Repeat</label>
+              <div class="col-10">
+                <select class="form-select" id="endRepeat">
+                  <option value="never">Never</option>
+                  <option value="on">On Date</option>
+                </select>
+              </div>
+            </div>
           </div>
+
+          <!-- Calendar Selection -->
           <div class="form-group mb-3">
-            <label>Category</label>
-            <select class="form-control" id="eventCategory">
-              <option value="maintenance">Maintenance</option>
-              <option value="monitoring">Monitoring</option>
-              <option value="harvest">Harvest</option>
-              <option value="planting">Planting</option>
-            </select>
+            <div class="row">
+              <label class="col-2">Calendar</label>
+              <div class="col-10">
+                <select class="form-select" id="calendar">
+                  <option value="work" style="color: #1cc88a">Work</option>
+                  <option value="community" style="color: #4e73df">
+                    Community
+                  </option>
+                  <option value="school" style="color: #f6c23e">School</option>
+                  <option value="personal" style="color: #e74a3b">
+                    Personal
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
+
+          <!-- Invitees Section -->
           <div class="form-group mb-3">
-            <label>Description</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-users"></i></span>
+              <input
+                type="text"
+                class="form-control"
+                id="invitees"
+                placeholder="Add invitees"
+              />
+              <button class="btn btn-outline-secondary" type="button">
+                Add
+              </button>
+            </div>
+          </div>
+
+          <!-- Alert Section -->
+          <div class="form-group mb-3">
+            <div class="row">
+              <label class="col-2">Alert</label>
+              <div class="col-10">
+                <select class="form-select" id="alert">
+                  <option value="0">At time of event</option>
+                  <option value="5">5 minutes before</option>
+                  <option value="10">10 minutes before</option>
+                  <option value="15">15 minutes before</option>
+                  <option value="30">30 minutes before</option>
+                  <option value="60">1 hour before</option>
+                  <option value="1440">1 day before</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Private Toggle -->
+          <div class="form-group mb-3">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="privateEvent"
+              />
+              <label class="form-check-label" for="privateEvent">Private</label>
+            </div>
+          </div>
+
+          <!-- URL -->
+          <div class="form-group mb-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-link"></i></span>
+              <input
+                type="url"
+                class="form-control"
+                id="eventUrl"
+                placeholder="Add URL"
+              />
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group mb-3">
             <textarea
               class="form-control"
-              id="eventDescription"
+              id="notes"
               rows="3"
+              placeholder="Add notes"
             ></textarea>
           </div>
         </form>
@@ -249,45 +403,75 @@
           Cancel
         </button>
         <button type="button" class="btn btn-success" onclick="saveEvent()">
-          Save
+          Add Event
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Add this JavaScript section -->
+<!-- Add this JavaScript -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Set default date to today
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("eventDate").value = today;
+    // Set default dates to today
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    document.getElementById("startDate").value = todayStr;
+    document.getElementById("endDate").value = todayStr;
+
+    // Handle all-day event toggle
+    const allDayCheckbox = document.getElementById("allDayEvent");
+    const startTimeContainer = document.getElementById("startTimeContainer");
+    const endTimeContainer = document.getElementById("endTimeContainer");
+
+    allDayCheckbox.addEventListener("change", function () {
+      startTimeContainer.style.display = this.checked ? "none" : "block";
+      endTimeContainer.style.display = this.checked ? "none" : "block";
+    });
+
+    // Handle repeat option changes
+    const repeatOption = document.getElementById("repeatOption");
+    const endRepeatContainer =
+      document.getElementById("endRepeat").parentElement.parentElement;
+
+    repeatOption.addEventListener("change", function () {
+      endRepeatContainer.style.display =
+        this.value === "never" ? "none" : "flex";
+    });
   });
 
   function saveEvent() {
-    // Get form values
-    const type = document.getElementById("eventType").value;
-    const title = document.getElementById("eventTitle").value;
-    const date = document.getElementById("eventDate").value;
-    const time = document.getElementById("eventTime").value;
-    const category = document.getElementById("eventCategory").value;
-    const description = document.getElementById("eventDescription").value;
+    // Get all form values
+    const formData = {
+      title: document.getElementById("eventTitle").value,
+      location: document.getElementById("location").value,
+      allDay: document.getElementById("allDayEvent").checked,
+      startDate: document.getElementById("startDate").value,
+      startTime: document.getElementById("startTime").value,
+      endDate: document.getElementById("endDate").value,
+      endTime: document.getElementById("endTime").value,
+      repeat: document.getElementById("repeatOption").value,
+      endRepeat: document.getElementById("endRepeat").value,
+      calendar: document.getElementById("calendar").value,
+      invitees: document.getElementById("invitees").value,
+      alert: document.getElementById("alert").value,
+      private: document.getElementById("privateEvent").checked,
+      url: document.getElementById("eventUrl").value,
+      notes: document.getElementById("notes").value,
+    };
 
-    // Validate form
-    if (!title || !date || !time) {
+    // Validate required fields
+    if (
+      !formData.title ||
+      !formData.startDate ||
+      (!formData.allDay && !formData.startTime)
+    ) {
       alert("Please fill in all required fields");
       return;
     }
 
-    // TODO: Add your logic here to save the event/task
-    console.log("Saving event:", {
-      type,
-      title,
-      date,
-      time,
-      category,
-      description,
-    });
+    // TODO: Add your logic here to save the event
+    console.log("Saving event:", formData);
 
     // Close the modal
     const modal = bootstrap.Modal.getInstance(
@@ -302,19 +486,32 @@
 
 <!-- Add these styles -->
 <style>
-  .modal-content {
-    border: none;
-    border-radius: 8px;
+  .modal-dialog {
+    max-width: 500px;
   }
 
-  .btn-success {
-    background-color: #1cc88a;
+  .form-group label {
+    color: #5a5c69;
+    font-weight: 500;
+  }
+
+  .input-group-text {
+    background-color: transparent;
+    border-right: none;
+  }
+
+  .input-group .form-control {
+    border-left: none;
+  }
+
+  .form-control:focus {
     border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
   }
 
-  .btn-success:hover {
-    background-color: #169b6b;
-    border-color: #169b6b;
+  .form-select:focus {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
   }
 </style>
 
@@ -445,6 +642,56 @@
     .column-content {
       padding: 0.4rem;
     }
+  }
+
+  .mini-day-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .event-indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #1cc88a;
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .event-indicator.has-event {
+    opacity: 1;
+  }
+
+  /* Optional: Add different colors for different calendar types */
+  .event-indicator.work {
+    background-color: #1cc88a;
+  }
+
+  .event-indicator.community {
+    background-color: #4e73df;
+  }
+
+  .event-indicator.school {
+    background-color: #f6c23e;
+  }
+
+  .event-indicator.personal {
+    background-color: #e74a3b;
+  }
+
+  /* If you want to show multiple dots for multiple events */
+  .event-indicator-multiple {
+    display: flex;
+    gap: 2px;
+  }
+
+  .event-indicator-multiple .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
   }
 </style>
 {% endblock content %}

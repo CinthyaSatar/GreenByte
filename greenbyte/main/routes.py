@@ -27,3 +27,7 @@ def index():
 def calendar():
     return render_template('calendar.html', title='Calendar')
 
+@main.route("/analytics")
+def analytics():
+    return render_template('analytics.html')
+

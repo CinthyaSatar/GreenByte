@@ -1,0 +1,311 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-fluid">
+  <!-- Global Analytics Section -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0" style="color: #1cc88a">Global Analytics</h1>
+  </div>
+
+  <!-- Global Stats Cards -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-success text-uppercase mb-1"
+              >
+                Total Users
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">156</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-users fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Total Plants
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">1,247</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-leaf fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-info text-uppercase mb-1"
+              >
+                Avg Growth Rate
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                2.3"/week
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Total Harvests
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">523</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-weight fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Charts Row -->
+  <div class="row">
+    <div class="col-xl-8 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Most Popular Plants
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="chart-bar">
+            <canvas id="popularPlantsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Growth Stage Distribution
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="chart-pie pt-4">
+            <canvas id="growthStageChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Farm Analytics Section -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4 mt-5">
+    <h1 class="h3 mb-0" style="color: #1cc88a">My Farm Analytics</h1>
+  </div>
+
+  <!-- Personal Stats Cards -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-success text-uppercase mb-1"
+              >
+                My Plants
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">25</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-seedling fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Monthly Harvest
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">15 lbs</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-balance-scale fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-info text-uppercase mb-1"
+              >
+                Water Usage
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">50 gal</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-tint fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Success Rate
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">92%</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-percentage fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Charts Row -->
+  <div class="row">
+    <div class="col-xl-8 col-lg-7">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            My Growth Trends
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="chart-area">
+            <canvas id="myGrowthChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            My Plant Types
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="chart-pie pt-4">
+            <canvas id="myPlantTypesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Plant Performance Table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            My Plant Performance
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Plant Name</th>
+                  <th>Growth Stage</th>
+                  <th>Days Growing</th>
+                  <th>Last Watered</th>
+                  <th>pH Level</th>
+                  <th>Expected Harvest</th>
+                  <th>Health Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Tomatoes</td>
+                  <td>Flowering</td>
+                  <td>45</td>
+                  <td>Today</td>
+                  <td>6.5</td>
+                  <td>2 weeks</td>
+                  <td><span class="badge bg-success">Healthy</span></td>
+                </tr>
+                <tr>
+                  <td>Lettuce</td>
+                  <td>Mature</td>
+                  <td>30</td>
+                  <td>Yesterday</td>
+                  <td>6.2</td>
+                  <td>5 days</td>
+                  <td><span class="badge bg-success">Healthy</span></td>
+                </tr>
+                <tr>
+                  <td>Basil</td>
+                  <td>Growing</td>
+                  <td>15</td>
+                  <td>Today</td>
+                  <td>6.8</td>
+                  <td>3 weeks</td>
+                  <td><span class="badge bg-warning">Needs Water</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} {% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/demo/chart-area-demo.js') }}"></script>
+<script src="{{ url_for('static', filename='js/demo/chart-pie-demo.js') }}"></script>
+<script src="{{ url_for('static', filename='js/demo/chart-bar-demo.js') }}"></script>
+{% endblock scripts %}
