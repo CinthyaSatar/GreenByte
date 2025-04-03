@@ -160,7 +160,7 @@
                       {{ user.location if user.location else "Location not specified" }}
                     </p>
                     {% if current_user.id == user.id %}
-                    <a href="{{ url_for('users.account') }}" class="btn btn-outline-success w-100 mb-4"
+                    <a href="{{ url_for('users.edit_account') }}" class="btn btn-outline-success w-100 mb-4"
                        style="border-radius: 0.75rem; padding: 0.5rem 1.25rem;">
                       <i class="fas fa-edit me-2"></i>Edit Profile
                     </a>

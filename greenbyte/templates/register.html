@@ -1,160 +1,207 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>GreenByte</title>
-
-    <!-- Custom fonts for this template-->
-    <link href="{{url_for('static', filename = 'vendor/fontawesome-free/css/all.min.css')}}" rel="stylesheet"
-        type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
-
-    <!-- Custom styles for this template-->
-    <link href="{{url_for('static', filename = 'css/sb-admin-2.min.css')}}" rel="stylesheet">
-
-</head>
-
-<body id="page-top">
-    <div class="container">
-        <div class="card o-hidden border-0 shadow-lg my-5">
-            <div class="card-body p-0">
-                <!-- Nested Row within Card Body -->
-                <div class="row">
-                    <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
-                    <div class="col-lg-7">
-                        <div class="p-5">
-                            <div class="text-center">
-                                <h1 class="h4 text-gray-900 mb-4">Create an Account!</h1>
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-10 col-md-9">
+            <!-- Register Card -->
+            <div class="card shadow mb-4" style="border-radius: 15px; border: 1px solid rgba(28, 200, 138, 0.2); margin-top: 2rem;">
+                <div class="card-body p-0">
+                    <div class="row">
+                        <!-- Left Image Column -->
+                        <div class="col-lg-5 d-none d-lg-block" style="background: linear-gradient(rgba(28, 200, 138, 0.7), rgba(28, 200, 138, 0.3)), url('https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center; border-top-left-radius: 15px; border-bottom-left-radius: 15px;">
+                            <div class="p-5 text-white" style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                                <h2 class="mb-4 fw-bold">Join GreenByte</h2>
+                                <p class="mb-4">Create an account to start tracking your garden, sharing your progress, and connecting with other gardeners.</p>
+                                <div class="d-flex mt-4">
+                                    <div class="me-3">
+                                        <i class="fas fa-seedling fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Garden Management</h5>
+                                        <p class="small mb-0">Organize your garden spaces</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex mt-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Community</h5>
+                                        <p class="small mb-0">Connect with fellow gardeners</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-center">
+                        </div>
+
+                        <!-- Right Form Column -->
+                        <div class="col-lg-7">
+                            <div class="p-5">
+                                <div class="text-center mb-4">
+                                    <h2 style="color: #1cc88a; font-weight: 600;">Create Your Account</h2>
+                                    <p class="text-muted">Fill out the form below to get started</p>
+                                </div>
+
+                                <!-- Flash Messages -->
                                 {% with messages = get_flashed_messages(with_categories=true) %}
-                                {% if messages %}
-                                {% for category, message in messages %}
-                                </div class="alert alert-{{ category }}"> {{message }}</div>
-                                {% endfor %}
-                                {% endif %}
+                                    {% if messages %}
+                                        {% for category, message in messages %}
+                                            <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                                                {{ message }}
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
                                 {% endwith %}
-                            </div>
-                            <form method="POST" action>
-                                {{ form.hidden_tag() }}
-                                <div class="form-group">
-                                    {% if form.username.errors %}
-                                    {{ form.username(class="form-control form-control-user is-invalid", placeholder="Username")}}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.username.errors%}
-                                        <span>{{error}}</span>
-                                        {% endfor%}
-                                    </div>
-                                    {% else %}
-                                    {{ form.username(class="form-control form-control-user", placeholder="Username")}}
-                                    {% endif%}
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-6 mb-3 mb-sm-0">
-                                        {% if form.firstName.errors %}
-                                        {{ form.firstName(class="form-control form-control-user is-invalid", placeholder="First Name")}}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.firstName.errors%}
-                                            <span>{{error}}</span>
-                                            {% endfor%}
-                                        </div>
+
+                                <form method="POST" action="">
+                                    {{ form.hidden_tag() }}
+
+                                    <div class="form-group mb-3">
+                                        {{ form.username.label(class="form-label fw-bold") }}
+                                        {% if form.username.errors %}
+                                            {{ form.username(class="form-control is-invalid", placeholder="Choose a username",
+                                                          style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.username.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
                                         {% else %}
-                                        {{ form.firstName(class="form-control form-control-user", placeholder="First Name")}}
-                                        {% endif%}
+                                            {{ form.username(class="form-control", placeholder="Choose a username",
+                                                          style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                        {% endif %}
                                     </div>
-                                    <div class="col-sm-6">
-                                        {% if form.lastName.errors %}
-                                        {{ form.lastName(class="form-control form-control-user is-invalid", placeholder="Last Name")}}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.lastName.errors%}
-                                            <span>{{error}}</span>
-                                            {% endfor%}
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                {{ form.firstName.label(class="form-label fw-bold") }}
+                                                {% if form.firstName.errors %}
+                                                    {{ form.firstName(class="form-control is-invalid", placeholder="First Name",
+                                                                   style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                    <div class="invalid-feedback">
+                                                        {% for error in form.firstName.errors %}
+                                                            <span>{{ error }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    {{ form.firstName(class="form-control", placeholder="First Name",
+                                                                   style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                        {% else %}
-                                        {{ form.lastName(class="form-control form-control-user", placeholder="Last Name")}}
-                                        {% endif%}
-                                    </div>
-                                </div>
-                                <div class="form-group">  
-                                    {% if form.email.errors %}
-                                    {{ form.email(class="form-control form-control-user is-invalid", placeholder="Email Address")}}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.email.errors%}
-                                        <span>{{error}}</span>
-                                        {% endfor%}
-                                    </div>
-                                    {% else %}
-                                    {{ form.email(class="form-control form-control-user", placeholder="Email Address")}}
-                                    {% endif%}
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-6 mb-3 mb-sm-0">
-                                        {% if form.password.errors %}
-                                        {{ form.password(class="form-control form-control-user is-invalid", placeholder="Password")}}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.password.errors%}
-                                            <span>{{error}}</span>
-                                            {% endfor%}
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                {{ form.lastName.label(class="form-label fw-bold") }}
+                                                {% if form.lastName.errors %}
+                                                    {{ form.lastName(class="form-control is-invalid", placeholder="Last Name",
+                                                                  style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                    <div class="invalid-feedback">
+                                                        {% for error in form.lastName.errors %}
+                                                            <span>{{ error }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    {{ form.lastName(class="form-control", placeholder="Last Name",
+                                                                  style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                        {% else %}
-                                        {{ form.password(class="form-control form-control-user", placeholder="Password")}}
-                                        {% endif%}
                                     </div>
-                                    <div class="col-sm-6">
-                                        {% if form.confirmPassword.errors %}
-                                        {{ form.confirmPassword(class="form-control form-control-user is-invalid", placeholder="Confirm Password")}}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.confirmPassword.errors%}
-                                            <span>{{error}}</span>
-                                            {% endfor%}
+
+                                    <div class="form-group mb-3">
+                                        {{ form.email.label(class="form-label fw-bold") }}
+                                        {% if form.email.errors %}
+                                            {{ form.email(class="form-control is-invalid", placeholder="Your email address",
+                                                       style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.email.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ form.email(class="form-control", placeholder="Your email address",
+                                                       style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                {{ form.password.label(class="form-label fw-bold") }}
+                                                {% if form.password.errors %}
+                                                    {{ form.password(class="form-control is-invalid", placeholder="Create a password",
+                                                                  style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                    <div class="invalid-feedback">
+                                                        {% for error in form.password.errors %}
+                                                            <span>{{ error }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    {{ form.password(class="form-control", placeholder="Create a password",
+                                                                  style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                        {% else %}
-                                        {{ form.confirmPassword(class="form-control form-control-user", placeholder="Confirm Password")}}
-                                        {% endif%}
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                {{ form.confirmPassword.label(class="form-label fw-bold") }}
+                                                {% if form.confirmPassword.errors %}
+                                                    {{ form.confirmPassword(class="form-control is-invalid", placeholder="Confirm password",
+                                                                         style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                    <div class="invalid-feedback">
+                                                        {% for error in form.confirmPassword.errors %}
+                                                            <span>{{ error }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    {{ form.confirmPassword(class="form-control", placeholder="Confirm password",
+                                                                         style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {{ form.submit(class="btn w-100 mb-4",
+                                                style="background: rgba(28, 200, 138, 0.1);
+                                                       color: #1cc88a;
+                                                       border: 1px solid rgba(28, 200, 138, 0.2);
+                                                       border-radius: 0.75rem;
+                                                       padding: 0.75rem 1.5rem;
+                                                       font-weight: 600;") }}
+                                </form>
+
+                                <div class="text-center mt-4">
+                                    <p class="mb-0">Already have an account?
+                                        <a href="{{ url_for('users.login') }}" class="text-decoration-none" style="color: #1cc88a; font-weight: 600;">
+                                            Sign in here
+                                        </a>
+                                    </p>
                                 </div>
-                                {{ form.submit(class="btn btn-primary btn-user btn-block")}}
-                            </form>
-                            <hr>
-                            <div class="text-center">
-                                <a class="small" href="#">Forgot Password?</a>
-                            </div>
-                            <div class="text-center">
-                                <a class="small" href="{{ url_for('users.login') }}">Already have an account? Login!</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
+</div>
 
+<style>
+    .form-control:focus {
+        border-color: rgba(28, 200, 138, 0.5);
+        box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+    }
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="{{url_for('static', filename = 'vendor/jquery/jquery.min.js')}}"></script>
-    <script src="{{url_for('static', filename = 'vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
 
-    <!-- Core plugin JavaScript-->
-    <script src="{{url_for('static', filename = 'vendor/jquery-easing/jquery.easing.min.js')}}"></script>
-
-    <!-- Custom scripts for all pages-->
-    <script src="{{url_for('static', filename = 'js/sb-admin-2.min.js')}}"></script>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"></script>
-
-
-</body>
-
-</html>
+    .form-label {
+        color: #5a5c69;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock content %}
