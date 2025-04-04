@@ -22,38 +22,52 @@
                     box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
             <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
                  style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
-                        border-top-left-radius: 1rem !important;
-                        border-top-right-radius: 1rem !important;">
-                <div>
-                    <h4 class="text-success m-0">{{ garden.name }}</h4>
-                    <div class="text-muted small">
-                        <i class="fas fa-user"></i>
-                        <a href="{{ url_for('users.page_user', username=garden.owner.username) }}"
-                           class="text-success text-decoration-none">
-                            {{ garden.owner.firstName }} {{ garden.owner.lastName }}
-                        </a>
-                        <span class="ms-3">
-                            <i class="fas fa-users"></i> {{ garden.members|length }} Members
-                        </span>
-                        {% if garden.location %}
+                        border-radius: 1rem !important;
+                        cursor: pointer;"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#garden-content-{{ garden.id }}"
+                 aria-expanded="false"
+                 aria-controls="garden-content-{{ garden.id }}">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-chevron-right me-3 garden-collapse-icon" style="color: #1cc88a; transition: transform 0.3s;"></i>
+                    <div>
+                        <h4 class="text-success m-0">{{ garden.name }}</h4>
+                        <div class="text-muted small">
+                            <i class="fas fa-user"></i>
+                            <a href="{{ url_for('users.page_user', username=garden.owner.username) }}"
+                               class="text-success text-decoration-none"
+                               onclick="event.stopPropagation();">
+                                {{ garden.owner.firstName }} {{ garden.owner.lastName }}
+                            </a>
                             <span class="ms-3">
-                                <i class="fas fa-map-marker-alt"></i> {{ garden.location }}
+                                <i class="fas fa-users"></i> {{ garden.members|length }} Members
                             </span>
-                        {% endif %}
+                            {% if garden.location %}
+                                <span class="ms-3">
+                                    <i class="fas fa-map-marker-alt"></i> {{ garden.location }}
+                                </span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 <div class="d-flex gap-2">
                     {% if garden.owner_id == current_user.id %}
-                    <a href="{{ url_for('gardens.edit_garden', garden_id=garden.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1);
-                                color: #1cc88a;
-                                border: 1px solid rgba(28, 200, 138, 0.2);">
+                    <a href="{{ url_for('gardens.edit_garden', garden_id=garden.id) }}"
+                       class="btn btn-sm"
+                       style="background: rgba(28, 200, 138, 0.1);
+                              color: #1cc88a;
+                              border: 1px solid rgba(28, 200, 138, 0.2);"
+                       onclick="event.stopPropagation();">
                         <i class="fas fa-edit"></i>
                     </a>
-                    <a href="{{ url_for('gardens.add_zone', garden_id=garden.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1);
-                        color: #1cc88a;
-                        border: 1px solid rgba(28, 200, 138, 0.2);
-                        border-radius: 0.5rem;
-                        transition: all 0.2s ease;">
+                    <a href="{{ url_for('gardens.add_zone', garden_id=garden.id) }}"
+                       class="btn btn-sm"
+                       style="background: rgba(28, 200, 138, 0.1);
+                              color: #1cc88a;
+                              border: 1px solid rgba(28, 200, 138, 0.2);
+                              border-radius: 0.5rem;
+                              transition: all 0.2s ease;"
+                       onclick="event.stopPropagation();">
                         <i class="fas fa-plus me-2"></i>Add Zone
                     </a>
                     {% endif %}
@@ -61,44 +75,64 @@
             </div>
 
 
-            <!-- Garden Zones -->
-            <div class="card-body p-4">
+            <!-- Garden Content -->
+            <div id="garden-content-{{ garden.id }}" class="collapse">
+                <!-- Garden Zones -->
+                <div class="card-body p-4" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
                 <div class="row">
                     {% for zone in garden.zones %}
                     <div class="col-12">
                         <div id="zone-{{ zone.id }}" class="card shadow mb-4">
-                            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 d-flex align-items-center gap-2"
-                                    style="color: #1cc88a;
-                                           font-size: 1.1rem;
-                                           font-weight: 600;
-                                           letter-spacing: 0.5px;">
-                                    <i class="fas fa-map-marked-alt"
-                                       style="color: rgba(28, 200, 138, 0.6);"></i>
-                                    {{ zone.name }}
-                                </h6>
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#zone-content-{{ zone.id }}"
+                                 aria-expanded="false"
+                                 aria-controls="zone-content-{{ zone.id }}"
+                                 style="cursor: pointer;
+                                        border-radius: 0.75rem !important;
+                                        background-color: rgba(28, 200, 138, 0.05);
+                                        border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-chevron-right me-2 zone-collapse-icon" style="color: #1cc88a; transition: transform 0.3s;"></i>
+                                    <h6 class="m-0 d-flex align-items-center gap-2"
+                                        style="color: #1cc88a;
+                                               font-size: 1.1rem;
+                                               font-weight: 600;
+                                               letter-spacing: 0.5px;">
+                                        <i class="fas fa-map-marked-alt"
+                                           style="color: rgba(28, 200, 138, 0.6);"></i>
+                                        {{ zone.name }}
+                                    </h6>
+                                </div>
                                 <div class="d-flex gap-2">
                                     {% if garden.owner_id == current_user.id %}
 
-                                    <a href="{{ url_for('gardens.edit_zone', zone_id=zone.id) }}" class="btn btn-sm" style="background: rgba(28, 200, 138, 0.1);
-                                    color: #1cc88a;
-                                    border: 1px solid rgba(28, 200, 138, 0.2);">
-                                     <i class="fas fa-edit"></i></a>
-                                        <a href="{{ url_for('gardens.add_plant', garden_id=garden.id, zone_id=zone.id) }}"
-                                           class="btn btn-sm"
-                                           style="background: rgba(28, 200, 138, 0.1);
-                                                  color: #1cc88a;
-                                                  border: 1px solid rgba(28, 200, 138, 0.2);
-                                                  font-size: 0.8rem;">
-                                            <i class="fas fa-seedling me-1"></i>Add Plant
-                                        </a>
+                                    <a href="{{ url_for('gardens.edit_zone', zone_id=zone.id) }}"
+                                       class="btn btn-sm"
+                                       style="background: rgba(28, 200, 138, 0.1);
+                                              color: #1cc88a;
+                                              border: 1px solid rgba(28, 200, 138, 0.2);"
+                                       onclick="event.stopPropagation();">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('gardens.add_plant', garden_id=garden.id, zone_id=zone.id) }}"
+                                       class="btn btn-sm"
+                                       style="background: rgba(28, 200, 138, 0.1);
+                                              color: #1cc88a;
+                                              border: 1px solid rgba(28, 200, 138, 0.2);
+                                              font-size: 0.8rem;"
+                                       onclick="event.stopPropagation();">
+                                        <i class="fas fa-seedling me-1"></i>Add Plant
+                                    </a>
 
                                     {% endif %}
                                 </div>
                             </div>
 
-                            <!-- Status Flow Visualization -->
-                            <div class="border-bottom" style="border-color: rgba(28, 200, 138, 0.2) !important;">
+                            <!-- Zone Content -->
+                            <div id="zone-content-{{ zone.id }}" class="collapse">
+                                <!-- Status Flow Visualization -->
+                                <div class="border-bottom" style="border-color: rgba(28, 200, 138, 0.2) !important;">
                                 <div class="d-flex align-items-center gap-2 overflow-auto py-2 px-4" style="scrollbar-width: thin;">
                                     {% for status in zone.get_plant_statuses() %}
                                         {% set color_sequence = [
@@ -283,6 +317,7 @@
                                 </div>
                                 {% endif %}
                             </div>
+                            </div> <!-- End of zone-content -->
                         </div>
                     </div>
                     {% endfor %}
@@ -295,7 +330,8 @@
                     </div>
                     {% endif %}
                 </div>
-            </div>
+                </div> <!-- End of card-body -->
+            </div> <!-- End of garden-content -->
         </div>
         {% endfor %}
     </div>
@@ -448,6 +484,45 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Handle garden collapse icons
+        const gardenHeaders = document.querySelectorAll('[data-bs-target^="#garden-content-"]');
+        gardenHeaders.forEach(header => {
+            const icon = header.querySelector('.garden-collapse-icon');
+            const targetId = header.getAttribute('data-bs-target');
+            const targetElement = document.querySelector(targetId);
+
+            // Set initial state - collapsed by default
+            icon.style.transform = 'rotate(0deg)';
+
+            // Add event listener for collapse events
+            targetElement.addEventListener('hide.bs.collapse', function() {
+                icon.style.transform = 'rotate(0deg)';
+            });
+
+            targetElement.addEventListener('show.bs.collapse', function() {
+                icon.style.transform = 'rotate(90deg)';
+            });
+        });
+
+        // Handle zone collapse icons
+        const zoneHeaders = document.querySelectorAll('[data-bs-target^="#zone-content-"]');
+        zoneHeaders.forEach(header => {
+            const icon = header.querySelector('.zone-collapse-icon');
+            const targetId = header.getAttribute('data-bs-target');
+            const targetElement = document.querySelector(targetId);
+
+            // Set initial state - collapsed by default
+            icon.style.transform = 'rotate(0deg)';
+
+            // Add event listener for collapse events
+            targetElement.addEventListener('hide.bs.collapse', function() {
+                icon.style.transform = 'rotate(0deg)';
+            });
+
+            targetElement.addEventListener('show.bs.collapse', function() {
+                icon.style.transform = 'rotate(90deg)';
+            });
+        });
         // Helper function to show toast notifications
         function showToast(message, bgClass = 'bg-success') {
             const toast = document.createElement('div');
