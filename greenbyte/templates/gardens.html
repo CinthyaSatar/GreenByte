@@ -231,6 +231,14 @@
                                                 <ul class="dropdown-menu dropdown-menu-end">
                                                     {% for status in zone.get_plant_statuses() %}
                                                     <li>
+                                                        {% if status == plant.status %}
+                                                        <!-- Current status - not clickable -->
+                                                        <span class="dropdown-item py-1 text-muted d-flex align-items-center">
+                                                            <i class="fas fa-check me-2 text-success"></i>
+                                                            {{ status }}
+                                                        </span>
+                                                        {% else %}
+                                                        <!-- Other statuses - clickable -->
                                                         <a class="dropdown-item py-1 status-update-link"
                                                            href="#"
                                                            data-plant-id="{{ plant.id }}"
@@ -238,6 +246,7 @@
                                                            data-csrf-token="{{ csrf_token() }}">
                                                             {{ status }}
                                                         </a>
+                                                        {% endif %}
                                                     </li>
                                                     {% endfor %}
                                                 </ul>
