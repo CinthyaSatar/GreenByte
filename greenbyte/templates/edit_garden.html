@@ -48,9 +48,95 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Garden Members Section -->
+                <div class="card mt-4 mb-4" style="border-radius: 10px; border: 1px solid rgba(28, 200, 138, 0.2);">
+                    <div class="card-header bg-white" style="border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
+                        <h6 class="m-0 font-weight-bold" style="color: #1cc88a;">
+                            <i class="fas fa-users me-2"></i>Garden Members
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Manage users who can access this garden. The garden owner (you) will always have access.
+                        </p>
+
+                        <!-- Search Bar -->
+                        {% if garden.owner_id == current_user.id %}
+                        <div class="mb-4">
+                            <div class="input-group">
+                                <input type="text" id="userSearchInput" class="form-control" placeholder="Search for users by name, username, or email..."
+                                       style="border-radius: 10px 0 0 10px; border-color: rgba(28, 200, 138, 0.2);">
+                                <button class="btn" type="button" id="searchButton"
+                                        style="background: rgba(28, 200, 138, 0.1);
+                                               color: #1cc88a;
+                                               border: 1px solid rgba(28, 200, 138, 0.2);
+                                               border-radius: 0 10px 10px 0;">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div id="searchResults" class="mt-2" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Current Members List -->
+                        <div class="members-container">
+                            <h6 class="mb-3 text-muted">Current Members</h6>
+                            <div id="membersList" class="list-group" style="max-height: 300px; overflow-y: auto;">
+                                <!-- Members will be loaded here via JavaScript -->
+                                <div class="text-center py-3">
+                                    <div class="spinner-border text-success" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Member Item Template -->
+                <template id="memberItemTemplate">
+                    <div class="list-group-item d-flex justify-content-between align-items-center member-item">
+                        <div class="d-flex align-items-center">
+                            <img src="" alt="Profile Picture" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-0 member-name"></h6>
+                                    <span class="badge bg-success ms-2 owner-badge" style="display: none;">Owner</span>
+                                </div>
+                                <div class="text-muted small">
+                                    <span class="member-username"></span> • <span class="member-email"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm remove-member-btn" style="display: none; background: rgba(231, 74, 59, 0.1); color: #e74a3b; border: 1px solid rgba(231, 74, 59, 0.2); border-radius: 0.5rem;">
+                            <i class="fas fa-user-minus"></i>
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Search Result Item Template -->
+                <template id="searchResultTemplate">
+                    <div class="list-group-item d-flex justify-content-between align-items-center search-result-item">
+                        <div class="d-flex align-items-center">
+                            <img src="" alt="Profile Picture" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <h6 class="mb-0 result-name"></h6>
+                                </div>
+                                <div class="text-muted small">
+                                    <span class="result-username"></span> • <span class="result-email"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm add-member-btn" style="background: rgba(28, 200, 138, 0.1); color: #1cc88a; border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;">
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+                    </div>
+                </template>
                 <div class="d-flex justify-content-between align-items-center mt-4">
                     <div>
-                        <a href="{{ url_for('gardens.view_gardens') }}" class="btn" 
+                        <a href="{{ url_for('gardens.view_gardens') }}" class="btn"
                            style="background: rgba(133, 135, 150, 0.1);
                                   color: #858796;
                                   border: 1px solid rgba(133, 135, 150, 0.2);
@@ -60,17 +146,17 @@
                         </a>
                     </div>
                     <div>
-                        {{ form.submit(class="btn", 
-                                     style="background: rgba(28, 200, 138, 0.1); 
-                                            color: #1cc88a; 
+                        {{ form.submit(class="btn",
+                                     style="background: rgba(28, 200, 138, 0.1);
+                                            color: #1cc88a;
                                             border: 1px solid rgba(28, 200, 138, 0.2);
                                             border-radius: 0.75rem;
                                             padding: 0.5rem 1.5rem;") }}
-                        
+
                         <!-- Delete Button -->
-                        <button type="button" 
-                                class="btn ms-2" 
-                                data-bs-toggle="modal" 
+                        <button type="button"
+                                class="btn ms-2"
+                                data-bs-toggle="modal"
                                 data-bs-target="#deleteConfirmModal"
                                 style="background: rgba(231, 74, 59, 0.1);
                                        color: #e74a3b;
@@ -149,7 +235,303 @@
     .modal-header, .modal-footer {
         border: none;
     }
+
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        border-radius: 0 !important;
+    }
+
+    .list-group-item:first-child {
+        border-top: none;
+    }
+
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    #searchResults {
+        border: 1px solid rgba(28, 200, 138, 0.2);
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const gardenId = {{ garden.id }};
+        const isOwner = {{ 'true' if garden.owner_id == current_user.id else 'false' }};
+        const currentUserId = {{ current_user.id }};
+
+        // Load garden members
+        loadGardenMembers();
+
+        // Set up search functionality
+        const searchInput = document.getElementById('userSearchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchResults = document.getElementById('searchResults');
+
+        if (searchInput && searchButton) {
+            // Search when button is clicked
+            searchButton.addEventListener('click', function() {
+                searchUsers(searchInput.value);
+            });
+
+            // Search when Enter key is pressed
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent form submission
+                    searchUsers(searchInput.value);
+                }
+            });
+
+            // Prevent form submission when pressing Enter in the search field
+            if (searchInput.form) {
+                searchInput.form.addEventListener('submit', function(e) {
+                    if (document.activeElement === searchInput) {
+                        e.preventDefault();
+                        searchUsers(searchInput.value);
+                    }
+                });
+            }
+
+            // Hide search results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) &&
+                    !searchButton.contains(e.target) &&
+                    !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+
+        // Function to load garden members
+        function loadGardenMembers() {
+            const membersList = document.getElementById('membersList');
+
+            fetch(`/api/garden/${gardenId}/members`)
+                .then(response => response.json())
+                .then(data => {
+                    membersList.innerHTML = '';
+
+                    if (data.members && data.members.length > 0) {
+                        data.members.forEach(member => {
+                            const memberItem = createMemberItem(member);
+                            membersList.appendChild(memberItem);
+                        });
+                    } else {
+                        membersList.innerHTML = '<div class="text-center py-3 text-muted">No members found</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading members:', error);
+                    membersList.innerHTML = '<div class="alert alert-danger">Error loading members</div>';
+                });
+        }
+
+        // Function to create a member list item
+        function createMemberItem(member) {
+            const template = document.getElementById('memberItemTemplate');
+            const clone = document.importNode(template.content, true);
+
+            const item = clone.querySelector('.member-item');
+            item.dataset.userId = member.id;
+
+            const img = clone.querySelector('img');
+            img.src = `/static/profilePics/${member.image}`;
+
+            const nameEl = clone.querySelector('.member-name');
+            nameEl.textContent = member.name;
+
+            const usernameEl = clone.querySelector('.member-username');
+            usernameEl.textContent = `@${member.username}`;
+
+            const emailEl = clone.querySelector('.member-email');
+            emailEl.textContent = member.email;
+
+            const ownerBadge = clone.querySelector('.owner-badge');
+            if (member.isOwner) {
+                ownerBadge.style.display = 'inline-block';
+            }
+
+            const removeBtn = clone.querySelector('.remove-member-btn');
+            if (isOwner && !member.isOwner && member.id !== currentUserId) {
+                removeBtn.style.display = 'block';
+                removeBtn.addEventListener('click', function() {
+                    removeMember(member.id, item);
+                });
+            }
+
+            return clone;
+        }
+
+        // Function to search for users
+        function searchUsers(query) {
+            if (!query || query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            fetch(`/api/users/search?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+
+                    if (data.users && data.users.length > 0) {
+                        data.users.forEach(user => {
+                            const resultItem = createSearchResultItem(user);
+                            searchResults.appendChild(resultItem);
+                        });
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.innerHTML = '<div class="text-center py-3 text-muted">No users found</div>';
+                        searchResults.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error searching users:', error);
+                    searchResults.innerHTML = '<div class="alert alert-danger">Error searching users</div>';
+                    searchResults.style.display = 'block';
+                });
+        }
+
+        // Function to create a search result item
+        function createSearchResultItem(user) {
+            const template = document.getElementById('searchResultTemplate');
+            const clone = document.importNode(template.content, true);
+
+            const item = clone.querySelector('.search-result-item');
+            item.dataset.userId = user.id;
+
+            const img = clone.querySelector('img');
+            img.src = `/static/profilePics/${user.image}`;
+
+            const nameEl = clone.querySelector('.result-name');
+            nameEl.textContent = user.name;
+
+            const usernameEl = clone.querySelector('.result-username');
+            usernameEl.textContent = `@${user.username}`;
+
+            const emailEl = clone.querySelector('.result-email');
+            emailEl.textContent = user.email;
+
+            const addBtn = clone.querySelector('.add-member-btn');
+            addBtn.addEventListener('click', function() {
+                addMember(user.id, item);
+            });
+
+            // Check if user is already a member
+            const existingMember = document.querySelector(`.member-item[data-user-id="${user.id}"]`);
+            if (existingMember) {
+                addBtn.disabled = true;
+                addBtn.innerHTML = '<i class="fas fa-check"></i>';
+                addBtn.title = 'Already a member';
+            }
+
+            return clone;
+        }
+
+        // Function to add a member
+        function addMember(userId, resultItem) {
+            fetch(`/api/garden/${gardenId}/members/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the button to show success
+                    const addBtn = resultItem.querySelector('.add-member-btn');
+                    addBtn.disabled = true;
+                    addBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    addBtn.title = 'Already a member';
+
+                    // Add the new member to the members list
+                    const membersList = document.getElementById('membersList');
+                    const memberItem = createMemberItem(data.member);
+                    membersList.appendChild(memberItem);
+
+                    // Show success message
+                    showToast(data.message, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding member:', error);
+                showToast('Error adding member', 'danger');
+            });
+        }
+
+        // Function to remove a member
+        function removeMember(userId, memberItem) {
+            if (confirm('Are you sure you want to remove this member from the garden?')) {
+                fetch(`/api/garden/${gardenId}/members/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the member from the list
+                        memberItem.remove();
+
+                        // Show success message
+                        showToast(data.message, 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing member:', error);
+                    showToast('Error removing member', 'danger');
+                });
+            }
+        }
+
+        // Function to show toast notifications
+        function showToast(message, type) {
+            // Check if the toast container exists, if not create it
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create a new toast
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.id = toastId;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Initialize and show the toast
+            const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+            bsToast.show();
+
+            // Remove the toast after it's hidden
+            toast.addEventListener('hidden.bs.toast', function() {
+                toast.remove();
+            });
+        }
+    });
+</script>
 {% endblock content %}
 
 <!-- Make sure these scripts are included -->

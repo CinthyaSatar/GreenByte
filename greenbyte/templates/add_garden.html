@@ -55,6 +55,50 @@
                                                  padding: 0.75rem;") }}
                         {% endif %}
                     </div>
+
+                    <!-- Garden Members Section -->
+                    <div class="card mt-4 mb-4" style="border-radius: 10px; border: 1px solid rgba(28, 200, 138, 0.2);">
+                        <div class="card-header bg-white" style="border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
+                            <h6 class="m-0 font-weight-bold" style="color: #1cc88a;">
+                                <i class="fas fa-users me-2"></i>Garden Members
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                Search for users to add as garden members. You will automatically be added as the garden owner.
+                            </p>
+
+                            <!-- Search Bar -->
+                            <div class="mb-4">
+                                <div class="input-group">
+                                    <input type="text" id="userSearchInput" class="form-control" placeholder="Search for users by name, username, or email..."
+                                           style="border-radius: 10px 0 0 10px; border-color: rgba(28, 200, 138, 0.2);">
+                                    <button class="btn" type="button" id="searchButton"
+                                            style="background: rgba(28, 200, 138, 0.1);
+                                                   color: #1cc88a;
+                                                   border: 1px solid rgba(28, 200, 138, 0.2);
+                                                   border-radius: 0 10px 10px 0;">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <div id="searchResults" class="mt-2" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+                            </div>
+
+                            <!-- Selected Members List -->
+                            <div class="members-container">
+                                <h6 class="mb-3 text-muted">Selected Members</h6>
+                                <div id="membersList" class="list-group" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Current user will be added here via JavaScript -->
+                                    <div class="text-center py-3 text-muted" id="noMembersMessage">
+                                        No members added yet. You will be added automatically as the owner.
+                                    </div>
+                                </div>
+
+                                <!-- Hidden input to store selected member IDs -->
+                                <input type="hidden" id="selectedMembers" name="selected_members" value="">
+                            </div>
+                        </div>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mt-4">
                         <a href="{{ url_for('gardens.view_gardens') }}" class="btn"
                            style="background: rgba(133, 135, 150, 0.1);
@@ -71,6 +115,47 @@
                                             border-radius: 0.75rem;
                                             padding: 0.5rem 1.5rem;") }}
                     </div>
+
+                    <!-- Member Item Template -->
+                    <template id="memberItemTemplate">
+                        <div class="list-group-item d-flex justify-content-between align-items-center member-item">
+                            <div class="d-flex align-items-center">
+                                <img src="" alt="Profile Picture" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                <div>
+                                    <div class="d-flex align-items-center">
+                                        <h6 class="mb-0 member-name"></h6>
+                                        <span class="badge bg-success ms-2 owner-badge" style="display: none;">Owner</span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <span class="member-username"></span> • <span class="member-email"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm remove-member-btn" style="background: rgba(231, 74, 59, 0.1); color: #e74a3b; border: 1px solid rgba(231, 74, 59, 0.2); border-radius: 0.5rem;">
+                                <i class="fas fa-user-minus"></i>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Search Result Item Template -->
+                    <template id="searchResultTemplate">
+                        <div class="list-group-item d-flex justify-content-between align-items-center search-result-item">
+                            <div class="d-flex align-items-center">
+                                <img src="" alt="Profile Picture" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                <div>
+                                    <div class="d-flex align-items-center">
+                                        <h6 class="mb-0 result-name"></h6>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <span class="result-username"></span> • <span class="result-email"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm add-member-btn" style="background: rgba(28, 200, 138, 0.1); color: #1cc88a; border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.5rem;">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                        </div>
+                    </template>
                 </form>
             </div>
         </div>
@@ -94,5 +179,327 @@
         font-weight: 500;
         margin-bottom: 0.5rem;
     }
+
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        border-radius: 0 !important;
+    }
+
+    .list-group-item:first-child {
+        border-top: none;
+    }
+
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    #searchResults {
+        border: 1px solid rgba(28, 200, 138, 0.2);
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUserId = {{ current_user.id }};
+        const selectedMembers = [];
+
+        // Add current user as owner
+        addCurrentUserAsOwner();
+
+        // Set up search functionality
+        const searchInput = document.getElementById('userSearchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchResults = document.getElementById('searchResults');
+        const selectedMembersInput = document.getElementById('selectedMembers');
+
+        if (searchInput && searchButton) {
+            // Search when button is clicked
+            searchButton.addEventListener('click', function() {
+                searchUsers(searchInput.value);
+            });
+
+            // Search when Enter key is pressed
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent form submission
+                    searchUsers(searchInput.value);
+                }
+            });
+
+            // Prevent form submission when pressing Enter in the search field
+            if (searchInput.form) {
+                searchInput.form.addEventListener('submit', function(e) {
+                    if (document.activeElement === searchInput) {
+                        e.preventDefault();
+                        searchUsers(searchInput.value);
+                    }
+                });
+            }
+
+            // Hide search results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) &&
+                    !searchButton.contains(e.target) &&
+                    !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+
+        // Add form submit event listener to include selected members
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            // Update the hidden input with selected member IDs
+            selectedMembersInput.value = JSON.stringify(selectedMembers);
+        });
+
+        // Function to add current user as owner
+        function addCurrentUserAsOwner() {
+            fetch(`/api/users/search?query={{ current_user.username }}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.users && data.users.length > 0) {
+                        const currentUser = data.users.find(user => user.id === currentUserId);
+                        if (currentUser) {
+                            // Create a member item for the current user
+                            const memberItem = createMemberItemFromUser(currentUser, true);
+
+                            // Add to the members list
+                            const membersList = document.getElementById('membersList');
+                            const noMembersMessage = document.getElementById('noMembersMessage');
+
+                            if (noMembersMessage) {
+                                noMembersMessage.style.display = 'none';
+                            }
+
+                            membersList.appendChild(memberItem);
+
+                            // Add to selected members
+                            if (!selectedMembers.includes(currentUserId)) {
+                                selectedMembers.push(currentUserId);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching current user:', error);
+                });
+        }
+
+        // Function to search for users
+        function searchUsers(query) {
+            if (!query || query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            fetch(`/api/users/search?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResults.innerHTML = '';
+
+                    if (data.users && data.users.length > 0) {
+                        data.users.forEach(user => {
+                            // Skip current user as they're already added as owner
+                            if (user.id !== currentUserId) {
+                                const resultItem = createSearchResultItem(user);
+                                searchResults.appendChild(resultItem);
+                            }
+                        });
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.innerHTML = '<div class="text-center py-3 text-muted">No users found</div>';
+                        searchResults.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error searching users:', error);
+                    searchResults.innerHTML = '<div class="alert alert-danger">Error searching users</div>';
+                    searchResults.style.display = 'block';
+                });
+        }
+
+        // Function to create a search result item
+        function createSearchResultItem(user) {
+            const template = document.getElementById('searchResultTemplate');
+            const clone = document.importNode(template.content, true);
+
+            const item = clone.querySelector('.search-result-item');
+            item.dataset.userId = user.id;
+
+            const img = clone.querySelector('img');
+            img.src = `/static/profilePics/${user.image}`;
+
+            const nameEl = clone.querySelector('.result-name');
+            nameEl.textContent = user.name;
+
+            const usernameEl = clone.querySelector('.result-username');
+            usernameEl.textContent = `@${user.username}`;
+
+            const emailEl = clone.querySelector('.result-email');
+            emailEl.textContent = user.email;
+
+            const addBtn = clone.querySelector('.add-member-btn');
+            addBtn.addEventListener('click', function() {
+                addMember(user);
+            });
+
+            // Check if user is already selected
+            if (selectedMembers.includes(user.id)) {
+                addBtn.disabled = true;
+                addBtn.innerHTML = '<i class="fas fa-check"></i>';
+                addBtn.title = 'Already added';
+            }
+
+            return clone;
+        }
+
+        // Function to create a member item from user data
+        function createMemberItemFromUser(user, isOwner = false) {
+            const template = document.getElementById('memberItemTemplate');
+            const clone = document.importNode(template.content, true);
+
+            const item = clone.querySelector('.member-item');
+            item.dataset.userId = user.id;
+
+            const img = clone.querySelector('img');
+            img.src = `/static/profilePics/${user.image}`;
+
+            const nameEl = clone.querySelector('.member-name');
+            nameEl.textContent = user.name;
+
+            const usernameEl = clone.querySelector('.member-username');
+            usernameEl.textContent = `@${user.username}`;
+
+            const emailEl = clone.querySelector('.member-email');
+            emailEl.textContent = user.email;
+
+            const ownerBadge = clone.querySelector('.owner-badge');
+            if (isOwner) {
+                ownerBadge.style.display = 'inline-block';
+            }
+
+            const removeBtn = clone.querySelector('.remove-member-btn');
+            if (!isOwner) {
+                removeBtn.addEventListener('click', function() {
+                    removeMember(user.id, item);
+                });
+            } else {
+                removeBtn.style.display = 'none';
+            }
+
+            return clone;
+        }
+
+        // Function to add a member
+        function addMember(user) {
+            // Check if already in the list
+            if (selectedMembers.includes(user.id)) {
+                return;
+            }
+
+            // Add to selected members array
+            selectedMembers.push(user.id);
+
+            // Create and add member item to the list
+            const memberItem = createMemberItemFromUser(user);
+            const membersList = document.getElementById('membersList');
+            const noMembersMessage = document.getElementById('noMembersMessage');
+
+            if (noMembersMessage) {
+                noMembersMessage.style.display = 'none';
+            }
+
+            membersList.appendChild(memberItem);
+
+            // Update search results to show the user is already added
+            const searchResultItem = document.querySelector(`.search-result-item[data-user-id="${user.id}"]`);
+            if (searchResultItem) {
+                const addBtn = searchResultItem.querySelector('.add-member-btn');
+                addBtn.disabled = true;
+                addBtn.innerHTML = '<i class="fas fa-check"></i>';
+                addBtn.title = 'Already added';
+            }
+
+            // Show success message
+            showToast(`${user.name} added to garden`, 'success');
+        }
+
+        // Function to remove a member
+        function removeMember(userId, memberItem) {
+            // Remove from selected members array
+            const index = selectedMembers.indexOf(userId);
+            if (index > -1) {
+                selectedMembers.splice(index, 1);
+            }
+
+            // Remove from the DOM
+            memberItem.remove();
+
+            // Show the no members message if there are no members left (except owner)
+            const membersList = document.getElementById('membersList');
+            if (membersList.querySelectorAll('.member-item').length === 1) { // Only owner left
+                const noMembersMessage = document.getElementById('noMembersMessage');
+                if (noMembersMessage) {
+                    noMembersMessage.style.display = 'block';
+                }
+            }
+
+            // Update search results to show the user can be added again
+            const searchResultItem = document.querySelector(`.search-result-item[data-user-id="${userId}"]`);
+            if (searchResultItem) {
+                const addBtn = searchResultItem.querySelector('.add-member-btn');
+                addBtn.disabled = false;
+                addBtn.innerHTML = '<i class="fas fa-user-plus"></i>';
+                addBtn.title = '';
+            }
+
+            // Show success message
+            showToast('Member removed from garden', 'success');
+        }
+
+        // Function to show toast notifications
+        function showToast(message, type) {
+            // Check if the toast container exists, if not create it
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create a new toast
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.id = toastId;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Initialize and show the toast
+            const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+            bsToast.show();
+
+            // Remove the toast after it's hidden
+            toast.addEventListener('hidden.bs.toast', function() {
+                toast.remove();
+            });
+        }
+    });
+</script>
 {% endblock content %}

@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 from greenbyte import db
 from greenbyte.gardens.forms import GardenForm, ZoneForm, PlantForm
 from greenbyte.models import (
-    Garden, Zone, Plant, PlantTracking,
+    User, Garden, Zone, Plant, PlantTracking,
     Harvest, user_garden, PlantDetail, PlantVariety
 )
 from datetime import datetime, timedelta
@@ -26,10 +26,25 @@ def add_garden():
         # Add current user as a member
         garden.members.append(current_user)
 
-        db.session.add(garden)
-        db.session.commit()
+        # Process selected members from the form
+        selected_members_json = request.form.get('selected_members', '[]')
+        try:
+            import json
+            selected_member_ids = json.loads(selected_members_json)
 
-        # Create default zone
+            # Add selected members to the garden
+            if selected_member_ids and isinstance(selected_member_ids, list):
+                for member_id in selected_member_ids:
+                    # Skip if it's the current user (already added)
+                    if member_id != current_user.id:
+                        user = User.query.get(member_id)
+                        if user:
+                            garden.members.append(user)
+        except Exception as e:
+            print(f"Error processing members: {e}")
+            # Continue with garden creation even if member processing fails
+
+        db.session.add(garden)
         db.session.commit()
 
         flash('Your garden has been created!', 'success')
@@ -211,6 +226,9 @@ def edit_garden(garden_id):
             garden.name = form.name.data
         if form.location.data:  # Only update location if provided
             garden.location = form.location.data
+
+        # Garden members are handled via AJAX, so we don't update them here
+
         db.session.commit()
         flash('Your garden has been updated!', 'success')
         return redirect(url_for('gardens.view_gardens'))
@@ -219,6 +237,121 @@ def edit_garden(garden_id):
         form.location.data = garden.location
 
     return render_template('edit_garden.html', form=form, garden=garden)
+
+
+@gardens.route("/api/users/search", methods=['GET'])
+@login_required
+def search_users():
+    """Search for users by name or username"""
+    query = request.args.get('query', '')
+    if not query or len(query) < 2:
+        return jsonify({'users': []})
+
+    # Search for users matching the query
+    users = User.query.filter(
+        (User.username.ilike(f'%{query}%')) |
+        (User.firstName.ilike(f'%{query}%')) |
+        (User.lastName.ilike(f'%{query}%')) |
+        (User.email.ilike(f'%{query}%'))
+    ).limit(10).all()
+
+    # Format the results
+    results = [{
+        'id': user.id,
+        'username': user.username,
+        'name': f"{user.firstName} {user.lastName}",
+        'email': user.email,
+        'image': user.image_file
+    } for user in users]
+
+    return jsonify({'users': results})
+
+
+@gardens.route("/api/garden/<int:garden_id>/members", methods=['GET'])
+@login_required
+def get_garden_members(garden_id):
+    """Get all members of a garden"""
+    garden = Garden.query.get_or_404(garden_id)
+
+    # Check if user has access to this garden
+    if current_user not in garden.members and current_user.id != garden.owner_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    # Format the members
+    members = [{
+        'id': member.id,
+        'username': member.username,
+        'name': f"{member.firstName} {member.lastName}",
+        'email': member.email,
+        'image': member.image_file,
+        'isOwner': member.id == garden.owner_id
+    } for member in garden.members]
+
+    return jsonify({'members': members})
+
+
+@gardens.route("/api/garden/<int:garden_id>/members/<int:user_id>", methods=['POST'])
+@login_required
+def add_garden_member(garden_id, user_id):
+    """Add a user to a garden's members"""
+    garden = Garden.query.get_or_404(garden_id)
+
+    # Only the owner can add members
+    if garden.owner_id != current_user.id:
+        return jsonify({'error': 'Only the garden owner can add members'}), 403
+
+    user = User.query.get_or_404(user_id)
+
+    # Check if user is already a member
+    if user in garden.members:
+        return jsonify({'message': 'User is already a member of this garden'})
+
+    # Add the user to the garden
+    garden.members.append(user)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'{user.firstName} {user.lastName} added to garden',
+        'member': {
+            'id': user.id,
+            'username': user.username,
+            'name': f"{user.firstName} {user.lastName}",
+            'email': user.email,
+            'image': user.image_file,
+            'isOwner': user.id == garden.owner_id
+        }
+    })
+
+
+@gardens.route("/api/garden/<int:garden_id>/members/<int:user_id>", methods=['DELETE'])
+@login_required
+def remove_garden_member(garden_id, user_id):
+    """Remove a user from a garden's members"""
+    garden = Garden.query.get_or_404(garden_id)
+
+    # Only the owner can remove members
+    if garden.owner_id != current_user.id:
+        return jsonify({'error': 'Only the garden owner can remove members'}), 403
+
+    # Cannot remove the owner
+    if user_id == garden.owner_id:
+        return jsonify({'error': 'Cannot remove the garden owner'}), 400
+
+    user = User.query.get_or_404(user_id)
+
+    # Check if user is a member
+    if user not in garden.members:
+        return jsonify({'error': 'User is not a member of this garden'}), 404
+
+    # Remove the user from the garden
+    garden.members.remove(user)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'{user.firstName} {user.lastName} removed from garden'
+    })
 
 
 @gardens.route("/garden/<int:garden_id>/delete", methods=['POST'])

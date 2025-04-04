@@ -28,14 +28,13 @@
                     <h4 class="text-success m-0">{{ garden.name }}</h4>
                     <div class="text-muted small">
                         <i class="fas fa-user"></i>
-                        {% for member in garden.members %}
-                            {% if member.id == garden.owner_id %}
-                                <a href="{{ url_for('users.page_user', username=member.username) }}"
-                                   class="text-success text-decoration-none">
-                                    {{ member.firstName }} {{ member.lastName }}
-                                </a>
-                            {% endif %}
-                        {% endfor %}
+                        <a href="{{ url_for('users.page_user', username=garden.owner.username) }}"
+                           class="text-success text-decoration-none">
+                            {{ garden.owner.firstName }} {{ garden.owner.lastName }}
+                        </a>
+                        <span class="ms-3">
+                            <i class="fas fa-users"></i> {{ garden.members|length }} Members
+                        </span>
                         {% if garden.location %}
                             <span class="ms-3">
                                 <i class="fas fa-map-marker-alt"></i> {{ garden.location }}

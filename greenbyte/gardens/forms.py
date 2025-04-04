@@ -1,27 +1,29 @@
 
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField, 
-    SubmitField, 
-    SelectField, 
+    StringField,
+    SubmitField,
+    SelectField,
     IntegerField,
     DateField,
-    FieldList
+    FieldList,
+    SelectMultipleField,
+    widgets
 )
 from wtforms.validators import DataRequired, Length, ValidationError
-from greenbyte.models import PlantDetail
+from greenbyte.models import PlantDetail, User
 from datetime import date
 
 class GardenForm(FlaskForm):
-    name = StringField('Garden Name', 
+    name = StringField('Garden Name',
                       validators=[DataRequired(), Length(min=2, max=100)])
-    location = StringField('Location', 
+    location = StringField('Location',
                          validators=[Length(max=100)])
     submit = SubmitField('Save Garden')  # Changed from 'Create Garden' to 'Save Garden'
 
 class ZoneForm(FlaskForm):
-    name = StringField('Zone Name', 
-                      validators=[DataRequired(), 
+    name = StringField('Zone Name',
+                      validators=[DataRequired(),
                                 Length(min=2, max=100)])
     plant_statuses = FieldList(StringField('Status'), min_entries=1)
     submit = SubmitField('Save Zone')
@@ -43,13 +45,13 @@ class ZoneForm(FlaskForm):
         # Clear existing entries
         while len(self.plant_statuses):
             self.plant_statuses.pop_entry()
-        
+
         # Add current zone statuses
         for status in zone.get_plant_statuses():
             self.plant_statuses.append_entry(status)
 
 class PlantForm(FlaskForm):
-    plant_detail_id = SelectField('Plant Type', 
+    plant_detail_id = SelectField('Plant Type',
                                 coerce=int,
                                 validators=[DataRequired()])
     variety_id = SelectField('Variety',
@@ -69,10 +71,10 @@ class PlantForm(FlaskForm):
         plant_details = PlantDetail.query.order_by(PlantDetail.name).all()
         self.plant_detail_id.choices = [(0, 'Select a plant...')] + \
                                      [(plant.id, plant.name) for plant in plant_details]
-        
+
         # Initialize variety choices with default option and special "new variety" option
         self.variety_id.choices = [(0, 'Select a variety...'), (-1, 'Add new variety...')]
-        
+
         # If plant_detail_id is provided, populate varieties
         if 'plant_detail_id' in kwargs.get('data', {}):
             plant_detail = PlantDetail.query.get(kwargs['data']['plant_detail_id'])
