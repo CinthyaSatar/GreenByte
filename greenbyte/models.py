@@ -1,14 +1,35 @@
 from datetime import datetime, timedelta
+from enum import Enum
 from itsdangerous import Serializer, BadSignature, SignatureExpired
 from greenbyte import db, login_manager
 from flask_login import UserMixin
 from flask import current_app
 from sqlalchemy_utils import TimezoneType
+from sqlalchemy.ext.hybrid import hybrid_property
 from .utils.timezone import now_in_timezone, get_current_timezone
 
+
+class PlantStage(str, Enum):
+    """Enum for plant stages/statuses"""
+    SEEDLING = 'Seedling'
+    GROWING = 'Growing'
+    MATURE = 'Mature'
+    HARVESTING = 'Harvesting'
+    DORMANT = 'Dormant'
+    FLOWERING = 'Flowering'
+    FRUITING = 'Fruiting'
+    TRANSPLANTED = 'Transplanted'
+    DISEASED = 'Diseased'
+    COMPLETED = 'Completed'
+
+    @classmethod
+    def list(cls):
+        """Return a list of all status values"""
+        return [e.value for e in cls]
+
 @login_manager.user_loader
-def loadUser(userId):
-    return User.query.get(int(userId))
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 # Many-to-Many Relationship for Users and Gardens
 user_garden = db.Table('user_garden',
@@ -70,11 +91,11 @@ class User(db.Model, UserMixin):
 class DynamicAttribute(db.Model):
     __tablename__ = 'dynamic_attribute'
     id = db.Column(db.Integer, primary_key=True)
-    
+
     # Entity identification
     entity_type = db.Column(db.String(50), nullable=False)  # e.g., 'plant_detail', 'variety', 'zone', 'garden'
     entity_id = db.Column(db.Integer, nullable=False)
-    
+
     # Attribute information
     name = db.Column(db.String(50), nullable=False)
     value = db.Column(db.String(100), nullable=False)
@@ -102,7 +123,7 @@ class DynamicAttributeMixin:
             name=name,
             category=category
         ).first()
-        
+
         if attr:
             attr.value = value
         else:
@@ -114,7 +135,7 @@ class DynamicAttributeMixin:
                 category=category
             )
             db.session.add(attr)
-        
+
         db.session.commit()
 
     def get_attribute(self, name, category='default'):
@@ -142,7 +163,7 @@ class DynamicAttributeMixin:
             entity_type=self.entity_type,
             entity_id=self.id
         ).all()
-        
+
         result = {}
         for attr in attrs:
             if attr.category not in result:
@@ -156,11 +177,11 @@ class Garden(db.Model, DynamicAttributeMixin):
     name = db.Column(db.String(100), nullable=False)
     location = db.Column(db.String(100))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
-    
+    last_updated = db.Column(db.DateTime, default=now_in_timezone)
+
     # Add owner relationship
     owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_gardens')
-    
+
     # Existing relationships
     members = db.relationship('User', secondary=user_garden, back_populates='gardens')
     zones = db.relationship('Zone', backref='garden', lazy=True)
@@ -195,7 +216,7 @@ class Zone(db.Model, DynamicAttributeMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=False)
-    
+
     plants = db.relationship('Plant', backref='zone', lazy=True)
 
     def set_plant_statuses(self, statuses):
@@ -255,7 +276,7 @@ class PlantDetail(db.Model, DynamicAttributeMixin):
     scientific_name = db.Column(db.String(100))
     category = db.Column(db.String(50))  # e.g., "Vegetable", "Herb", "Fruit"
     description = db.Column(db.Text)
-    
+
     # Relationships
     attributes = db.relationship('PlantAttribute', backref='plant_detail', lazy=True,
                                cascade='all, delete-orphan')
@@ -268,7 +289,7 @@ class PlantDetail(db.Model, DynamicAttributeMixin):
             plant_detail_id=self.id,
             name=name
         ).first()
-        
+
         if attr:
             attr.value = value
             attr.category = category
@@ -280,7 +301,7 @@ class PlantDetail(db.Model, DynamicAttributeMixin):
                 category=category
             )
             db.session.add(attr)
-        
+
         db.session.commit()
 
     def get_attribute(self, name):
@@ -293,7 +314,7 @@ class PlantDetail(db.Model, DynamicAttributeMixin):
 
     def get_attributes_by_category(self, category):
         """Get all attributes in a category"""
-        return {attr.name: attr.value for attr in self.attributes 
+        return {attr.name: attr.value for attr in self.attributes
                 if attr.category == category}
 
     def __repr__(self):
@@ -327,7 +348,7 @@ class PlantVariety(db.Model, DynamicAttributeMixin):
     plant_detail_id = db.Column(db.Integer, db.ForeignKey('plant_detail.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    
+
     # Relationships
     attributes = db.relationship('VarietyAttribute', backref='variety', lazy=True,
                                cascade='all, delete-orphan')
@@ -339,7 +360,7 @@ class PlantVariety(db.Model, DynamicAttributeMixin):
             variety_id=self.id,
             name=name
         ).first()
-        
+
         if attr:
             attr.value = value
             attr.category = category
@@ -351,7 +372,7 @@ class PlantVariety(db.Model, DynamicAttributeMixin):
                 category=category
             )
             db.session.add(attr)
-        
+
         db.session.commit()
 
     def get_attribute(self, name):
@@ -364,7 +385,7 @@ class PlantVariety(db.Model, DynamicAttributeMixin):
 
     def get_attributes_by_category(self, category):
         """Get all attributes in a category"""
-        return {attr.name: attr.value for attr in self.attributes 
+        return {attr.name: attr.value for attr in self.attributes
                 if attr.category == category}
 
     def __repr__(self):
@@ -375,7 +396,7 @@ class PlantStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=False)
     status = db.Column(db.String(50), nullable=False, default='Seedling')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_in_timezone)
     notes = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
@@ -389,7 +410,7 @@ class Plant(db.Model):
     zone_id = db.Column(db.Integer, db.ForeignKey('zone.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     planting_date = db.Column(db.DateTime)
-    
+
     # Use growth_stages instead of status_history
     growth_stages = db.relationship('PlantTracking', backref='plant', lazy=True,
                                   order_by='desc(PlantTracking.date_logged)')
@@ -406,14 +427,30 @@ class Plant(db.Model):
             return latest_stage.stage
         return 'Seedling'
 
-    def update_status(self, new_status, notes=None, image_file=None):
-        """Update plant stage using PlantTracking"""
+    def update_status(self, new_status: str, notes: str = None, image_file: str = None) -> 'PlantTracking':
+        """Update plant stage using PlantTracking
+
+        Args:
+            new_status (str): The new status/stage of the plant
+            notes (str, optional): Additional notes about the status change
+            image_file (str, optional): Path to an image file documenting the status
+
+        Returns:
+            PlantTracking: The newly created tracking record
+
+        Raises:
+            ValueError: If the status is not valid
+        """
+        # Validate the status
+        if new_status not in PlantStage.list():
+            raise ValueError(f"Invalid status: {new_status}. Must be one of {PlantStage.list()}")
+
         tracking = PlantTracking(
             plant_id=self.id,
             stage=new_status,
             notes=notes,
             image_file=image_file,
-            date_logged=datetime.utcnow()
+            date_logged=now_in_timezone()
         )
         db.session.add(tracking)
         db.session.commit()
@@ -427,17 +464,19 @@ class Plant(db.Model):
             plant_id=self.id,
             stage=status,
             notes=notes,
-            date_logged=self.planting_date or datetime.utcnow()
+            date_logged=self.planting_date or now_in_timezone()
         )
         db.session.add(tracking)
         return tracking
 
     # Add fields for recurring harvests
     total_harvests = db.Column(db.Integer, default=0)
-  
+
     # Relationships
-    growth_stages = db.relationship('PlantTracking', backref='plant', lazy=True)
-    harvests = db.relationship('Harvest', backref='plant', lazy=True)
+    growth_stages = db.relationship('PlantTracking', backref='plant', lazy=True,
+                                  cascade='all, delete-orphan')
+    harvests = db.relationship('Harvest', backref='plant', lazy=True,
+                              cascade='all, delete-orphan')
 
     def schedule_next_harvest(self):
         """Calculate and set the next harvest date"""
@@ -456,16 +495,97 @@ class Plant(db.Model):
             harvest_number=self.total_harvests + 1
         )
         self.total_harvests += 1
-        
+
         if self.is_recurring_harvest:
             self.schedule_next_harvest()
-        
+
         db.session.add(harvest)
         db.session.commit()
         return harvest
 
+    @hybrid_property
+    def days_since_planting(self):
+        """Get the number of days since the plant was planted
+
+        Returns:
+            int or None: Number of days since planting, or None if planting_date is not set
+        """
+        if not self.planting_date:
+            return None
+        return (now_in_timezone().date() - self.planting_date.date()).days
+
+    def get_last_update_time(self) -> str:
+        """Get the last update time in a human-readable format
+
+        Returns:
+            str: A human-readable string representing the time since the last update
+        """
+        latest_tracking = PlantTracking.query.filter_by(plant_id=self.id)\
+            .order_by(PlantTracking.date_logged.desc())\
+            .first()
+
+        if not latest_tracking:
+            return "Never updated"
+
+        now = now_in_timezone()
+
+        # Make sure the date_logged has timezone info
+        date_logged = latest_tracking.date_logged
+        if date_logged.tzinfo is None:
+            # Convert naive datetime to aware datetime using the same timezone as now
+            date_logged = date_logged.replace(tzinfo=now.tzinfo)
+
+        diff = now - date_logged
+
+        if diff.days == 0:
+            hours = diff.seconds // 3600
+            if hours == 0:
+                minutes = diff.seconds // 60
+                if minutes == 0:
+                    return "Just now"
+                elif minutes == 1:
+                    return "1 minute ago"
+                else:
+                    return f"{minutes} minutes ago"
+            elif hours == 1:
+                return "1 hour ago"
+            else:
+                return f"{hours} hours ago"
+        elif diff.days == 1:
+            return "Yesterday"
+        elif diff.days < 7:
+            return f"{diff.days} days ago"
+        elif diff.days < 30:
+            weeks = diff.days // 7
+            if weeks == 1:
+                return "1 week ago"
+            else:
+                return f"{weeks} weeks ago"
+        elif diff.days < 365:
+            months = diff.days // 30
+            if months == 1:
+                return "1 month ago"
+            else:
+                return f"{months} months ago"
+        else:
+            years = diff.days // 365
+            if years == 1:
+                return "1 year ago"
+            else:
+                return f"{years} years ago"
+
     def get_harvest_stats(self):
-        """Get statistics about plant harvests"""
+        """Get statistics about plant harvests
+
+        Returns:
+            dict: A dictionary containing:
+                - total_harvests (int): The number of harvests
+                - total_amount (float): The total amount collected across all harvests
+                - average_amount (float): The average amount per harvest
+                - first_harvest (datetime): The date of the first harvest, or None if no harvests
+                - last_harvest (datetime): The date of the most recent harvest, or None if no harvests
+                - next_harvest (datetime): The date of the next scheduled harvest, or None if not recurring
+        """
         total_amount = sum(h.amount_collected for h in self.harvests)
         avg_amount = total_amount / len(self.harvests) if self.harvests else 0
         return {
@@ -484,11 +604,17 @@ class Plant(db.Model):
 class PlantTracking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=False)
-    date_logged = db.Column(db.DateTime, default=datetime.utcnow)
-    
+    date_logged = db.Column(db.DateTime, default=now_in_timezone)
+
     stage = db.Column(db.String(50), nullable=False)  # e.g., "Seeded", "Sprouted", "Flowering", "Harvested"
     notes = db.Column(db.Text, nullable=True)  # Optional user notes
     image_file = db.Column(db.String(100), nullable=True)  # ✅ Store image filename
+
+    # Add indexes for better performance
+    __table_args__ = (
+        db.Index('idx_plant_tracking_plant', 'plant_id'),
+        db.Index('idx_plant_tracking_date', 'date_logged'),
+    )
 
     def __repr__(self):
         return f"PlantTracking(Stage: {self.stage}, Date: {self.date_logged})"
@@ -496,7 +622,7 @@ class PlantTracking(db.Model):
 class Harvest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow)  # When the harvest started
+    date = db.Column(db.DateTime, default=now_in_timezone)  # When the harvest started
     completed_date = db.Column(db.DateTime)  # When the harvest was completed
     amount_collected = db.Column(db.Float, nullable=False)  # Yield amount
     notes = db.Column(db.Text, nullable=True)
@@ -516,10 +642,10 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    date_posted = db.Column(db.DateTime, default=now_in_timezone)
     read_time = db.Column(db.Integer, nullable=False, default=5)  # in minutes
     category = db.Column(db.String(50), nullable=False)  # e.g., 'Herbs', 'Vegetables', 'Flowers'
-    
+
     # Foreign Keys
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=True)
@@ -541,7 +667,7 @@ class Post(db.Model):
 
     def __repr__(self):
         return f"Post({self.title}, {self.date_posted})"
-    
+
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -559,7 +685,7 @@ class Order(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
     garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    date_placed = db.Column(db.DateTime, default=datetime.utcnow)
+    date_placed = db.Column(db.DateTime, default=now_in_timezone)
     total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), nullable=False, default='pending')  # pending, processing, completed, cancelled
     recurring = db.Column(db.Boolean, default=False)
@@ -581,11 +707,11 @@ class Order(db.Model):
         super().__init__(*args, **kwargs)
         if not User.query.get(self.created_by).has_commercial_access(self.garden_id):
             raise ValueError("User does not have commercial access in this garden")
-        
+
         # Validate status
         if 'status' in kwargs and kwargs['status'] not in self.VALID_STATUSES:
             raise ValueError(f"Invalid status. Must be one of: {', '.join(self.VALID_STATUSES)}")
-        
+
         # Validate recurring frequency
         if self.recurring and self.recurring_frequency not in self.VALID_FREQUENCIES:
             raise ValueError(f"Invalid recurring frequency. Must be one of: {', '.join(self.VALID_FREQUENCIES)}")
@@ -675,7 +801,7 @@ class Order(db.Model):
 
     def __repr__(self):
         return f"Order(Client: {self.client.name}, Status: {self.status}, Total: {self.total_amount}, Recurring: {self.recurring})"
-    
+
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
@@ -701,7 +827,7 @@ class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    payment_date = db.Column(db.DateTime, default=now_in_timezone)
     payment_method = db.Column(db.String(50), nullable=False)  # e.g., "Credit Card", "PayPal", "Bank Transfer"
     status = db.Column(db.String(50), default="Pending")  # e.g., "Pending", "Completed", "Failed"
 

@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Garden Info Banner -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-4"
+         style="background: linear-gradient(120deg, rgba(255,255,255,0.9) 0%, rgba(240,255,244,0.9) 100%);
+                border-radius: 1rem;
+                border: 1px solid rgba(28, 200, 138, 0.15);
+                box-shadow: 0 4px 20px rgba(28, 200, 138, 0.08);">
+        <div>
+            <h3 class="text-success m-0 fw-bold">
+                <i class="fas fa-leaf me-2"></i>{{ garden.name }}
+            </h3>
+            <p class="mb-0 mt-2 text-muted">
+                <i class="fas fa-map-marker-alt me-1"></i> {{ garden.location }}
+            </p>
+        </div>
+        <a href="{{ url_for('gardens.view_gardens') }}" class="btn"
+           style="background: white;
+                  color: #1cc88a;
+                  border: 1px solid rgba(28, 200, 138, 0.3);
+                  border-radius: 0.5rem;
+                  box-shadow: 0 2px 8px rgba(28, 200, 138, 0.1);">
+            <i class="fas fa-arrow-left me-2"></i>Back to Gardens
+        </a>
+    </div>
+
+    <!-- Members Card -->
+    <div class="card mb-4" style="border-radius: 1rem; border: 1px solid rgba(28, 200, 138, 0.15); box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+        <!-- Members Header -->
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+             style="border-bottom: 1px solid rgba(28, 200, 138, 0.15);">
+            <h5 class="m-0 text-success fw-bold">
+                <i class="fas fa-users me-2"></i>Garden Members <span class="badge bg-success rounded-pill ms-2">{{ garden.members|length }}</span>
+            </h5>
+            {% if garden.owner_id == current_user.id %}
+            <button type="button" class="btn"
+                    style="background: white;
+                           color: #1cc88a;
+                           border: 1px solid rgba(28, 200, 138, 0.3);
+                           border-radius: 0.5rem;
+                           box-shadow: 0 2px 8px rgba(28, 200, 138, 0.1);">
+                <i class="fas fa-user-plus me-1"></i> Invite Member
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="card-body p-0">
+
+            <!-- Members List -->
+            <div class="p-0">
+                {% for member in garden.members %}
+                <div class="d-flex justify-content-between align-items-center p-4 {% if not loop.last %}border-bottom{% endif %} {% if member.id == garden.owner_id %}bg-light-success{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <div class="position-relative me-3">
+                            <img src="{{ url_for('static', filename='profilePics/' + member.image_file) }}"
+                                 class="rounded-circle"
+                                 style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #f0f0f0; box-shadow: 0 3px 10px rgba(0,0,0,0.08);"
+                                 alt="{{ member.username }}">
+                            {% if member.id == garden.owner_id %}
+                            <div class="position-absolute bottom-0 end-0 bg-white rounded-circle"
+                                 style="width: 22px; height: 22px; border: 2px solid white; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-seedling text-success" style="font-size: 0.7rem;"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-0 fw-bold">{{ member.firstName }} {{ member.lastName }}</h5>
+                                {% if member.id == garden.owner_id %}
+                                <span class="badge ms-2" style="background-color: rgba(28, 200, 138, 0.1); color: #1cc88a; border: 1px solid rgba(28, 200, 138, 0.2);">Owner</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted mt-1">
+                                <a href="{{ url_for('users.page_user', username=member.username) }}"
+                                   class="text-decoration-none">
+                                    <span style="color: #1cc88a;">@{{ member.username }}</span>
+                                </a>
+                                <span class="ms-2">{{ member.email }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        {% if member.id == current_user.id %}
+                        <span class="badge me-3" style="background-color: rgba(28, 200, 138, 0.05); color: #1cc88a; border: 1px solid rgba(28, 200, 138, 0.1);">You</span>
+                        {% endif %}
+
+                        {% if garden.owner_id == current_user.id and member.id != garden.owner_id %}
+                        <div class="dropdown">
+                            <button class="btn"
+                                    type="button"
+                                    id="memberOptions{{ member.id }}"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    style="background: white;
+                                           color: #1cc88a;
+                                           border: 1px solid rgba(28, 200, 138, 0.3);
+                                           border-radius: 0.5rem;
+                                           box-shadow: 0 2px 8px rgba(28, 200, 138, 0.1);">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="memberOptions{{ member.id }}">
+                                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-user-times me-2"></i>Remove Member</a></li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
