@@ -197,6 +197,155 @@ def move_plant_ajax(plant_id, zone_id):
 
         db.session.commit()
 
+        # Generate HTML for the plant in its new zone
+        from flask import render_template_string
+
+        # Get the plant's status and style
+        status = plant.status
+        status_index = new_zone.get_plant_statuses().index(status) if status in new_zone.get_plant_statuses() else 0
+        color_sequence = [
+            {'bg': 'bg-success text-white', 'color': '#28a745'},
+            {'bg': 'bg-info text-white', 'color': '#17a2b8'},
+            {'bg': 'bg-primary text-white', 'color': '#4e73df'},
+            {'bg': 'bg-warning text-white', 'color': '#ffc107'},
+            {'bg': 'bg-pink text-white', 'color': '#e83e8c'},
+            {'bg': 'bg-orange text-white', 'color': '#fd7e14'},
+            {'bg': 'bg-teal text-white', 'color': '#20c997'},
+            {'bg': 'bg-purple text-white', 'color': '#6f42c1'},
+            {'bg': 'bg-cyan text-white', 'color': '#17a2b8'},
+            {'bg': 'bg-indigo text-white', 'color': '#6610f2'}
+        ]
+        status_icons = {
+            'Seedling': 'seedling',
+            'Growing': 'leaf',
+            'Mature': 'tree',
+            'Harvesting': 'cut',
+            'Dormant': 'moon',
+            'Flowering': 'flower',
+            'Fruiting': 'apple-alt',
+            'Transplanted': 'exchange-alt',
+            'Diseased': 'biohazard',
+            'Completed': 'check-circle'
+        }
+        color_index = status_index % len(color_sequence)
+        style = {
+            'bg': color_sequence[color_index]['bg'],
+            'icon': status_icons.get(status, 'circle'),
+            'extra_style': f"background-color: {color_sequence[color_index]['color']} !important;"
+        }
+
+        # Get the plant's tracking info for timestamp
+        latest_tracking = PlantTracking.query.filter_by(plant_id=plant.id)\
+            .order_by(PlantTracking.date_logged.desc())\
+            .first()
+        timestamp = latest_tracking.date_logged if latest_tracking else now_in_timezone()
+
+        # Get all zones in the garden for move dropdown
+        garden_zones = [z for z in new_zone.garden.zones]
+
+        # Template for a single plant row
+        plant_row_template = '''
+        <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom"
+             style="border-color: rgba(28, 200, 138, 0.1) !important;
+                    background-color: rgba(28, 200, 138, 0.08);
+                    transition: background-color 0.2s ease;">
+            <!-- Plant Name & Variety -->
+            <div class="col-4 d-flex align-items-center gap-2">
+                <span style="color: #1cc88a; font-weight: 500;">
+                    {{ plant.plant_detail.name }}
+                </span>
+                {% if plant.variety %}
+                <small class="text-muted">{{ plant.variety.name }}</small>
+                {% endif %}
+            </div>
+
+            <!-- Quantity -->
+            <div class="col-2">
+                <span class="badge bg-light text-success">
+                    <i class="fas fa-seedling"></i> {{ plant.quantity }}
+                </span>
+            </div>
+
+            <!-- Status -->
+            <div class="col-4 d-flex">
+                <span class="badge {{ style.bg }} d-inline-flex align-items-center gap-1"
+                      style="font-size: 0.8rem;
+                             padding: 0.35rem 0.75rem;
+                             {{ style.extra_style }}
+                             white-space: nowrap;
+                             max-width: fit-content;">
+                    <i class="fas fa-{{ style.icon }}"></i>
+                    {{ plant.status }}
+                </span>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-2 d-flex gap-1">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light px-2 py-1" data-bs-toggle="dropdown">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% for status in new_zone.get_plant_statuses() %}
+                        <li>
+                            {% if status == plant.status %}
+                            <!-- Current status - not clickable -->
+                            <span class="dropdown-item py-1 text-muted d-flex align-items-center">
+                                <i class="fas fa-check me-2 text-success"></i>
+                                {{ status }}
+                            </span>
+                            {% else %}
+                            <!-- Other statuses - clickable -->
+                            <a class="dropdown-item py-1 status-update-link"
+                               href="#"
+                               data-plant-id="{{ plant.id }}"
+                               data-status="{{ status }}"
+                               data-csrf-token="{{ csrf_token }}">
+                                {{ status }}
+                            </a>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% if garden_zones|length > 1 %}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light px-2 py-1" data-bs-toggle="dropdown">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% for available_zone in garden_zones %}
+                            {% if available_zone.id != plant.zone_id %}
+                            <li>
+                                <a class="dropdown-item py-1 move-plant-link"
+                                   href="#"
+                                   data-plant-id="{{ plant.id }}"
+                                   data-zone-id="{{ available_zone.id }}"
+                                   data-zone-name="{{ available_zone.name }}"
+                                   data-csrf-token="{{ csrf_token }}">
+                                    {{ available_zone.name }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        '''
+
+        # Render the plant row HTML
+        plant_html = render_template_string(
+            plant_row_template,
+            plant=plant,
+            style=style,
+            timestamp=timestamp,
+            new_zone=new_zone,
+            garden_zones=garden_zones,
+            csrf_token=request.form.get('csrf_token', '')
+        )
+
         return jsonify({
             'success': True,
             'message': f'Moved {plant_name} from {old_zone_name} to {new_zone.name}!',
@@ -205,7 +354,8 @@ def move_plant_ajax(plant_id, zone_id):
             'new_zone_name': new_zone.name,
             'new_zone_id': new_zone.id,
             'old_zone_name': old_zone_name,
-            'old_zone_id': old_zone_id
+            'old_zone_id': old_zone_id,
+            'plant_html': plant_html
         })
     except Exception as e:
         db.session.rollback()
@@ -656,11 +806,26 @@ def update_plant_status_ajax(plant_id, status):
             'extra_style': f"background-color: {color_sequence[color_index]['color']} !important;"
         }
 
+        # Get the latest tracking record for timestamp
+        latest_tracking = PlantTracking.query.filter_by(plant_id=plant.id)\
+            .order_by(PlantTracking.date_logged.desc())\
+            .first()
+
+        # Get the timestamp for the response
+        timestamp = latest_tracking.date_logged.isoformat() if latest_tracking else now_in_timezone().isoformat()
+        timestamp_display = 'just now'
+
+        # Get all valid statuses for this zone
+        valid_statuses = zone.get_plant_statuses()
+
         return jsonify({
             'success': True,
             'status': status,
             'style': style,
-            'message': 'Plant status updated successfully!'
+            'message': 'Plant status updated successfully!',
+            'timestamp': timestamp,
+            'timestamp_display': timestamp_display,
+            'valid_statuses': valid_statuses
         })
     except Exception as e:
         db.session.rollback()
