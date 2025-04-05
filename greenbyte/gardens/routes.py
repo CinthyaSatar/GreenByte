@@ -250,7 +250,7 @@ def move_plant_ajax(plant_id, zone_id):
                     background-color: rgba(28, 200, 138, 0.08);
                     transition: background-color 0.2s ease;">
             <!-- Plant Name & Variety -->
-            <div class="col-4 d-flex align-items-center gap-2">
+            <div class="col-3 d-flex align-items-center gap-2">
                 <span style="color: #1cc88a; font-weight: 500;">
                     {{ plant.plant_detail.name }}
                 </span>
@@ -267,7 +267,7 @@ def move_plant_ajax(plant_id, zone_id):
             </div>
 
             <!-- Status -->
-            <div class="col-4 d-flex">
+            <div class="col-3 d-flex">
                 <span class="badge {{ style.bg }} d-inline-flex align-items-center gap-1"
                       style="font-size: 0.8rem;
                              padding: 0.35rem 0.75rem;
@@ -277,6 +277,14 @@ def move_plant_ajax(plant_id, zone_id):
                     <i class="fas fa-{{ style.icon }}"></i>
                     {{ plant.status }}
                 </span>
+            </div>
+
+            <!-- Last Updated -->
+            <div class="col-2 text-muted">
+                <small>
+                    <i class="far fa-clock me-1"></i>
+                    just now
+                </small>
             </div>
 
             <!-- Actions -->

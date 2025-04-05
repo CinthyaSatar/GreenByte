@@ -135,8 +135,8 @@
             }
 
             const plantRow = link.closest('.plant-row');
-            const statusBadge = plantRow.querySelector('.col-4.d-flex .badge');
-            const timestampElement = plantRow.querySelector('.col-3.text-muted .relative-timestamp');
+            const statusBadge = plantRow.querySelector('.col-3.d-flex .badge');
+            const timestampElement = plantRow.querySelector('.col-2.text-muted small');
             const dropdownMenu = plantRow.querySelector('.dropdown-menu');
             const dropdownToggle = plantRow.querySelector('.dropdown-toggle');
 
@@ -173,8 +173,7 @@
 
                     // Update the timestamp
                     if (timestampElement && data.timestamp) {
-                        timestampElement.setAttribute('data-timestamp', data.timestamp);
-                        timestampElement.textContent = 'just now';
+                        timestampElement.innerHTML = '<i class="far fa-clock me-1"></i>just now';
                     }
 
                     // Update the dropdown menu

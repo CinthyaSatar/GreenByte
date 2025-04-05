@@ -6,7 +6,7 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from greenbyte.config import Config
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -17,7 +17,10 @@ csrf = CSRFProtect()  # Add this line
 
 def timeago(date):
     """Convert a datetime to a 'time ago' string."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
+    # Make sure date is timezone-aware
+    if date.tzinfo is None:
+        date = date.replace(tzinfo=timezone.utc)
     diff = now - date
 
     seconds = diff.total_seconds()
@@ -42,21 +45,21 @@ def timeago(date):
 def createApp(configClass=Config):
     app = Flask(__name__)
     app.config.from_object(Config)
-    db.init_app(app) 
+    db.init_app(app)
     migrate.init_app(app, db)
-    bcrypt.init_app(app) 
-    login_manager.init_app(app) 
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
     mail.init_app(app)
     csrf.init_app(app)  # Add this line
 
-    # Register the filter with your Flask app
+    # Register custom filters
     app.jinja_env.filters['timeago'] = timeago
 
-    from greenbyte.users.routes import users 
-    from greenbyte.posts.routes import posts 
-    from greenbyte.main.routes import main 
-    from greenbyte.errors.handlers import errors 
-    from greenbyte.gardens.routes import gardens 
+    from greenbyte.users.routes import users
+    from greenbyte.posts.routes import posts
+    from greenbyte.main.routes import main
+    from greenbyte.errors.handlers import errors
+    from greenbyte.gardens.routes import gardens
 
     app.register_blueprint(users)
     app.register_blueprint(posts)
