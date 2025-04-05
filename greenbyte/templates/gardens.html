@@ -26,7 +26,7 @@
                         cursor: pointer;"
                  data-bs-toggle="collapse"
                  data-bs-target="#garden-content-{{ garden.id }}"
-                 aria-expanded="false"
+                 aria-expanded="true"
                  aria-controls="garden-content-{{ garden.id }}">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-chevron-right me-3 garden-collapse-icon" style="color: #1cc88a; transition: transform 0.3s;"></i>
@@ -76,7 +76,7 @@
 
 
             <!-- Garden Content -->
-            <div id="garden-content-{{ garden.id }}" class="collapse">
+            <div id="garden-content-{{ garden.id }}" class="collapse show">
                 <!-- Garden Zones -->
                 <div class="card-body p-4" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
                 <div class="row">
@@ -86,8 +86,9 @@
                             <div class="card-header py-3 d-flex justify-content-between align-items-center"
                                  data-bs-toggle="collapse"
                                  data-bs-target="#zone-content-{{ zone.id }}"
-                                 aria-expanded="false"
+                                 aria-expanded="true"
                                  aria-controls="zone-content-{{ zone.id }}"
+                                 onclick="event.stopPropagation();"
                                  style="cursor: pointer;
                                         border-radius: 0.75rem !important;
                                         background-color: rgba(28, 200, 138, 0.05);
@@ -130,7 +131,7 @@
                             </div>
 
                             <!-- Zone Content -->
-                            <div id="zone-content-{{ zone.id }}" class="collapse">
+                            <div id="zone-content-{{ zone.id }}" class="collapse show">
                                 <!-- Status Flow Visualization -->
                                 <div class="border-bottom" style="border-color: rgba(28, 200, 138, 0.2) !important;">
                                 <div class="d-flex align-items-center gap-2 overflow-auto py-2 px-4" style="scrollbar-width: thin;">
