@@ -1,3 +1,4 @@
+
 # Virtual Environment
 env/
 venv/
@@ -8,7 +9,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Database
+
 instance/
 *.db
 *.sqlite
@@ -16,6 +17,21 @@ instance/
 # IDE files
 .idea/
 .vscode/
+
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Scripts
+remove_pyc.sh
 
 # Logs
 *.log

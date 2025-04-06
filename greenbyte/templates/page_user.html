@@ -3,7 +3,7 @@
           <!-- Main Content Column -->
           <div class="col-xl-8 col-lg-7">
             <!-- Function Bar -->
-            <div class="card shadow-sm mb-4" 
+            <div class="card shadow-sm mb-4"
                  style="background: white;
                         border: 1px solid rgba(28, 200, 138, 0.2);
                         border-radius: 1rem !important;
@@ -16,11 +16,11 @@
                   <!-- Search Box -->
                   <div class="col-lg-6 mb-2 mb-lg-0">
                     <div class="input-group">
-                      <input type="text" 
-                             class="form-control" 
-                             placeholder="Search posts..." 
+                      <input type="text"
+                             class="form-control"
+                             placeholder="Search posts..."
                              style="border-radius: 0.5rem 0 0 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
-                      <button class="btn btn-light" 
+                      <button class="btn btn-light"
                               style="border-radius: 0 0.5rem 0.5rem 0; border: 1px solid rgba(28, 200, 138, 0.2);">
                         <i class="fas fa-search text-success"></i>
                       </button>
@@ -32,8 +32,8 @@
 
             {% for post in posts.items %}
             <!-- Blog Post Card -->
-            <div class="card shadow-sm mb-4" style="background: white; 
-                        border-radius: 1.5rem !important; 
+            <div class="card shadow-sm mb-4" style="background: white;
+                        border-radius: 1.5rem !important;
                         box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;">
               {% if post.image_file %}
               <div class="position-relative">
@@ -42,7 +42,7 @@
                   <!-- Carousel Items -->
                   <div class="carousel-inner">
                     <div class="carousel-item active">
-                      <img src="{{ url_for('static', filename='post_pics/' + post.image_file) }}" 
+                      <img src="{{ url_for('static', filename='post_pics/' + post.image_file) }}"
                            class="d-block w-100"
                            alt="Post Image"
                            style="height: 240px; object-fit: cover; border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem;">
@@ -51,7 +51,7 @@
                 </div>
               </div>
               {% endif %}
-              
+
               <div class="card-body p-4">
                 <div class="d-flex align-items-center mb-2">
                   <img src="{{ url_for('static', filename='profilePics/' + post.author.image_file) }}"
@@ -125,9 +125,9 @@
               {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
                 {% if page_num %}
                   {% if posts.page == page_num %}
-                    <a class="btn btn-success mx-1" href="{{ url_for('users.page_user', email=user.email, page=page_num) }}">{{ page_num }}</a>
+                    <a class="btn btn-success mx-1" href="{{ url_for('users.page_user', username=user.username, page=page_num) }}">{{ page_num }}</a>
                   {% else %}
-                    <a class="btn btn-outline-success mx-1" href="{{ url_for('users.page_user', email=user.email, page=page_num) }}">{{ page_num }}</a>
+                    <a class="btn btn-outline-success mx-1" href="{{ url_for('users.page_user', username=user.username, page=page_num) }}">{{ page_num }}</a>
                   {% endif %}
                 {% else %}
                   ...
@@ -160,7 +160,7 @@
                       {{ user.location if user.location else "Location not specified" }}
                     </p>
                     {% if current_user.id == user.id %}
-                    <a href="{{ url_for('users.account') }}" class="btn btn-outline-success w-100 mb-4" 
+                    <a href="{{ url_for('users.edit_account') }}" class="btn btn-outline-success w-100 mb-4"
                        style="border-radius: 0.75rem; padding: 0.5rem 1.25rem;">
                       <i class="fas fa-edit me-2"></i>Edit Profile
                     </a>

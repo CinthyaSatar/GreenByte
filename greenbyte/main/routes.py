@@ -16,11 +16,19 @@ def index():
         # Get garden details
         if post.start_date:
             post.start_date_formatted = post.start_date.strftime('%B %Y')
+    
+    # Add default_style to the template context
+    default_style = {
+        'background': '#ffffff',
+        'text': '#000000',
+        'accent': '#4e73df'
+    }
             
     return render_template('index.html', 
                          posts=posts,
                          max=max,
-                         min=min)  # Also add min since we're using both
+                         min=min,
+                         default_style=default_style)  # Add default_style here
 
 
 @main.route("/calendar")

@@ -1,0 +1,215 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-12 col-md-9">
+            <div class="card" style="border: 1px solid rgba(28, 200, 138, 0.2);
+                        border-radius: 1rem !important;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
+                     style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
+                            border-top-left-radius: 1rem !important;
+                            border-top-right-radius: 1rem !important;">
+                    <h5 class="text-success m-0">Add Plant to {{ zone.name }}</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('gardens.add_plant', garden_id=garden.id, zone_id=zone.id) }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Plant Type Field -->
+                        <div class="mb-4">
+                            {{ form.plant_detail_id.label(class="form-label fw-bold") }}
+                            {% if form.plant_detail_id.errors %}
+                                {{ form.plant_detail_id(class="form-control is-invalid",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.plant_detail_id.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.plant_detail_id(class="form-control",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Variety Field -->
+                        <div class="mb-4">
+                            {{ form.variety_id.label(class="form-label fw-bold") }}
+                            {% if form.variety_id.errors %}
+                                {{ form.variety_id(class="form-control is-invalid",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.variety_id.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.variety_id(class="form-control",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                            {% endif %}
+                        </div>
+
+                        <!-- New Variety Container -->
+                        <div id="new-variety-container" style="display: none;" class="mb-4">
+                            <label class="form-label fw-bold">New Variety Name</label>
+                            <input type="text" class="form-control" id="variety_name" name="variety_name"
+                                   style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                          border-radius: 0.75rem;
+                                          padding: 0.75rem;">
+                        </div>
+
+                        <!-- Quantity Field -->
+                        <div class="mb-4">
+                            {{ form.quantity.label(class="form-label fw-bold") }}
+                            {% if form.quantity.errors %}
+                                {{ form.quantity(class="form-control is-invalid",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.quantity.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.quantity(class="form-control",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Planting Date Field -->
+                        <div class="mb-4">
+                            {{ form.planting_date.label(class="form-label fw-bold") }}
+                            {% if form.planting_date.errors %}
+                                {{ form.planting_date(class="form-control is-invalid", type="date",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.planting_date.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.planting_date(class="form-control", type="date",
+                                           style="border: 1px solid rgba(28, 200, 138, 0.2);
+                                                  border-radius: 0.75rem;
+                                                  padding: 0.75rem;") }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{{ url_for('gardens.view_gardens') }}" class="btn" 
+                               style="background: rgba(28, 200, 138, 0.1); 
+                                      color: #1cc88a; 
+                                      border: 1px solid rgba(28, 200, 138, 0.2);
+                                      border-radius: 0.5rem;
+                                      transition: all 0.2s ease;">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Gardens
+                            </a>
+                            {{ form.submit(class="btn",
+                                          style="background: rgba(28, 200, 138, 0.1); 
+                                                 color: #1cc88a; 
+                                                 border: 1px solid rgba(28, 200, 138, 0.2);
+                                                 border-radius: 0.5rem;
+                                                 transition: all 0.2s ease;") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: rgba(28, 200, 138, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+}
+
+.form-select:focus {
+    border-color: rgba(28, 200, 138, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const plantSelect = document.getElementById('plant_detail_id');
+    const varietySelect = document.getElementById('variety_id');
+
+    plantSelect.addEventListener('change', async function() {
+        const plantDetailId = this.value;
+        
+        if (plantDetailId == 0) {
+            varietySelect.innerHTML = '<option value="0">Select a variety...</option>';
+            varietySelect.disabled = true;
+            return;
+        }
+        
+        try {
+            varietySelect.disabled = true;
+            varietySelect.innerHTML = '<option value="0">Loading varieties...</option>';
+            
+            const response = await fetch(`/gardens/get_varieties/${plantDetailId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            let options = '<option value="0">Select a variety...</option>';
+            data.varieties.forEach(variety => {
+                options += `<option value="${variety.id}">${variety.name}</option>`;
+            });
+            
+            options += '<option value="-1">Add new variety...</option>';
+            
+            varietySelect.innerHTML = options;
+            varietySelect.disabled = false;
+            
+        } catch (error) {
+            console.error('Error fetching varieties:', error);
+            varietySelect.innerHTML = '<option value="0">Error loading varieties</option>';
+            varietySelect.disabled = true;
+        }
+    });
+
+    varietySelect.addEventListener('change', function() {
+        const newVarietyContainer = document.getElementById('new-variety-container');
+        if (this.value == -1) {
+            newVarietyContainer.style.display = 'block';
+        } else {
+            newVarietyContainer.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock content %}

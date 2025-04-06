@@ -1,284 +1,363 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+import random
+
+from flask_bcrypt import Bcrypt
+import faker
+
 from greenbyte import db
 from run import app
 from greenbyte.models import (
-    User, Garden, Zone, Plant, PlantTracking, Post, PostImage, PostPlant,
-    Harvest, Client, Order, OrderItem, Delivery, Payment
+    User, Garden, Zone, Plant, PlantTracking, PlantDetail, PlantVariety, PlantStage
 )
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
-import random
-from flask_bcrypt import Bcrypt
-import faker
-from greenbyte.utils.timezone import now_in_timezone, get_current_timezone
+from greenbyte.utils.timezone import now_in_timezone
 
 bcrypt = Bcrypt(app)
 fake = faker.Faker()
 
+# Constants for generation
+NUM_USERS = 5
+NUM_GARDENS = 3
+MAX_MEMBERS_PER_GARDEN = 3
+MAX_ZONES_PER_GARDEN = 4
+MAX_PLANTS_PER_ZONE = 6
+
 def generate_database():
     with app.app_context():
-        # Get current time in configured timezone
-        current_time = now_in_timezone()
-        
-        # Clear existing data
-        db.drop_all()
-        db.session.commit()
-        db.create_all()
-        
-        # Sample profile and garden images
-        profile_images = [f"profile_{i}.jpg" for i in range(1, 11)]
-        garden_images = [f"garden_{i}.jpg" for i in range(1, 11)]
-        post_images = [f"post_{i}.jpg" for i in range(1, 21)]  # Make sure this matches the number of images downloaded
+        with db.session.no_autoflush:
+            current_time = now_in_timezone()
 
-        # Create sample users (50)
-        users = []
-        hashed_password = bcrypt.generate_password_hash('password123').decode('utf-8')
-        
-        # Create one admin user
-        admin = User(
-            username="admin",
-            firstName="Admin",
-            lastName="User",
-            email="admin@example.com",
-            password=hashed_password,
-            location="San Francisco, CA",
-            bio="Garden enthusiast and sustainability advocate. Managing multiple urban farming projects.",
-            image_file="default.jpg"  # Set default profile picture
-        )
-        users.append(admin)
+            # Clear existing data
+            db.drop_all()
+            db.session.commit()
+            db.create_all()
 
-        # Create regular users
-        for i in range(49):
-            first_name = fake.first_name()
-            last_name = fake.last_name()
-            user = User(
-                username=f"{first_name.lower()}{last_name.lower()}{random.randint(1,999)}",
-                firstName=first_name,
-                lastName=last_name,
-                email=f"{first_name.lower()}.{last_name.lower()}@example.com",
-                password=hashed_password,
-                location=fake.city() + ", " + fake.state_abbr(),
-                bio=fake.paragraph(nb_sentences=3),
-                image_file="default.jpg"  # Set default profile picture
+            # Create users
+            users = []
+            default_password = bcrypt.generate_password_hash('password').decode('utf-8')
+
+            # Create main test user
+            main_user = User(
+                username='testuser',
+                firstName='Test',
+                lastName='User',
+                email='test@example.com',
+                password=default_password
             )
-            users.append(user)
-        db.session.add_all(users)
-        db.session.commit()
+            db.session.add(main_user)
+            users.append(main_user)
 
-        # Create gardens (100)
-        gardens = []
-        garden_types = [
-            "Backyard Garden",
-            "Community Garden",
-            "Commercial Farm",
-            "Urban Garden",
-            "Greenhouse",
-            "Rooftop Garden",
-            "Indoor Garden"
-        ]
-        
-        for i in range(100):
-            owner = random.choice(users)
-            garden_size = round(random.uniform(100, 1000), 2)
-            
-            # Create timestamps in the correct timezone
-            created_at = current_time - timedelta(days=random.randint(30, 365))
-            updated_at = created_at + timedelta(days=random.randint(0, 30))
-            
-            # Convert timezone to string
-            timezone_str = str(get_current_timezone())  # This will convert ZoneInfo to string like 'America/Montreal'
-            
-            garden = Garden(
-                name=fake.company() + " " + random.choice(["Garden", "Farm", "Greenhouse", "Nursery"]),
-                location=fake.address(),
-                owner_id=owner.id,
-                garden_type=random.choice(garden_types),
-                garden_size=garden_size,
-                created_at=created_at,
-                updated_at=updated_at,
-                last_updated=updated_at,
-                timezone=timezone_str  # Use the string version
-            )
-            gardens.append(garden)
-            
-            # Add owner as a member
-            garden.members.append(owner)
-            
-            # Add 1-3 random members
-            num_members = random.randint(1, 3)
-            potential_members = [u for u in users if u != owner]
-            members = random.sample(potential_members, num_members)
-            for member in members:
-                garden.members.append(member)
-        
-        # Add all gardens at once and commit
-        db.session.add_all(gardens)
-        db.session.commit()
+            # Create additional users
+            for i in range(1, NUM_USERS):
+                first_name = fake.first_name()
+                last_name = fake.last_name()
+                username = f"{first_name.lower()}{last_name.lower()}{random.randint(1, 99)}"
 
-        # Create zones (300)
-        zones = []
-        sunlight_types = ["Full Sun", "Partial Sun", "Partial Shade", "Full Shade"]
-        soil_types = ["Loamy", "Sandy", "Clay", "Silt", "Peat", "Chalky"]
-        watering_schedules = ["Daily", "Twice Daily", "Every Other Day", "Weekly"]
-        temperature_ranges = ["55-65°F", "65-75°F", "75-85°F", "85-95°F"]
-        ph_levels = ["5.5-6.0", "6.0-6.5", "6.5-7.0", "7.0-7.5"]
-        organic_matter_levels = ["Low", "Medium", "High", "Very High"]
-        
-        for i in range(300):
-            # Get a random garden that's already in the database
-            garden = random.choice(gardens)
-            
-            zone = Zone(
-                name=fake.word() + " Zone",
-                garden_id=garden.id,  # This will now have a valid ID
-                sunlight=random.choice(sunlight_types),
-                soil_type=random.choice(soil_types),
-                watering=random.choice(watering_schedules),
-                temperature=random.choice(temperature_ranges),
-                ph_level=random.choice(ph_levels),
-                organic_matter=random.choice(organic_matter_levels)
-            )
-            zones.append(zone)
-        
-        # Add all zones at once
-        db.session.add_all(zones)
-        db.session.commit()
-
-        # Updated plant types with recurring harvest information
-        plant_types = [
-            ("Tomato", ["Cherry", "Beefsteak", "Roma", "Grape"], True, 14),
-            ("Pepper", ["Bell", "Jalapeño", "Habanero", "Sweet"], True, 14),
-            ("Lettuce", ["Romaine", "Butterhead", "Iceberg"], True, 7),
-            ("Basil", ["Sweet", "Thai", "Purple"], True, 10),
-            ("Mint", ["Spearmint", "Peppermint"], True, 14),
-            ("Carrot", ["Nantes", "Imperator", "Danvers"], False, None),
-            ("Potato", ["Russet", "Yukon Gold", "Red"], False, None),
-            ("Cucumber", ["English", "Persian", "Pickling"], True, 7),
-            ("Kale", ["Curly", "Dinosaur", "Red Russian"], True, 10),
-            ("Spinach", ["Savoy", "Flat-leaf", "Baby"], True, 7),
-        ]
-
-        # Create plants (600)
-        plants = []
-        plant_statuses = ['Seedling', 'Growing', 'Mature', 'Blooming', 'Fruiting', 'Ready', 'Harvesting', 'Regrowth']
-        
-        for i in range(600):
-            zone = random.choice(zones)
-            plant_info = random.choice(plant_types)
-            plant_type, varieties, is_recurring, harvest_freq = plant_info
-            
-            planting_date = current_time - timedelta(days=random.randint(30, 120))
-            maturity_date = planting_date + timedelta(days=random.randint(60, 120))
-            
-            plant = Plant(
-                name=plant_type,
-                variety=random.choice(varieties),
-                zone_id=zone.id,
-                quantity=random.randint(5, 50),  # Added random quantity between 5 and 50
-                planting_date=planting_date,
-                maturity_date=maturity_date,
-                flowering_date=planting_date + timedelta(days=random.randint(20, 40)),
-                fruiting_date=planting_date + timedelta(days=random.randint(40, 80)),
-                status=random.choice(plant_statuses),
-                is_recurring_harvest=is_recurring,
-                harvest_frequency_days=harvest_freq,
-                total_harvests=0
-            )
-            
-            plants.append(plant)
-
-        # First commit all plants to get their IDs
-        db.session.add_all(plants)
-        db.session.commit()
-
-        # Now create harvests and tracking entries
-        for plant in plants:
-            # Generate some harvest records for mature plants
-            if plant.status in ['Harvesting', 'Regrowth'] and plant.is_recurring_harvest:
-                num_harvests = random.randint(1, 5)
-                plant.total_harvests = num_harvests
-                
-                for h in range(num_harvests):
-                    harvest_date = plant.planting_date + timedelta(days=(60 + (h * plant.harvest_frequency_days)))
-                    harvest = Harvest(
-                        plant_id=plant.id,
-                        date=harvest_date,
-                        completed_date=harvest_date + timedelta(days=random.randint(1, 3)),
-                        amount_collected=round(random.uniform(0.5, 5.0), 2),
-                        notes=f"Harvest #{h+1}",
-                        harvest_number=h+1
-                    )
-                    db.session.add(harvest)
-                
-                # Set next harvest date if plant is still active
-                if plant.status != 'Completed':
-                    plant.next_harvest_date = current_time + timedelta(days=random.randint(1, plant.harvest_frequency_days))
-            
-            # Add plant tracking entries
-            tracking = PlantTracking(
-                plant_id=plant.id,
-                stage=plant.status,
-                date_logged=current_time - timedelta(days=random.randint(1, 30)),
-                notes=f"Plant reached {plant.status} stage"
-            )
-            db.session.add(tracking)
-
-        # Commit all harvests and tracking entries
-        db.session.commit()
-
-        # Create sample posts (150)
-        posts = []
-        post_titles = [
-            "My Garden Journey", "Growing Success", "Garden Update", 
-            "Harvest Time", "Planting Season", "Garden Tips"
-        ]
-        post_contents = [
-            "Today I'm excited to share my progress with {plants}...",
-            "Finally harvested my {plants} and they turned out great!",
-            "Started growing some new {plants} in the garden...",
-            "Here's what I learned about growing {plants}..."
-        ]
-        categories = ["Vegetables", "Herbs", "Flowers", "Fruits", "Maintenance", "Planning"]
-        
-        for i in range(150):
-            author = random.choice(users)
-            if author.gardens:
-                garden = random.choice(author.gardens)
-                
-                # Format content with random plant names
-                content_template = random.choice(post_contents)
-                plant_names = [p.name for p in random.sample(plants, 2)]
-                content = content_template.format(plants=", ".join(plant_names))
-                
-                post = Post(
-                    title=f"{random.choice(post_titles)} #{i+1}",
-                    content=content,
-                    user_id=author.id,
-                    garden_id=garden.id,
-                    date_posted=current_time - timedelta(days=random.randint(1, 90)),
-                    read_time=random.randint(2, 10),
-                    category=random.choice(categories)
+                user = User(
+                    username=username,
+                    firstName=first_name,
+                    lastName=last_name,
+                    email=f"{username}@example.com",
+                    password=default_password
                 )
-                db.session.add(post)
-                db.session.flush()  # This ensures post.id is available
-                
-                # Add 1-3 images to the post
-                num_images = random.randint(1, 3)
-                for j in range(num_images):
-                    post_image = PostImage(
-                        post_id=post.id,
-                        image_file=random.choice(post_images),
-                        caption=f"Garden photo #{j+1}",
-                        order=j
-                    )
-                    db.session.add(post_image)
-                
-                posts.append(post)
-                
-                if len(posts) % 10 == 0:  # Commit every 10 posts
-                    db.session.commit()
+                db.session.add(user)
+                users.append(user)
 
-        print("Sample data generated successfully!")
+            db.session.commit()
+            print(f"Created {len(users)} users")
+
+            # Create gardens
+            gardens = []
+            garden_names = [
+                'My Test Garden', 'Community Garden', 'Rooftop Garden',
+                'Indoor Garden', 'Vertical Garden', 'Container Garden'
+            ]
+            garden_locations = [
+                'Backyard', 'Front Yard', 'Community Center', 'Rooftop',
+                'Balcony', 'Window Sill', 'Patio', 'Greenhouse'
+            ]
+
+            # Ensure main user has a garden
+            main_garden = Garden(
+                name=garden_names[0],
+                location=garden_locations[0],
+                owner_id=main_user.id
+            )
+            db.session.add(main_garden)
+            gardens.append(main_garden)
+
+            # Add main user as a member of their own garden
+            main_garden.members.append(main_user)
+
+            # Create additional gardens with random owners
+            for i in range(1, NUM_GARDENS):
+                owner = random.choice(users)
+                garden_name = garden_names[i % len(garden_names)]
+                garden_location = random.choice(garden_locations)
+
+                garden = Garden(
+                    name=f"{owner.firstName}'s {garden_name}",
+                    location=garden_location,
+                    owner_id=owner.id
+                )
+                db.session.add(garden)
+                gardens.append(garden)
+
+                # Add owner as a member
+                garden.members.append(owner)
+
+                # Add random members to each garden
+                potential_members = [u for u in users if u != owner]
+                num_members = random.randint(1, min(MAX_MEMBERS_PER_GARDEN, len(potential_members)))
+                garden_members = random.sample(potential_members, num_members)
+
+                for member in garden_members:
+                    garden.members.append(member)
+
+            db.session.commit()
+            print(f"Created {len(gardens)} gardens with members")
+
+            # Create zones for each garden
+            zones = []
+            zone_names = [
+                'Vegetable Patch', 'Herb Garden', 'Berry Patch', 'Flower Bed',
+                'Greenhouse Area', 'Raised Beds', 'Container Section', 'Shade Garden',
+                'Sunny Spot', 'Vertical Garden', 'Hydroponic Setup', 'Aquaponic System'
+            ]
+
+            for garden in gardens:
+                # Determine how many zones for this garden
+                num_zones = random.randint(1, min(MAX_ZONES_PER_GARDEN, len(zone_names)))
+                garden_zone_names = random.sample(zone_names, num_zones)
+
+                for name in garden_zone_names:
+                    zone = Zone(
+                        name=name,
+                        garden_id=garden.id
+                    )
+                    db.session.add(zone)
+                    zones.append(zone)
+
+            db.session.commit()
+            print(f"Created {len(zones)} zones across all gardens")
+
+            # Plant data
+            plant_details = [
+                {
+                    "name": "Tomato",
+                    "scientific_name": "Solanum lycopersicum",
+                    "category": "Vegetable",
+                    "description": "A versatile fruit commonly used as a vegetable",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "60-80",
+                            "spacing": "24-36 inches",
+                            "sun_requirements": "Full sun"
+                        }
+                    },
+                    "varieties": ["Roma", "Cherry", "Beefsteak", "San Marzano", "Brandywine", "Green Zebra", "Yellow Pear"]
+                },
+                {
+                    "name": "Lettuce",
+                    "scientific_name": "Lactuca sativa",
+                    "category": "Vegetable",
+                    "description": "A leafy green perfect for salads",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "30-60",
+                            "spacing": "6-8 inches",
+                            "sun_requirements": "Partial shade"
+                        }
+                    },
+                    "varieties": ["Romaine", "Iceberg", "Butterhead", "Red Leaf", "Oak Leaf", "Arugula", "Mesclun Mix"]
+                },
+                {
+                    "name": "Basil",
+                    "scientific_name": "Ocimum basilicum",
+                    "category": "Herb",
+                    "description": "Aromatic herb essential in many cuisines",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "50-75",
+                            "spacing": "12-18 inches",
+                            "sun_requirements": "Full sun"
+                        }
+                    },
+                    "varieties": ["Sweet Basil", "Thai Basil", "Purple Basil", "Genovese", "Lemon Basil", "Cinnamon Basil"]
+                },
+                {
+                    "name": "Strawberry",
+                    "scientific_name": "Fragaria × ananassa",
+                    "category": "Fruit",
+                    "description": "Sweet berries perfect for home gardens",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "90-120",
+                            "spacing": "12-18 inches",
+                            "sun_requirements": "Full sun"
+                        }
+                    },
+                    "varieties": ["June-bearing", "Everbearing", "Day-neutral", "Alpine", "Seascape", "Chandler"]
+                },
+                {
+                    "name": "Pepper",
+                    "scientific_name": "Capsicum annuum",
+                    "category": "Vegetable",
+                    "description": "Versatile vegetables ranging from sweet to spicy",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "60-90",
+                            "spacing": "18-24 inches",
+                            "sun_requirements": "Full sun"
+                        }
+                    },
+                    "varieties": ["Bell", "Jalapeño", "Habanero", "Cayenne", "Poblano", "Sweet Banana", "Serrano"]
+                },
+                {
+                    "name": "Cucumber",
+                    "scientific_name": "Cucumis sativus",
+                    "category": "Vegetable",
+                    "description": "Refreshing vegetable perfect for salads and pickling",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "50-70",
+                            "spacing": "36-60 inches",
+                            "sun_requirements": "Full sun"
+                        }
+                    },
+                    "varieties": ["Slicing", "Pickling", "English", "Lemon", "Armenian", "Persian"]
+                },
+                {
+                    "name": "Mint",
+                    "scientific_name": "Mentha",
+                    "category": "Herb",
+                    "description": "Aromatic herb used in teas, desserts, and savory dishes",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "60-90",
+                            "spacing": "18-24 inches",
+                            "sun_requirements": "Partial shade"
+                        }
+                    },
+                    "varieties": ["Peppermint", "Spearmint", "Chocolate Mint", "Apple Mint", "Moroccan Mint"]
+                },
+                {
+                    "name": "Blueberry",
+                    "scientific_name": "Vaccinium",
+                    "category": "Fruit",
+                    "description": "Antioxidant-rich berries that grow on bushes",
+                    "attributes": {
+                        "growing_info": {
+                            "days_to_maturity": "730-1095",  # 2-3 years
+                            "spacing": "4-6 feet",
+                            "sun_requirements": "Full sun to partial shade"
+                        }
+                    },
+                    "varieties": ["Highbush", "Lowbush", "Rabbiteye", "Duke", "Bluecrop", "Patriot"]
+                }
+            ]
+
+            # Create plant details and varieties
+            plant_detail_objects = {}
+            for plant in plant_details:
+                plant_detail = PlantDetail(
+                    name=plant["name"],
+                    scientific_name=plant["scientific_name"],
+                    category=plant["category"],
+                    description=plant["description"]
+                )
+                db.session.add(plant_detail)
+                db.session.flush()
+
+                # Add attributes
+                for category, attributes in plant["attributes"].items():
+                    for name, value in attributes.items():
+                        plant_detail.set_attribute(name, value, category)
+
+                # Create varieties
+                for variety_name in plant["varieties"]:
+                    variety = PlantVariety(
+                        name=variety_name,
+                        plant_detail_id=plant_detail.id,
+                        description=f"A popular {plant['name'].lower()} variety"
+                    )
+                    db.session.add(variety)
+
+                plant_detail_objects[plant["name"]] = plant_detail
+
+            db.session.commit()
+
+            # Add plants to appropriate zones
+            for zone in zones:
+                # Select plants based on zone type
+                suitable_plants = []
+                if "Vegetable" in zone.name:
+                    suitable_plants = [p for p in plant_details if p["category"] == "Vegetable"]
+                elif "Herb" in zone.name:
+                    suitable_plants = [p for p in plant_details if p["category"] == "Herb"]
+                elif "Berry" in zone.name or "Fruit" in zone.name:
+                    suitable_plants = [p for p in plant_details if p["category"] == "Fruit"]
+                elif "Flower" in zone.name:
+                    # Use any plant type for flower beds
+                    suitable_plants = plant_details
+                else:
+                    # For other zones, use any plant type
+                    suitable_plants = plant_details
+
+                # Add plants to each zone
+                num_plants = random.randint(1, min(MAX_PLANTS_PER_ZONE, len(suitable_plants) * 2))
+                for _ in range(num_plants):
+                    if suitable_plants:
+                        plant_info = random.choice(suitable_plants)
+                        plant_detail = plant_detail_objects[plant_info["name"]]
+                        variety = random.choice(plant_detail.varieties)
+
+                        # Create a random planting date between 7 and 120 days ago
+                        days_ago = random.randint(7, 120)
+                        planting_date = current_time - timedelta(days=days_ago)
+
+                        plant = Plant(
+                            plant_detail_id=plant_detail.id,
+                            variety_id=variety.id,
+                            zone_id=zone.id,
+                            quantity=random.randint(1, 15),
+                            planting_date=planting_date
+                        )
+                        db.session.add(plant)
+                        db.session.flush()
+
+                        # Determine appropriate plant stage based on age
+                        stage = PlantStage.SEEDLING.value
+                        if days_ago > 90:
+                            stage_options = [PlantStage.MATURE.value, PlantStage.HARVESTING.value, PlantStage.FRUITING.value]
+                            stage = random.choice(stage_options)
+                        elif days_ago > 60:
+                            stage_options = [PlantStage.GROWING.value, PlantStage.FLOWERING.value]
+                            stage = random.choice(stage_options)
+                        elif days_ago > 30:
+                            stage = PlantStage.GROWING.value
+
+                        # Add initial tracking entry at planting time
+                        initial_tracking = PlantTracking(
+                            plant_id=plant.id,
+                            stage=PlantStage.SEEDLING.value,
+                            notes=f"Initial planting of {plant_detail.name} ({variety.name})",
+                            date_logged=planting_date
+                        )
+                        db.session.add(initial_tracking)
+
+                        # Add current status tracking entry if plant has progressed beyond seedling
+                        if stage != PlantStage.SEEDLING.value:
+                            status_date = current_time - timedelta(days=random.randint(1, min(7, days_ago - 1)))
+                            current_tracking = PlantTracking(
+                                plant_id=plant.id,
+                                stage=stage,
+                                notes=f"Updated status to {stage}",
+                                date_logged=status_date
+                            )
+                            db.session.add(current_tracking)
+
+            db.session.commit()
+            print("Database generated successfully with plant data!")
 
 if __name__ == "__main__":
-    generate_database()
+    generate_database()  # Add this line to create varieties

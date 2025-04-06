@@ -210,28 +210,50 @@
         </a>
       </div>
 
-    
+
     </div>
 
     <!-- User Section -->
     <div class="user-section">
+      {% if current_user.is_authenticated %}
+      <!-- Logged in user dropdown -->
       <button id="userDropdownBtn" class="user-btn">
         <i class="fas fa-user-circle"></i>
       </button>
 
       <!-- Add Dropdown Menu -->
       <div id="userDropdown" class="user-dropdown">
-        <a href="{{ url_for('users.account') }}" class="dropdown-item">
+        <a href="{{ url_for('users.page_user', username=current_user.username) }}" class="dropdown-item">
           <i class="fas fa-user fa-sm fa-fw mr-2"></i>
           Profile
         </a>
-       
+
         <div class="dropdown-divider"></div>
         <a href="{{ url_for('users.logout') }}" class="dropdown-item">
           <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2"></i>
           Logout
         </a>
       </div>
+      {% else %}
+      <!-- Not logged in - show login/register buttons -->
+      <button id="authDropdownBtn" class="user-btn">
+        <i class="fas fa-sign-in-alt"></i>
+      </button>
+
+      <!-- Auth Dropdown Menu -->
+      <div id="authDropdown" class="user-dropdown">
+        <a href="{{ url_for('users.login') }}" class="dropdown-item">
+          <i class="fas fa-sign-in-alt fa-sm fa-fw mr-2"></i>
+          Login
+        </a>
+
+        <div class="dropdown-divider"></div>
+        <a href="{{ url_for('users.register') }}" class="dropdown-item">
+          <i class="fas fa-user-plus fa-sm fa-fw mr-2"></i>
+          Register
+        </a>
+      </div>
+      {% endif %}
     </div>
   </nav>
 
@@ -239,24 +261,18 @@
     <!-- Add Flash Messages Container -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div id="flash-messages" style="position: fixed;
-                    top: 1rem;
-                    right: 1rem;
-                    z-index: 1050;
-                    min-width: 250px;
-                    max-width: 350px;">
+        <div id="flash-messages" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;">
           {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" 
-                 role="alert"
-                 style="border-radius: 0.5rem;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                        margin-bottom: 0.5rem;
-                        border: 1px solid {% if category == 'success' %}rgba(28, 200, 138, 0.2){% else %}rgba(0,0,0,0.1){% endif %};">
-              {{ message }}
-              <button type="button" 
-                      class="btn-close" 
-                      data-bs-dismiss="alert" 
-                      aria-label="Close"></button>
+            {% set bg_color = 'bg-success' if category == 'success' else 'bg-danger' if category == 'danger' else 'bg-warning' if category == 'warning' else 'bg-info' if category == 'info' else 'bg-secondary' %}
+            {% set icon = 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'danger' else 'exclamation-triangle' if category == 'warning' else 'info-circle' if category == 'info' else 'bell' %}
+            <div class="toast align-items-center text-white {{ bg_color }} border-0 show mb-3" role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="d-flex">
+                <div class="toast-body">
+                  <i class="fas fa-{{ icon }} me-2"></i>
+                  {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
             </div>
           {% endfor %}
         </div>
@@ -269,7 +285,7 @@
           {% block content %}{% endblock %}
         </div>
       </div>
-      
+
       <!-- Footer -->
       <footer class="sticky-footer" style="padding: 1rem 0;
                                          margin-top: 2rem;
@@ -296,20 +312,62 @@
     });
   </script>
 
-  <!-- Add user dropdown functionality -->
+  <!-- Initialize Flash Message Toasts -->
   <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize all toasts in the flash messages container
+      const toastElList = document.querySelectorAll('#flash-messages .toast');
+      toastElList.forEach(toastEl => {
+        const toast = new bootstrap.Toast(toastEl, {
+          autohide: true,
+          delay: 5000
+        });
+        toast.show();
+      });
+    });
+  </script>
+
+  <!-- Page-specific scripts -->
+  {% block scripts %}{% endblock %}
+
+  <!-- Add dropdown functionality for both user and auth dropdowns -->
+  <script>
+    // User dropdown (when logged in)
     const userBtn = document.getElementById('userDropdownBtn');
     const userDropdown = document.getElementById('userDropdown');
 
-    userBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      userDropdown.classList.toggle('show');
-    });
+    if (userBtn) {
+      userBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle('show');
+      });
+    }
 
-    // Close dropdown when clicking outside
+    // Auth dropdown (when not logged in)
+    const authBtn = document.getElementById('authDropdownBtn');
+    const authDropdown = document.getElementById('authDropdown');
+
+    if (authBtn) {
+      authBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        authDropdown.classList.toggle('show');
+      });
+    }
+
+    // Close dropdowns when clicking outside
     document.addEventListener('click', function (e) {
-      if (!userDropdown.contains(e.target) && !userBtn.contains(e.target)) {
-        userDropdown.classList.remove('show');
+      // Close user dropdown if it exists
+      if (userDropdown && !userBtn?.contains(e.target)) {
+        if (!userDropdown.contains(e.target)) {
+          userDropdown.classList.remove('show');
+        }
+      }
+
+      // Close auth dropdown if it exists
+      if (authDropdown && !authBtn?.contains(e.target)) {
+        if (!authDropdown.contains(e.target)) {
+          authDropdown.classList.remove('show');
+        }
       }
     });
   </script>

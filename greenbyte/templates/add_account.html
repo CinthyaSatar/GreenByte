@@ -1,0 +1,216 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow-sm border-0" style="border-radius: 1rem; border: 1px solid rgba(28, 200, 138, 0.2) !important;">
+                <div class="card-body p-4">
+                    <!-- Header -->
+                    <div class="d-flex align-items-center mb-4">
+                        <h2 class="mb-0 text-dark">Create an Account</h2>
+                    </div>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} mb-4">{{message}}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Username Field -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Username</label>
+                            {% if form.username.errors %}
+                                {{ form.username(class="form-control is-invalid", 
+                                               style="border: 1px solid rgba(231, 74, 59, 0.2); 
+                                                      border-radius: 0.75rem;
+                                                      padding: 0.75rem;
+                                                      background: rgba(255, 255, 255, 0.9);") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.username(class="form-control", 
+                                               style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                                                      border-radius: 0.75rem;
+                                                      padding: 0.75rem;
+                                                      background: rgba(255, 255, 255, 0.9);") }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Name Fields -->
+                        <div class="row mb-4">
+                            <div class="col-sm-6">
+                                <label class="form-label fw-bold">First Name</label>
+                                {% if form.firstName.errors %}
+                                    {{ form.firstName(class="form-control is-invalid", 
+                                                    style="border: 1px solid rgba(231, 74, 59, 0.2); 
+                                                           border-radius: 0.75rem;
+                                                           padding: 0.75rem;
+                                                           background: rgba(255, 255, 255, 0.9);") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.firstName.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.firstName(class="form-control", 
+                                                    style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                                                           border-radius: 0.75rem;
+                                                           padding: 0.75rem;
+                                                           background: rgba(255, 255, 255, 0.9);") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-bold">Last Name</label>
+                                {% if form.lastName.errors %}
+                                    {{ form.lastName(class="form-control is-invalid", 
+                                                   style="border: 1px solid rgba(231, 74, 59, 0.2); 
+                                                          border-radius: 0.75rem;
+                                                          padding: 0.75rem;
+                                                          background: rgba(255, 255, 255, 0.9);") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.lastName.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.lastName(class="form-control", 
+                                                   style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                                                          border-radius: 0.75rem;
+                                                          padding: 0.75rem;
+                                                          background: rgba(255, 255, 255, 0.9);") }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Email Field -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Email Address</label>
+                            {% if form.email.errors %}
+                                {{ form.email(class="form-control is-invalid", 
+                                            style="border: 1px solid rgba(231, 74, 59, 0.2); 
+                                                   border-radius: 0.75rem;
+                                                   padding: 0.75rem;
+                                                   background: rgba(255, 255, 255, 0.9);") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.email(class="form-control", 
+                                            style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                                                   border-radius: 0.75rem;
+                                                   padding: 0.75rem;
+                                                   background: rgba(255, 255, 255, 0.9);") }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Password Fields -->
+                        <div class="row mb-4">
+                            <div class="col-sm-6">
+                                <label class="form-label fw-bold">Password</label>
+                                {% if form.password.errors %}
+                                    {{ form.password(class="form-control is-invalid", 
+                                                   style="border: 1px solid rgba(231, 74, 59, 0.2); 
+                                                          border-radius: 0.75rem;
+                                                          padding: 0.75rem;
+                                                          background: rgba(255, 255, 255, 0.9);") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.password.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.password(class="form-control", 
+                                                   style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                                                          border-radius: 0.75rem;
+                                                          padding: 0.75rem;
+                                                          background: rgba(255, 255, 255, 0.9);") }}
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-bold">Confirm Password</label>
+                                {% if form.confirmPassword.errors %}
+                                    {{ form.confirmPassword(class="form-control is-invalid", 
+                                                         style="border: 1px solid rgba(231, 74, 59, 0.2); 
+                                                                border-radius: 0.75rem;
+                                                                padding: 0.75rem;
+                                                                background: rgba(255, 255, 255, 0.9);") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.confirmPassword.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.confirmPassword(class="form-control", 
+                                                         style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                                                                border-radius: 0.75rem;
+                                                                padding: 0.75rem;
+                                                                background: rgba(255, 255, 255, 0.9);") }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="mt-4">
+                            {{ form.submit(class="btn w-100", 
+                                         style="background: rgba(28, 200, 138, 0.1); 
+                                                color: #1cc88a; 
+                                                border: 1px solid rgba(28, 200, 138, 0.2);
+                                                border-radius: 0.75rem;
+                                                padding: 0.75rem 1.5rem;") }}
+                        </div>
+
+                        <!-- Links -->
+                        <div class="text-center mt-4">
+                            <a href="{{ url_for('users.resetRequest') }}" 
+                               style="color: #1cc88a; text-decoration: none;">
+                                <small>Forgot Password?</small>
+                            </a>
+                            <span class="mx-2" style="color: #5a5c69;">•</span>
+                            <a href="{{ url_for('users.login') }}" 
+                               style="color: #1cc88a; text-decoration: none;">
+                                <small>Already have an account? Login!</small>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control:focus {
+    border-color: rgba(28, 200, 138, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.form-label {
+    color: #5a5c69;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.invalid-feedback {
+    color: #e74a3b;
+    font-size: 80%;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock content %}

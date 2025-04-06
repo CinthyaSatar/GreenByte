@@ -1,72 +1,135 @@
 {% extends "layout.html" %}
 {% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-10 col-md-9">
+            <!-- Login Card -->
+            <div class="card shadow mb-4" style="border-radius: 15px; border: 1px solid rgba(28, 200, 138, 0.2); margin-top: 2rem;">
+                <div class="card-body p-0">
+                    <div class="row">
+                        <!-- Left Image Column -->
+                        <div class="col-lg-5 d-none d-lg-block" style="background: linear-gradient(rgba(28, 200, 138, 0.8), rgba(28, 200, 138, 0.4)), url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center; border-top-left-radius: 15px; border-bottom-left-radius: 15px;">
+                            <div class="p-5 text-white" style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                                <h2 class="mb-4 fw-bold">Welcome to GreenByte</h2>
+                                <p class="mb-4">Your digital garden management platform. Track plants, monitor growth, and connect with fellow gardeners.</p>
+                                <div class="d-flex mt-4">
+                                    <div class="me-3">
+                                        <i class="fas fa-leaf fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Plant Tracking</h5>
+                                        <p class="small mb-0">Monitor growth and health</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex mt-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-calendar-alt fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Garden Planning</h5>
+                                        <p class="small mb-0">Organize your garden zones</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-    <div class="container">
-        <!-- Outer Row -->
-        <div class="row justify-content-center">
-            <div class="col-xl-10 col-lg-12 col-md-9">
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <!-- Nested Row within Card Body -->
-                        <div class="row">
-                            <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
-                            <div class="col-lg-6">
-                                <div class="p-5">
-                                    <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">Welcome Back!</h1>
-                                    </div>
-                                    <form class="user" method="POST" action>
-                                        {{ form.hidden_tag() }}
-                                        <div class="form-group">
-                                            {% if form.email.errors %}
-                                            {{ form.email(class="form-control form-control-user is-invalid", placeholder="Email Address")}}
-                                            <div class="invalid-feedback">
-                                                {% for error in form.email.errors%}
-                                                <span>{{error}}</span>
-                                                {% endfor%}
-                                            </div>
-                                            {% else %}
-                                            {{ form.email(class="form-control form-control-user", placeholder="Email Address")}}
-                                            {% endif%}
-                                        </div>
-                                        <div class="form-group">
-                                            {% if form.password.errors %}
-                                            {{ form.password(class="form-control form-control-user is-invalid", placeholder="Password")}}
-                                            <div class="invalid-feedback">
-                                                {% for error in form.password.errors%}
-                                                <span>{{error}}</span>
-                                                {% endfor%}
-                                            </div>
-                                            {% else %}
-                                            {{ form.password(class="form-control form-control-user", placeholder="Password")}}
-                                            {% endif%}
-                                        </div>
-                                        <div class="form-group">
-                                            <div class="custom-control custom-checkbox small">
-                                                
-                                                {{ form.remember(class="custom-control-input")}}
-                                                {{ form.remember.label(class="custom-control-label")}}
+                        <!-- Right Form Column -->
+                        <div class="col-lg-7">
+                            <div class="p-5">
+                                <div class="text-center mb-4">
+                                    <h2 style="color: #1cc88a; font-weight: 600;">Welcome Back!</h2>
+                                    <p class="text-muted">Sign in to access your garden dashboard</p>
+                                </div>
 
+                                <form method="POST" action="">
+                                    {{ form.hidden_tag() }}
+
+                                    <div class="form-group mb-4">
+                                        {{ form.email.label(class="form-label fw-bold") }}
+                                        {% if form.email.errors %}
+                                            {{ form.email(class="form-control is-invalid", placeholder="Enter your email address",
+                                                       style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.email.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
                                             </div>
+                                        {% else %}
+                                            {{ form.email(class="form-control", placeholder="Enter your email address",
+                                                       style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        {{ form.password.label(class="form-label fw-bold") }}
+                                        {% if form.password.errors %}
+                                            {{ form.password(class="form-control is-invalid", placeholder="Enter your password",
+                                                          style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.password.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ form.password(class="form-control", placeholder="Enter your password",
+                                                          style="border-radius: 10px; border-color: rgba(28, 200, 138, 0.2); padding: 0.75rem;") }}
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        <div class="form-check">
+                                            {{ form.remember(class="form-check-input",
+                                                          style="border-color: rgba(28, 200, 138, 0.2);") }}
+                                            {{ form.remember.label(class="form-check-label") }}
                                         </div>
-                                        {{ form.submit(class="btn btn-primary btn-user btn-block")}}
-                                    </form>
-                                    <hr>
-                                    <div class="text-center">
-                                        <a class="small" href="{{url_for('users.resetRequest')}}">Forgot Password?</a>
                                     </div>
-                                    <div class="text-center">
-                                        <a class="small" href="{{url_for('users.register')}}">Create an Account!</a>
-                                    </div>
+
+                                    {{ form.submit(class="btn w-100 mb-4",
+                                                style="background: rgba(28, 200, 138, 0.1);
+                                                       color: #1cc88a;
+                                                       border: 1px solid rgba(28, 200, 138, 0.2);
+                                                       border-radius: 0.75rem;
+                                                       padding: 0.75rem 1.5rem;
+                                                       font-weight: 600;") }}
+                                </form>
+
+                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                    <a href="{{ url_for('users.resetRequest') }}" class="text-decoration-none" style="color: #4e73df;">
+                                        <i class="fas fa-key me-1"></i> Forgot Password?
+                                    </a>
+                                    <a href="{{ url_for('users.register') }}" class="text-decoration-none" style="color: #1cc88a;">
+                                        <i class="fas fa-user-plus me-1"></i> Create Account
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
-
         </div>
-
     </div>
-    {% endblock content%}
+</div>
+
+<style>
+    .form-control:focus {
+        border-color: rgba(28, 200, 138, 0.5);
+        box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .form-label {
+        color: #5a5c69;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-check-input:checked {
+        background-color: #1cc88a;
+        border-color: #1cc88a;
+    }
+</style>
+{% endblock content %}
