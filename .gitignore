@@ -1,13 +1,15 @@
-# Python virtual environment
+
+# Virtual Environment
 env/
 venv/
 ENV/
-*.pyc
+
+# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Flask instance folder
+
 instance/
 *.db
 *.sqlite
@@ -15,6 +17,7 @@ instance/
 # IDE files
 .idea/
 .vscode/
+
 *.swp
 *.swo
 
@@ -29,3 +32,19 @@ Thumbs.db
 
 # Scripts
 remove_pyc.sh
+
+# Logs
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Ignore all virtual environment files
+env
+env/*
+env/**/*
+
+# Ignore database files
+instance
+instance/*

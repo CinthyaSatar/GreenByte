@@ -1,0 +1,1250 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-fluid">
+  <!-- Global Analytics Section -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0" style="color: #1cc88a">Global Analytics</h1>
+  </div>
+
+  <!-- Global Stats Cards -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-success text-uppercase mb-1"
+              >
+                Total Users
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">156</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-users fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Total Plants
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">1,247</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-leaf fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-info text-uppercase mb-1"
+              >
+                Plant Varieties
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">42</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-seedling fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Total Harvests
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">523</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-weight fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plant Selection -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow">
+        <div
+          class="card-header py-3 d-flex justify-content-between align-items-center"
+        >
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Plant Analytics
+          </h6>
+          <div class="d-flex align-items-center">
+            <div class="input-group" style="width: 300px">
+              <input
+                type="text"
+                id="plantSearch"
+                class="form-control"
+                placeholder="Search plants..."
+              />
+              <select id="plantSelector" class="form-select">
+                <option value="all">All Plants</option>
+                <option value="tomato">Tomato</option>
+                <option value="basil">Basil</option>
+                <option value="lettuce">Lettuce</option>
+                <option value="pepper">Pepper</option>
+                <option value="cucumber">Cucumber</option>
+                <option value="spinach">Spinach</option>
+                <option value="kale">Kale</option>
+                <option value="carrot">Carrot</option>
+                <option value="radish">Radish</option>
+                <option value="strawberry">Strawberry</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" id="plantSpecificInfo" style="display: none">
+          <div class="row">
+            <div class="col-md-3">
+              <img
+                id="plantImage"
+                src="{{ url_for('static', filename='img/plants/tomato.jpg') }}"
+                class="img-fluid rounded"
+                alt="Plant Image"
+              />
+            </div>
+            <div class="col-md-9">
+              <h4 id="plantName">Tomato</h4>
+              <p id="plantDescription">
+                Tomatoes are the fruit of the plant Solanum lycopersicum. They
+                are one of the most popular garden vegetables to grow and are
+                rich in vitamins A and C.
+              </p>
+              <div class="row">
+                <div class="col-md-4">
+                  <p>
+                    <strong>Scientific Name:</strong>
+                    <span id="scientificName">Solanum lycopersicum</span>
+                  </p>
+                  <p>
+                    <strong>Family:</strong>
+                    <span id="plantFamily">Solanaceae</span>
+                  </p>
+                </div>
+                <div class="col-md-4">
+                  <p>
+                    <strong>Growing Season:</strong>
+                    <span id="growingSeason">Spring-Summer</span>
+                  </p>
+                  <p>
+                    <strong>Difficulty:</strong>
+                    <span id="difficulty">Moderate</span>
+                  </p>
+                </div>
+                <div class="col-md-4">
+                  <p>
+                    <strong>Companion Plants:</strong>
+                    <span id="companionPlants">Basil, Marigold</span>
+                  </p>
+                  <p>
+                    <strong>Avoid Planting With:</strong>
+                    <span id="avoidPlants">Potatoes, Corn</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Charts Row -->
+  <div class="row">
+    <div class="col-xl-4 col-lg-4">
+      <div class="card shadow mb-4 h-100">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Most Popular Plants
+          </h6>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>Tomato</span>
+              <span class="badge bg-success rounded-pill">87 growers</span>
+            </div>
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>Lettuce</span>
+              <span class="badge bg-success rounded-pill">65 growers</span>
+            </div>
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>Basil</span>
+              <span class="badge bg-success rounded-pill">58 growers</span>
+            </div>
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>Pepper</span>
+              <span class="badge bg-success rounded-pill">42 growers</span>
+            </div>
+            <div
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>Cucumber</span>
+              <span class="badge bg-success rounded-pill">39 growers</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4">
+      <div class="card shadow mb-4 h-100">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Growth Stage Distribution
+          </h6>
+          <small class="text-muted"
+            >Percentage of plants in each growth phase</small
+          >
+        </div>
+        <div class="card-body d-flex align-items-center">
+          <div class="py-2 w-100">
+            <div class="progress mb-3" style="height: 25px">
+              <div
+                class="progress-bar bg-primary"
+                role="progressbar"
+                style="width: 15%"
+                aria-valuenow="15"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                15%
+              </div>
+              <div
+                class="progress-bar bg-success"
+                role="progressbar"
+                style="width: 35%"
+                aria-valuenow="35"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                35%
+              </div>
+              <div
+                class="progress-bar bg-info"
+                role="progressbar"
+                style="width: 30%"
+                aria-valuenow="30"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                30%
+              </div>
+              <div
+                class="progress-bar bg-warning"
+                role="progressbar"
+                style="width: 20%"
+                aria-valuenow="20"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                20%
+              </div>
+            </div>
+            <div class="d-flex justify-content-between small">
+              <div><i class="fas fa-circle text-primary"></i> Seedling</div>
+              <div><i class="fas fa-circle text-success"></i> Vegetative</div>
+              <div><i class="fas fa-circle text-info"></i> Flowering</div>
+              <div><i class="fas fa-circle text-warning"></i> Fruiting</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-4">
+      <div class="card shadow mb-4 h-100">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Growing Conditions
+          </h6>
+        </div>
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="progress-container mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Indoor Growing</span>
+              <span>65%</span>
+            </div>
+            <div class="progress" style="height: 10px">
+              <div
+                class="progress-bar bg-success"
+                role="progressbar"
+                style="width: 65%"
+                aria-valuenow="65"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+          <div class="progress-container mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Outdoor Growing</span>
+              <span>35%</span>
+            </div>
+            <div class="progress" style="height: 10px">
+              <div
+                class="progress-bar bg-info"
+                role="progressbar"
+                style="width: 35%"
+                aria-valuenow="35"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+          <div class="progress-container mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Hydroponics</span>
+              <span>42%</span>
+            </div>
+            <div class="progress" style="height: 10px">
+              <div
+                class="progress-bar bg-primary"
+                role="progressbar"
+                style="width: 42%"
+                aria-valuenow="42"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+          <div class="progress-container">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Soil Growing</span>
+              <span>58%</span>
+            </div>
+            <div class="progress" style="height: 10px">
+              <div
+                class="progress-bar bg-warning"
+                role="progressbar"
+                style="width: 58%"
+                aria-valuenow="58"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plant Performance Metrics -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Plant Performance Metrics
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Plant Type</th>
+                  <th>Avg Growth Rate</th>
+                  <th>Avg Time to Harvest</th>
+                  <th>Success Rate</th>
+                  <th>Avg Yield</th>
+                  <th>Optimal pH</th>
+                  <th>Water Needs</th>
+                </tr>
+              </thead>
+              <tbody id="plantMetricsBody">
+                <tr>
+                  <td>Tomato</td>
+                  <td>1.2"/week</td>
+                  <td>75 days</td>
+                  <td>87%</td>
+                  <td>5.2 lbs/plant</td>
+                  <td>6.0-6.8</td>
+                  <td>Medium</td>
+                </tr>
+                <tr>
+                  <td>Basil</td>
+                  <td>0.8"/week</td>
+                  <td>30 days</td>
+                  <td>92%</td>
+                  <td>0.5 lbs/plant</td>
+                  <td>6.0-7.5</td>
+                  <td>Medium</td>
+                </tr>
+                <tr>
+                  <td>Lettuce</td>
+                  <td>1.0"/week</td>
+                  <td>45 days</td>
+                  <td>95%</td>
+                  <td>0.8 lbs/plant</td>
+                  <td>6.0-7.0</td>
+                  <td>High</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Farm Analytics Section -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4 mt-5">
+    <h1 class="h3 mb-0" style="color: #1cc88a">My Farm Analytics</h1>
+  </div>
+
+  <!-- Personal Stats Cards -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-success text-uppercase mb-1"
+              >
+                My Plants
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">25</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-seedling fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Monthly Harvest
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">15 lbs</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-balance-scale fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-info text-uppercase mb-1"
+              >
+                Water Usage
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">50 gal</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-tint fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Success Rate
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">92%</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-percentage fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Charts Row -->
+  <div class="row">
+    <div class="col-xl-8 col-lg-7">
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3 d-flex justify-content-between align-items-center"
+        >
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            My Growth Trends
+          </h6>
+          <div>
+            <select class="form-select form-select-sm" id="growthTimeRange">
+              <option value="week">Last Week</option>
+              <option value="month" selected>Last Month</option>
+              <option value="quarter">Last Quarter</option>
+              <option value="year">Last Year</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Growth Trend Visualization -->
+          <div class="mt-3 mb-4">
+            <div class="d-flex justify-content-between text-muted small mb-3">
+              <span>Growth (inches)</span>
+              <span>Last 30 Days</span>
+            </div>
+
+            <!-- Chart Container with proper spacing -->
+            <div
+              class="position-relative"
+              style="height: 220px; padding-left: 30px; padding-bottom: 20px"
+            >
+              <!-- Y-axis labels -->
+              <div
+                class="position-absolute"
+                style="left: 0; top: 0; height: 200px; width: 30px"
+              >
+                <div class="d-flex flex-column justify-content-between h-100">
+                  <small class="text-muted">5.0"</small>
+                  <small class="text-muted">4.0"</small>
+                  <small class="text-muted">3.0"</small>
+                  <small class="text-muted">2.0"</small>
+                  <small class="text-muted">1.0"</small>
+                  <small class="text-muted">0"</small>
+                </div>
+              </div>
+
+              <!-- Bars Container -->
+              <div class="h-100">
+                <div class="d-flex align-items-end h-100">
+                  <!-- Generate 15 bars for better spacing -->
+                  <div
+                    class="d-flex justify-content-between align-items-end w-100"
+                    style="height: 200px"
+                  >
+                    <!-- Day 1 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 40px"
+                      ></div>
+                      <small class="text-muted mt-1">1</small>
+                    </div>
+                    <!-- Day 2 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 45px"
+                      ></div>
+                      <small class="text-muted mt-1">2</small>
+                    </div>
+                    <!-- Day 3 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 50px"
+                      ></div>
+                      <small class="text-muted mt-1">3</small>
+                    </div>
+                    <!-- Day 4 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 55px"
+                      ></div>
+                      <small class="text-muted mt-1">4</small>
+                    </div>
+                    <!-- Day 5 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 60px"
+                      ></div>
+                      <small class="text-muted mt-1">5</small>
+                    </div>
+                    <!-- Day 6 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 65px"
+                      ></div>
+                      <small class="text-muted mt-1">6</small>
+                    </div>
+                    <!-- Day 7 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 70px"
+                      ></div>
+                      <small class="text-muted mt-1">7</small>
+                    </div>
+                    <!-- Day 8 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 80px"
+                      ></div>
+                      <small class="text-muted mt-1">8</small>
+                    </div>
+                    <!-- Day 9 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 90px"
+                      ></div>
+                      <small class="text-muted mt-1">9</small>
+                    </div>
+                    <!-- Day 10 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 100px"
+                      ></div>
+                      <small class="text-muted mt-1">10</small>
+                    </div>
+                    <!-- Day 11 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 110px"
+                      ></div>
+                      <small class="text-muted mt-1">11</small>
+                    </div>
+                    <!-- Day 12 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 120px"
+                      ></div>
+                      <small class="text-muted mt-1">12</small>
+                    </div>
+                    <!-- Day 13 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 140px"
+                      ></div>
+                      <small class="text-muted mt-1">13</small>
+                    </div>
+                    <!-- Day 14 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 160px"
+                      ></div>
+                      <small class="text-muted mt-1">14</small>
+                    </div>
+                    <!-- Day 15 -->
+                    <div
+                      class="d-flex flex-column align-items-center"
+                      style="width: 6%"
+                    >
+                      <div
+                        class="bg-success rounded-top"
+                        style="width: 8px; height: 180px"
+                      ></div>
+                      <small class="text-muted mt-1">15</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="d-flex justify-content-center mt-2">
+              <small class="text-muted">Days (showing 15 of 30 days)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            My Plant Types
+          </h6>
+        </div>
+        <div class="card-body">
+          <!-- Plant Types Visualization -->
+          <div class="plant-types-container">
+            <div class="row text-center">
+              <div class="col-4 mb-4">
+                <div
+                  class="plant-type-circle bg-success mx-auto"
+                  style="
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <i class="fas fa-seedling fa-2x text-white"></i>
+                </div>
+                <h6 class="mt-2 mb-0">Tomato</h6>
+                <small class="text-muted">8 plants</small>
+              </div>
+              <div class="col-4 mb-4">
+                <div
+                  class="plant-type-circle bg-primary mx-auto"
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <i class="fas fa-leaf fa-lg text-white"></i>
+                </div>
+                <h6 class="mt-2 mb-0">Basil</h6>
+                <small class="text-muted">5 plants</small>
+              </div>
+              <div class="col-4 mb-4">
+                <div
+                  class="plant-type-circle bg-info mx-auto"
+                  style="
+                    width: 70px;
+                    height: 70px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <i class="fas fa-leaf fa-lg text-white"></i>
+                </div>
+                <h6 class="mt-2 mb-0">Lettuce</h6>
+                <small class="text-muted">6 plants</small>
+              </div>
+              <div class="col-4 mb-4">
+                <div
+                  class="plant-type-circle bg-warning mx-auto"
+                  style="
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <i class="fas fa-pepper-hot fa-lg text-white"></i>
+                </div>
+                <h6 class="mt-2 mb-0">Pepper</h6>
+                <small class="text-muted">3 plants</small>
+              </div>
+              <div class="col-4 mb-4">
+                <div
+                  class="plant-type-circle bg-danger mx-auto"
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <i class="fas fa-carrot fa-lg text-white"></i>
+                </div>
+                <h6 class="mt-2 mb-0">Carrot</h6>
+                <small class="text-muted">2 plants</small>
+              </div>
+              <div class="col-4 mb-4">
+                <div
+                  class="plant-type-circle bg-secondary mx-auto"
+                  style="
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <i class="fas fa-seedling fa-sm text-white"></i>
+                </div>
+                <h6 class="mt-2 mb-0">Other</h6>
+                <small class="text-muted">1 plant</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Plant Performance Table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            My Plant Performance
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Plant Name</th>
+                  <th>Growth Stage</th>
+                  <th>Days Growing</th>
+                  <th>Last Watered</th>
+                  <th>pH Level</th>
+                  <th>Expected Harvest</th>
+                  <th>Health Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Tomatoes</td>
+                  <td>Flowering</td>
+                  <td>45</td>
+                  <td>Today</td>
+                  <td>6.5</td>
+                  <td>2 weeks</td>
+                  <td><span class="badge bg-success">Healthy</span></td>
+                </tr>
+                <tr>
+                  <td>Lettuce</td>
+                  <td>Mature</td>
+                  <td>30</td>
+                  <td>Yesterday</td>
+                  <td>6.2</td>
+                  <td>5 days</td>
+                  <td><span class="badge bg-success">Healthy</span></td>
+                </tr>
+                <tr>
+                  <td>Basil</td>
+                  <td>Growing</td>
+                  <td>15</td>
+                  <td>Today</td>
+                  <td>6.8</td>
+                  <td>3 weeks</td>
+                  <td><span class="badge bg-warning">Needs Water</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} {% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/demo/chart-area-demo.js') }}"></script>
+<script src="{{ url_for('static', filename='js/demo/chart-pie-demo.js') }}"></script>
+<script src="{{ url_for('static', filename='js/demo/chart-bar-demo.js') }}"></script>
+
+<!-- Plant Analytics JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Get the elements
+    const plantSelector = document.getElementById("plantSelector");
+    const plantSearch = document.getElementById("plantSearch");
+    const plantMetricsBody = document.getElementById("plantMetricsBody");
+    const plantSpecificInfo = document.getElementById("plantSpecificInfo");
+    const plantImage = document.getElementById("plantImage");
+    const plantName = document.getElementById("plantName");
+    const plantDescription = document.getElementById("plantDescription");
+    const scientificName = document.getElementById("scientificName");
+    const plantFamily = document.getElementById("plantFamily");
+    const growingSeason = document.getElementById("growingSeason");
+    const difficulty = document.getElementById("difficulty");
+    const companionPlants = document.getElementById("companionPlants");
+    const avoidPlants = document.getElementById("avoidPlants");
+
+    // Sample data for different plants
+    const plantData = {
+      tomato: [
+        [
+          "Tomato",
+          '1.2"/week',
+          "75 days",
+          "87%",
+          "5.2 lbs/plant",
+          "6.0-6.8",
+          "Medium",
+        ],
+      ],
+      basil: [
+        [
+          "Basil",
+          '0.8"/week',
+          "30 days",
+          "92%",
+          "0.5 lbs/plant",
+          "6.0-7.5",
+          "Medium",
+        ],
+      ],
+      lettuce: [
+        [
+          "Lettuce",
+          '1.0"/week',
+          "45 days",
+          "95%",
+          "0.8 lbs/plant",
+          "6.0-7.0",
+          "High",
+        ],
+      ],
+      pepper: [
+        [
+          "Bell Pepper",
+          '0.9"/week',
+          "80 days",
+          "82%",
+          "2.0 lbs/plant",
+          "5.8-6.5",
+          "Medium",
+        ],
+      ],
+      cucumber: [
+        [
+          "Cucumber",
+          '1.5"/week',
+          "60 days",
+          "88%",
+          "3.5 lbs/plant",
+          "5.5-7.0",
+          "High",
+        ],
+      ],
+      spinach: [
+        [
+          "Spinach",
+          '0.7"/week',
+          "40 days",
+          "90%",
+          "0.6 lbs/plant",
+          "6.0-7.0",
+          "Medium",
+        ],
+      ],
+      kale: [
+        [
+          "Kale",
+          '0.8"/week',
+          "60 days",
+          "93%",
+          "1.2 lbs/plant",
+          "5.5-6.5",
+          "Medium",
+        ],
+      ],
+      carrot: [
+        [
+          "Carrot",
+          '0.5"/week',
+          "70 days",
+          "85%",
+          "0.3 lbs/plant",
+          "6.0-6.8",
+          "Low",
+        ],
+      ],
+      radish: [
+        [
+          "Radish",
+          '0.6"/week',
+          "25 days",
+          "96%",
+          "0.2 lbs/plant",
+          "6.0-7.0",
+          "Low",
+        ],
+      ],
+      strawberry: [
+        [
+          "Strawberry",
+          '0.4"/week',
+          "90 days",
+          "80%",
+          "0.5 lbs/plant",
+          "5.5-6.5",
+          "Medium",
+        ],
+      ],
+      all: [
+        [
+          "Tomato",
+          '1.2"/week',
+          "75 days",
+          "87%",
+          "5.2 lbs/plant",
+          "6.0-6.8",
+          "Medium",
+        ],
+        [
+          "Basil",
+          '0.8"/week',
+          "30 days",
+          "92%",
+          "0.5 lbs/plant",
+          "6.0-7.5",
+          "Medium",
+        ],
+        [
+          "Lettuce",
+          '1.0"/week',
+          "45 days",
+          "95%",
+          "0.8 lbs/plant",
+          "6.0-7.0",
+          "High",
+        ],
+        [
+          "Bell Pepper",
+          '0.9"/week',
+          "80 days",
+          "82%",
+          "2.0 lbs/plant",
+          "5.8-6.5",
+          "Medium",
+        ],
+        [
+          "Cucumber",
+          '1.5"/week',
+          "60 days",
+          "88%",
+          "3.5 lbs/plant",
+          "5.5-7.0",
+          "High",
+        ],
+      ],
+    };
+
+    // Plant details data
+    const plantDetails = {
+      tomato: {
+        name: "Tomato",
+        image: "tomato.jpg",
+        description:
+          "Tomatoes are the fruit of the plant Solanum lycopersicum. They are one of the most popular garden vegetables to grow and are rich in vitamins A and C.",
+        scientificName: "Solanum lycopersicum",
+        family: "Solanaceae",
+        growingSeason: "Spring-Summer",
+        difficulty: "Moderate",
+        companionPlants: "Basil, Marigold, Onions",
+        avoidPlants: "Potatoes, Corn, Fennel",
+      },
+      basil: {
+        name: "Basil",
+        image: "basil.jpg",
+        description:
+          "Basil is a culinary herb of the family Lamiaceae. It's a tender plant, and is used in cuisines worldwide.",
+        scientificName: "Ocimum basilicum",
+        family: "Lamiaceae",
+        growingSeason: "Spring-Summer",
+        difficulty: "Easy",
+        companionPlants: "Tomatoes, Peppers, Oregano",
+        avoidPlants: "Rue, Sage",
+      },
+      lettuce: {
+        name: "Lettuce",
+        image: "lettuce.jpg",
+        description:
+          "Lettuce is an annual plant of the daisy family, Asteraceae. It is most often grown as a leaf vegetable, but sometimes for its stem and seeds.",
+        scientificName: "Lactuca sativa",
+        family: "Asteraceae",
+        growingSeason: "Spring-Fall",
+        difficulty: "Easy",
+        companionPlants: "Carrots, Radishes, Cucumbers",
+        avoidPlants: "Broccoli, Cabbage",
+      },
+      pepper: {
+        name: "Bell Pepper",
+        image: "pepper.jpg",
+        description:
+          "Bell peppers are fruits of the Capsicum annuum plant. They are cultivated in different colors including red, yellow, orange, and green.",
+        scientificName: "Capsicum annuum",
+        family: "Solanaceae",
+        growingSeason: "Summer-Fall",
+        difficulty: "Moderate",
+        companionPlants: "Tomatoes, Basil, Onions",
+        avoidPlants: "Fennel, Kohlrabi",
+      },
+      cucumber: {
+        name: "Cucumber",
+        image: "cucumber.jpg",
+        description:
+          "Cucumbers are a widely-cultivated creeping vine plant that bears cylindrical fruits used as culinary vegetables.",
+        scientificName: "Cucumis sativus",
+        family: "Cucurbitaceae",
+        growingSeason: "Summer",
+        difficulty: "Moderate",
+        companionPlants: "Corn, Beans, Sunflowers",
+        avoidPlants: "Potatoes, Aromatic Herbs",
+      },
+    };
+
+    // Function to update the table based on selected plant
+    function updatePlantMetrics(plantType) {
+      // Clear existing table rows
+      plantMetricsBody.innerHTML = "";
+
+      // Get data for the selected plant
+      const data = plantData[plantType] || plantData["all"];
+
+      // Create and append new rows
+      data.forEach((plant) => {
+        const row = document.createElement("tr");
+
+        plant.forEach((cell) => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          row.appendChild(td);
+        });
+
+        plantMetricsBody.appendChild(row);
+      });
+
+      // Update plant specific info section
+      if (plantType !== "all" && plantDetails[plantType]) {
+        const details = plantDetails[plantType];
+
+        // Update plant details
+        plantName.textContent = details.name;
+        plantDescription.textContent = details.description;
+        scientificName.textContent = details.scientificName;
+        plantFamily.textContent = details.family;
+        growingSeason.textContent = details.growingSeason;
+        difficulty.textContent = details.difficulty;
+        companionPlants.textContent = details.companionPlants;
+        avoidPlants.textContent = details.avoidPlants;
+
+        // Show the plant specific info section
+        plantSpecificInfo.style.display = "block";
+
+        // Set a placeholder image for now
+        plantImage.src =
+          "https://placehold.co/300x200/1cc88a/FFFFFF.png?text=" + details.name;
+      } else {
+        // Hide the plant specific info section for 'all' plants
+        plantSpecificInfo.style.display = "none";
+      }
+    }
+
+    // Add event listener to the plant selector
+    plantSelector.addEventListener("change", function () {
+      updatePlantMetrics(this.value);
+    });
+
+    // Add event listener to the plant search
+    plantSearch.addEventListener("input", function () {
+      const searchTerm = this.value.toLowerCase();
+      const options = plantSelector.options;
+
+      // If search term matches an option value, select it
+      for (let i = 0; i < options.length; i++) {
+        const option = options[i];
+        if (option.text.toLowerCase().includes(searchTerm)) {
+          plantSelector.value = option.value;
+          updatePlantMetrics(option.value);
+          break;
+        }
+      }
+    });
+
+    // Initialize with 'all' plants
+    updatePlantMetrics("all");
+  });
+</script>
+{% endblock scripts %}

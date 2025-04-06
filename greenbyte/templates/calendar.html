@@ -1,0 +1,697 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Weekly Calendar Section (Left) -->
+    <div class="col-xl-9 col-lg-8">
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+          style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
+        >
+          <div class="d-flex align-items-center">
+            <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+              Weekly Schedule
+            </h6>
+            <div class="d-flex align-items-center" style="margin-left: 3rem">
+              <button
+                class="btn btn-sm mr-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                "
+              >
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <h6 class="m-0">March 11 - 17, 2024</h6>
+              <button
+                class="btn btn-sm ml-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                "
+              >
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+          <a
+            href="#"
+            class="btn btn-sm"
+            style="
+              background: rgba(28, 200, 138, 0.1);
+              color: #1cc88a;
+              border: 1px solid rgba(28, 200, 138, 0.2);
+            "
+            data-bs-toggle="modal"
+            data-bs-target="#addEventModal"
+          >
+            <i class="fas fa-plus fa-sm"></i>
+          </a>
+        </div>
+        <div class="card-body p-0">
+          <div class="weekly-board">
+            <div class="board-columns">
+              {% for day in [ {'name': 'Monday', 'date': '11', 'events': [
+              {'title': 'Water Plants', 'time': '9:00 AM', 'type':
+              'maintenance'}, {'title': 'Check Soil pH', 'time': '2:00 PM',
+              'type': 'monitoring'} ]}, {'name': 'Tuesday', 'date': '12',
+              'events': []}, {'name': 'Wednesday', 'date': '13', 'events': [
+              {'title': 'Harvest Tomatoes', 'time': '10:00 AM', 'type':
+              'harvest'} ]}, {'name': 'Thursday', 'date': '14', 'events': []},
+              {'name': 'Friday', 'date': '15', 'events': [ {'title': 'Plant New
+              Seeds', 'time': '11:00 AM', 'type': 'planting'} ]}, {'name':
+              'Saturday', 'date': '16', 'events': []}, {'name': 'Sunday',
+              'date': '17', 'events': []} ] %}
+              <div class="board-column">
+                <div class="column-header">
+                  <div class="day-name">{{ day.name }}</div>
+                  <div class="day-date">{{ day.date }}</div>
+                </div>
+                <div class="column-content">
+                  {% for event in day.events %}
+                  <div class="event-card">
+                    <div class="event-title">{{ event.title }}</div>
+                    <div class="event-time">
+                      <i class="fas fa-clock fa-sm"></i> {{ event.time }}
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar (Right) -->
+    <div class="col-xl-3 col-lg-4">
+      <!-- Mini Monthly Calendar -->
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3"
+          style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
+        >
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            March 2024
+          </h6>
+        </div>
+        <div class="card-body p-2">
+          <div class="mini-calendar">
+            <div class="row text-center mb-2">
+              {% for day in ['S', 'M', 'T', 'W', 'T', 'F', 'S'] %}
+              <div class="col px-1">
+                <small style="color: #858796">{{ day }}</small>
+              </div>
+              {% endfor %}
+            </div>
+            {% for week in range(5) %}
+            <div class="row text-center mb-2">
+              {% for day in range(7) %}
+              <div class="col px-1">
+                <div class="mini-day-wrapper">
+                  <div
+                    class="mini-day p-1 {% if loop.index == 3 and week == 1 %}bg-success-light{% endif %}"
+                    style="border-radius: 4px; cursor: pointer"
+                  >
+                    <small>{{ loop.index + (week * 7) }}</small>
+                  </div>
+                  <!-- Add event indicator dot - we'll control visibility with has-event class -->
+                  <div
+                    class="event-indicator {% if (loop.index + (week * 7)) in [11, 13, 15] %}has-event{% endif %}"
+                  ></div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3"
+          style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
+        >
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Upcoming Events
+          </h6>
+        </div>
+        <div class="card-body">
+          <div
+            class="upcoming-event d-flex align-items-center p-2 mb-3"
+            style="
+              border-left: 3px solid #1cc88a;
+              background: rgba(28, 200, 138, 0.05);
+            "
+          >
+            <div class="event-date text-center me-3" style="min-width: 50px">
+              <small class="text-gray-500 d-block">MAR</small>
+              <div class="h5 mb-0" style="color: #1cc88a">15</div>
+            </div>
+            <div class="event-details">
+              <h6 class="mb-0">Harvest Day - Tomatoes</h6>
+              <small class="text-gray-600">
+                <i class="fas fa-clock fa-sm me-1"></i>9:00 AM
+              </small>
+            </div>
+          </div>
+          <div
+            class="upcoming-event d-flex align-items-center p-2"
+            style="
+              border-left: 3px solid #1cc88a;
+              background: rgba(28, 200, 138, 0.05);
+            "
+          >
+            <div class="event-date text-center me-3" style="min-width: 50px">
+              <small class="text-gray-500 d-block">MAR</small>
+              <div class="h5 mb-0" style="color: #1cc88a">18</div>
+            </div>
+            <div class="event-details">
+              <h6 class="mb-0">Planting - Lettuce</h6>
+              <small class="text-gray-600">
+                <i class="fas fa-clock fa-sm me-1"></i>2:00 PM
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Event Modal -->
+<div
+  class="modal fade"
+  id="addEventModal"
+  tabindex="-1"
+  aria-labelledby="addEventModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div
+        class="modal-header"
+        style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
+      >
+        <h5 class="modal-title" id="addEventModalLabel" style="color: #1cc88a">
+          New Event
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="eventForm">
+          <!-- Title and Location Section -->
+          <div class="form-group mb-3">
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              id="eventTitle"
+              placeholder="Add title"
+              required
+            />
+          </div>
+          <div class="form-group mb-3">
+            <div class="input-group">
+              <span class="input-group-text"
+                ><i class="fas fa-map-marker-alt"></i
+              ></span>
+              <input
+                type="text"
+                class="form-control"
+                id="location"
+                placeholder="Add location or video call"
+              />
+            </div>
+          </div>
+
+          <!-- Date and Time Section -->
+          <div class="form-group mb-3">
+            <div class="d-flex align-items-center mb-2">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="allDayEvent"
+                />
+                <label class="form-check-label" for="allDayEvent"
+                  >All-day</label
+                >
+              </div>
+            </div>
+
+            <div class="row mb-2">
+              <label class="col-2">Starts</label>
+              <div class="col-5">
+                <input
+                  type="date"
+                  class="form-control"
+                  id="startDate"
+                  required
+                />
+              </div>
+              <div class="col-5" id="startTimeContainer">
+                <input
+                  type="time"
+                  class="form-control"
+                  id="startTime"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <label class="col-2">Ends</label>
+              <div class="col-5">
+                <input type="date" class="form-control" id="endDate" required />
+              </div>
+              <div class="col-5" id="endTimeContainer">
+                <input type="time" class="form-control" id="endTime" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- Repeat Section -->
+          <div class="form-group mb-3">
+            <div class="row">
+              <label class="col-2">Repeat</label>
+              <div class="col-10">
+                <select class="form-select" id="repeatOption">
+                  <option value="never">Never</option>
+                  <option value="daily">Every Day</option>
+                  <option value="weekly">Every Week</option>
+                  <option value="biweekly">Every 2 Weeks</option>
+                  <option value="monthly">Every Month</option>
+                  <option value="yearly">Every Year</option>
+                  <option value="custom">Custom...</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <label class="col-2">End Repeat</label>
+              <div class="col-10">
+                <select class="form-select" id="endRepeat">
+                  <option value="never">Never</option>
+                  <option value="on">On Date</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar Selection -->
+          <div class="form-group mb-3">
+            <div class="row">
+              <label class="col-2">Calendar</label>
+              <div class="col-10">
+                <select class="form-select" id="calendar">
+                  <option value="work" style="color: #1cc88a">Work</option>
+                  <option value="community" style="color: #4e73df">
+                    Community
+                  </option>
+                  <option value="school" style="color: #f6c23e">School</option>
+                  <option value="personal" style="color: #e74a3b">
+                    Personal
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Invitees Section -->
+          <div class="form-group mb-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-users"></i></span>
+              <input
+                type="text"
+                class="form-control"
+                id="invitees"
+                placeholder="Add invitees"
+              />
+              <button class="btn btn-outline-secondary" type="button">
+                Add
+              </button>
+            </div>
+          </div>
+
+          <!-- Alert Section -->
+          <div class="form-group mb-3">
+            <div class="row">
+              <label class="col-2">Alert</label>
+              <div class="col-10">
+                <select class="form-select" id="alert">
+                  <option value="0">At time of event</option>
+                  <option value="5">5 minutes before</option>
+                  <option value="10">10 minutes before</option>
+                  <option value="15">15 minutes before</option>
+                  <option value="30">30 minutes before</option>
+                  <option value="60">1 hour before</option>
+                  <option value="1440">1 day before</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Private Toggle -->
+          <div class="form-group mb-3">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="privateEvent"
+              />
+              <label class="form-check-label" for="privateEvent">Private</label>
+            </div>
+          </div>
+
+          <!-- URL -->
+          <div class="form-group mb-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-link"></i></span>
+              <input
+                type="url"
+                class="form-control"
+                id="eventUrl"
+                placeholder="Add URL"
+              />
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group mb-3">
+            <textarea
+              class="form-control"
+              id="notes"
+              rows="3"
+              placeholder="Add notes"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+      <div
+        class="modal-footer"
+        style="border-top: 1px solid rgba(28, 200, 138, 0.2)"
+      >
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-success" onclick="saveEvent()">
+          Add Event
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Set default dates to today
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    document.getElementById("startDate").value = todayStr;
+    document.getElementById("endDate").value = todayStr;
+
+    // Handle all-day event toggle
+    const allDayCheckbox = document.getElementById("allDayEvent");
+    const startTimeContainer = document.getElementById("startTimeContainer");
+    const endTimeContainer = document.getElementById("endTimeContainer");
+
+    allDayCheckbox.addEventListener("change", function () {
+      startTimeContainer.style.display = this.checked ? "none" : "block";
+      endTimeContainer.style.display = this.checked ? "none" : "block";
+    });
+
+    // Handle repeat option changes
+    const repeatOption = document.getElementById("repeatOption");
+    const endRepeatContainer =
+      document.getElementById("endRepeat").parentElement.parentElement;
+
+    repeatOption.addEventListener("change", function () {
+      endRepeatContainer.style.display =
+        this.value === "never" ? "none" : "flex";
+    });
+  });
+
+  function saveEvent() {
+    // Get all form values
+    const formData = {
+      title: document.getElementById("eventTitle").value,
+      location: document.getElementById("location").value,
+      allDay: document.getElementById("allDayEvent").checked,
+      startDate: document.getElementById("startDate").value,
+      startTime: document.getElementById("startTime").value,
+      endDate: document.getElementById("endDate").value,
+      endTime: document.getElementById("endTime").value,
+      repeat: document.getElementById("repeatOption").value,
+      endRepeat: document.getElementById("endRepeat").value,
+      calendar: document.getElementById("calendar").value,
+      invitees: document.getElementById("invitees").value,
+      alert: document.getElementById("alert").value,
+      private: document.getElementById("privateEvent").checked,
+      url: document.getElementById("eventUrl").value,
+      notes: document.getElementById("notes").value,
+    };
+
+    // Validate required fields
+    if (
+      !formData.title ||
+      !formData.startDate ||
+      (!formData.allDay && !formData.startTime)
+    ) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    // TODO: Add your logic here to save the event
+    console.log("Saving event:", formData);
+
+    // Close the modal
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById("addEventModal")
+    );
+    modal.hide();
+
+    // Reset form
+    document.getElementById("eventForm").reset();
+  }
+</script>
+
+<!-- Add these styles -->
+<style>
+  .modal-dialog {
+    max-width: 500px;
+  }
+
+  .form-group label {
+    color: #5a5c69;
+    font-weight: 500;
+  }
+
+  .input-group-text {
+    background-color: transparent;
+    border-right: none;
+  }
+
+  .input-group .form-control {
+    border-left: none;
+  }
+
+  .form-control:focus {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+  }
+
+  .form-select:focus {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+  }
+</style>
+
+<!-- Custom styles -->
+<style>
+  .weekly-board {
+    height: calc(100vh - 200px);
+    overflow: hidden; /* Remove horizontal scroll */
+  }
+
+  .board-columns {
+    display: flex;
+    min-height: 100%;
+    width: 100%; /* Ensure full width */
+  }
+
+  .board-column {
+    flex: 1;
+    min-width: 0; /* Remove min-width to allow shrinking */
+    border-right: 1px solid rgba(28, 200, 138, 0.1);
+  }
+
+  .board-column:last-child {
+    border-right: none;
+  }
+
+  .column-header {
+    padding: 0.5rem; /* Reduced padding */
+    background: rgba(28, 200, 138, 0.05);
+    border-bottom: 1px solid rgba(28, 200, 138, 0.1);
+    text-align: center;
+  }
+
+  .day-name {
+    color: #5a5c69;
+    font-weight: 600;
+    font-size: 0.85rem; /* Slightly smaller font */
+  }
+
+  .day-date {
+    color: #858796;
+    font-size: 0.75rem;
+  }
+
+  .column-content {
+    padding: 0.5rem; /* Reduced padding */
+    min-height: 100%;
+    overflow-y: auto; /* Allow vertical scrolling within columns */
+  }
+
+  .event-card {
+    background: white;
+    border-radius: 4px; /* Slightly smaller radius */
+    padding: 0.5rem; /* Reduced padding */
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #1cc88a;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    word-break: break-word; /* Prevent text overflow */
+  }
+
+  .event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .event-title {
+    color: #5a5c69;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem; /* Slightly smaller font */
+  }
+
+  .event-time {
+    color: #858796;
+    font-size: 0.7rem; /* Slightly smaller font */
+  }
+
+  .event-time i {
+    margin-right: 0.25rem;
+  }
+
+  .bg-success-light {
+    background-color: rgba(28, 200, 138, 0.1);
+  }
+
+  .mini-day:hover {
+    background-color: rgba(28, 200, 138, 0.1);
+  }
+
+  .hour-slot:hover {
+    background-color: rgba(28, 200, 138, 0.05);
+  }
+
+  .upcoming-event {
+    transition: all 0.3s ease;
+    border-radius: 4px;
+  }
+
+  .upcoming-event:hover {
+    transform: translateX(5px);
+  }
+
+  .event-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .event-card:hover {
+    transform: scale(1.02);
+  }
+
+  /* Make calendar more compact on smaller screens */
+  @media (max-width: 1200px) {
+    .day-name {
+      font-size: 0.8rem;
+    }
+
+    .event-title {
+      font-size: 0.8rem;
+    }
+
+    .column-header {
+      padding: 0.4rem;
+    }
+
+    .column-content {
+      padding: 0.4rem;
+    }
+  }
+
+  .mini-day-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .event-indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #1cc88a;
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .event-indicator.has-event {
+    opacity: 1;
+  }
+
+  /* Optional: Add different colors for different calendar types */
+  .event-indicator.work {
+    background-color: #1cc88a;
+  }
+
+  .event-indicator.community {
+    background-color: #4e73df;
+  }
+
+  .event-indicator.school {
+    background-color: #f6c23e;
+  }
+
+  .event-indicator.personal {
+    background-color: #e74a3b;
+  }
+
+  /* If you want to show multiple dots for multiple events */
+  .event-indicator-multiple {
+    display: flex;
+    gap: 2px;
+  }
+
+  .event-indicator-multiple .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+  }
+</style>
+{% endblock content %}
