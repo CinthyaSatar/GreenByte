@@ -23,3 +23,12 @@ instance/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Ignore all virtual environment files
+env
+env/*
+env/**/*
+
+# Ignore database files
+instance
+instance/*
