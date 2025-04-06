@@ -1,0 +1,25 @@
+# Virtual Environment
+env/
+venv/
+ENV/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+instance/
+*.db
+*.sqlite
+
+# IDE files
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db
