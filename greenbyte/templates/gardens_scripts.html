@@ -290,6 +290,24 @@
                 noPlantMessage.remove();
             }
 
+            // Check if the zone has table headers
+            const hasHeaders = newZonePlantsContainer.querySelector('.d-flex[style*="background-color: rgba(28, 200, 138, 0.05)"]');
+            if (!hasHeaders) {
+                // Add table headers
+                const headers = document.createElement('div');
+                headers.className = 'd-flex align-items-center py-2 px-4 border-bottom';
+                headers.style.backgroundColor = 'rgba(28, 200, 138, 0.05)';
+                headers.style.fontWeight = '500';
+                headers.innerHTML = `
+                    <div class="col-3">Plant</div>
+                    <div class="col-2">Quantity</div>
+                    <div class="col-3">Status</div>
+                    <div class="col-2">Last Updated</div>
+                    <div class="col-2">Actions</div>
+                `;
+                newZonePlantsContainer.appendChild(headers);
+            }
+
             // Create a temporary container to parse the HTML
             const tempContainer = document.createElement('div');
             tempContainer.innerHTML = data.plant_html;
