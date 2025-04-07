@@ -85,12 +85,38 @@
       <!-- Mini Monthly Calendar -->
       <div class="card shadow mb-4">
         <div
-          class="card-header py-3"
+          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
           style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
         >
-          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
-            March 2024
-          </h6>
+          <div class="d-flex align-items-center">
+            <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+              {{ month_name }} {{ year }}
+            </h6>
+            <div class="d-flex align-items-center" style="margin-left: 1rem">
+              <a
+                href="{{ url_for('main.calendar', date_str=prev_month) }}"
+                class="btn btn-sm mr-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                  padding: 0.1rem 0.3rem;
+                "
+              >
+                <i class="fas fa-chevron-left"></i>
+              </a>
+              <a
+                href="{{ url_for('main.calendar', date_str=next_month) }}"
+                class="btn btn-sm ml-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                  padding: 0.1rem 0.3rem;
+                "
+              >
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </div>
+          </div>
         </div>
         <div class="card-body p-2">
           <div class="mini-calendar">
@@ -101,20 +127,23 @@
               </div>
               {% endfor %}
             </div>
-            {% for week in range(5) %}
+            {% for week in month_calendar %}
             <div class="row text-center mb-2">
-              {% for day in range(7) %}
+              {% for day in week %}
               <div class="col px-1">
                 <div class="mini-day-wrapper">
                   <div
-                    class="mini-day p-1 {% if loop.index == 3 and week == 1 %}bg-success-light{% endif %}"
+                    class="mini-day p-1 {% if day.current_month and day.date == current_day %}bg-success-light{% endif %} {% if not day.current_month %}text-muted{% endif %}"
                     style="border-radius: 4px; cursor: pointer"
+                    {% if day.current_month %}
+                    onclick="window.location.href='{{ url_for('main.calendar', date_str=day.date_str) }}'"
+                    {% endif %}
                   >
-                    <small>{{ loop.index + (week * 7) }}</small>
+                    <small>{{ day.day }}</small>
                   </div>
                   <!-- Add event indicator dot - we'll control visibility with has-event class -->
                   <div
-                    class="event-indicator {% if (loop.index + (week * 7)) in [11, 13, 15] %}has-event{% endif %}"
+                    class="event-indicator {% if day.has_events %}has-event{% endif %}"
                   ></div>
                 </div>
               </div>

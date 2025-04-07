@@ -55,14 +55,114 @@ def calendar(date_str=None):
     prev_week = (start_of_week - timedelta(days=7)).strftime('%Y-%m-%d')
     next_week = (start_of_week + timedelta(days=7)).strftime('%Y-%m-%d')
 
+    # Calculate month calendar data
+    month_start = reference_date.replace(day=1)
+    month_name = month_start.strftime('%B')
+    year = month_start.strftime('%Y')
+
+    # Calculate previous and next month dates
+    prev_month = (month_start - timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')
+    next_month_date = month_start.replace(day=28) + timedelta(days=4)  # This will always be in the next month
+    next_month = next_month_date.replace(day=1).strftime('%Y-%m-%d')
+
+    # Get the first day of the month and the number of days in the month
+    first_day_weekday = month_start.weekday()  # 0 = Monday, 6 = Sunday
+
+    # Get the number of days in the month
+    if month_start.month == 12:
+        next_month_start = month_start.replace(year=month_start.year + 1, month=1)
+    else:
+        next_month_start = month_start.replace(month=month_start.month + 1)
+
+    days_in_month = (next_month_start - month_start).days
+
+    # Get all events for the month (including a few days before and after)
+    month_start_date = month_start - timedelta(days=10)  # Include some days from previous month
+    month_end_date = next_month_start + timedelta(days=10)  # Include some days from next month
+
+    # Get all events in the date range
+    month_events = CalendarEvent.query.filter(
+        CalendarEvent.user_id == current_user.id,
+        CalendarEvent.start_datetime >= month_start_date,
+        CalendarEvent.start_datetime <= month_end_date
+    ).all()
+
+    # Create a set of dates that have events for quick lookup
+    event_dates = set()
+    for event in month_events:
+        event_date = event.start_datetime.strftime('%Y-%m-%d')
+        event_dates.add(event_date)
+
+    # Get the previous month's days that appear in the first week of the current month
+    prev_month_days = []
+    if first_day_weekday > 0:  # If the month doesn't start on Monday
+        prev_month_end = month_start - timedelta(days=1)
+        for i in range(first_day_weekday):
+            day = prev_month_end - timedelta(days=i)
+            day_str = day.strftime('%Y-%m-%d')
+            prev_month_days.insert(0, {
+                'day': day.day,
+                'date': day_str,
+                'date_str': day_str,
+                'current_month': False,
+                'has_events': day_str in event_dates
+            })
+
+    # Get the current month's days
+    current_month_days = []
+    for i in range(1, days_in_month + 1):
+        day = month_start.replace(day=i)
+        day_str = day.strftime('%Y-%m-%d')
+        current_month_days.append({
+            'day': day.day,
+            'date': day_str,
+            'date_str': day_str,
+            'current_month': True,
+            'has_events': day_str in event_dates
+        })
+
+    # Get the next month's days that appear in the last week of the current month
+    next_month_days = []
+    total_days = len(prev_month_days) + len(current_month_days)
+    remaining_days = 42 - total_days  # 6 weeks * 7 days = 42
+
+    if remaining_days > 0:
+        next_month_start = month_start.replace(day=1)
+        if next_month_start.month == 12:
+            next_month_start = next_month_start.replace(year=next_month_start.year + 1, month=1)
+        else:
+            next_month_start = next_month_start.replace(month=next_month_start.month + 1)
+
+        for i in range(1, remaining_days + 1):
+            day = next_month_start.replace(day=i)
+            day_str = day.strftime('%Y-%m-%d')
+            next_month_days.append({
+                'day': day.day,
+                'date': day_str,
+                'date_str': day_str,
+                'current_month': False,
+                'has_events': day_str in event_dates
+            })
+
+    # Combine all days and split into weeks
+    all_days = prev_month_days + current_month_days + next_month_days
+    month_calendar = [all_days[i:i+7] for i in range(0, len(all_days), 7)]
+
+    # Get the current day for highlighting in the calendar
+    current_day = datetime.now().strftime('%Y-%m-%d')
+
     # Format the date range for display
     date_range = f"{start_of_week.strftime('%B %d')} - {end_of_week.strftime('%d, %Y')}"
 
-    # Get all events for the current user
+    # Get all events for the current user for this specific week
+    # Use strict date range to ensure events are only shown in their correct week
+    week_start_datetime = datetime.combine(start_of_week, datetime.min.time())
+    week_end_datetime = datetime.combine(end_of_week, datetime.max.time())
+
     events = CalendarEvent.query.filter(
         CalendarEvent.user_id == current_user.id,
-        CalendarEvent.start_datetime >= start_of_week,
-        CalendarEvent.start_datetime <= end_of_week + timedelta(days=1)  # Add 1 day to include events on Sunday
+        CalendarEvent.start_datetime >= week_start_datetime,
+        CalendarEvent.start_datetime <= week_end_datetime
     ).order_by(CalendarEvent.start_datetime).all()
 
     # Debug output
@@ -85,8 +185,13 @@ def calendar(date_str=None):
 
     # Add events to the appropriate day
     for event in events:
-        weekday = event.start_datetime.weekday()  # 0 = Monday, 6 = Sunday
-        if 0 <= weekday <= 6:  # Ensure the weekday is valid
+        # Get the event date and ensure it's within our week
+        event_date = event.start_datetime.date()
+        days_since_start = (event_date - start_of_week.date()).days
+
+        # Only add events that fall within this week (0-6 days from start_of_week)
+        if 0 <= days_since_start <= 6:
+            weekday = event.start_datetime.weekday()  # 0 = Monday, 6 = Sunday
             event_dict = {
                 'id': event.id,
                 'title': event.title,
@@ -95,7 +200,7 @@ def calendar(date_str=None):
                 'all_day': event.all_day
             }
             days_of_week[weekday]['events'].append(event_dict)
-            print(f"Added event '{event.title}' to {days_of_week[weekday]['name']} (index {weekday})")
+            print(f"Added event '{event.title}' to {days_of_week[weekday]['name']} (index {weekday}) - Date: {event_date}")
 
     # Debug output for days_of_week
     for i, day in enumerate(days_of_week):
@@ -121,7 +226,13 @@ def calendar(date_str=None):
                          gardens=gardens,
                          plants=plants,
                          prev_week=prev_week,
-                         next_week=next_week)
+                         next_week=next_week,
+                         month_calendar=month_calendar,
+                         month_name=month_name,
+                         year=year,
+                         prev_month=prev_month,
+                         next_month=next_month,
+                         current_day=current_day)
 
 @main.route("/calendar/events", methods=['POST'])
 @login_required
