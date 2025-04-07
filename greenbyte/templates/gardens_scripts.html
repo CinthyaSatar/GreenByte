@@ -40,45 +40,9 @@
         // Initialize timestamps when the page loads
         updateRelativeTimestamps();
 
-        // Handle garden collapse icons
-        const gardenHeaders = document.querySelectorAll('[data-bs-target^="#garden-content-"]');
-        gardenHeaders.forEach(header => {
-            const icon = header.querySelector('.garden-collapse-icon');
-            const targetId = header.getAttribute('data-bs-target');
-            const targetElement = document.querySelector(targetId);
+        // Garden collapse functionality has been removed
 
-            // Set initial state - expanded by default
-            icon.style.transform = 'rotate(90deg)';
-
-            // Add event listener for collapse events
-            targetElement.addEventListener('hide.bs.collapse', function() {
-                icon.style.transform = 'rotate(0deg)';
-            });
-
-            targetElement.addEventListener('show.bs.collapse', function() {
-                icon.style.transform = 'rotate(90deg)';
-            });
-        });
-
-        // Handle zone collapse icons
-        const zoneHeaders = document.querySelectorAll('[data-bs-target^="#zone-content-"]');
-        zoneHeaders.forEach(header => {
-            const icon = header.querySelector('.zone-collapse-icon');
-            const targetId = header.getAttribute('data-bs-target');
-            const targetElement = document.querySelector(targetId);
-
-            // Set initial state - expanded by default
-            icon.style.transform = 'rotate(90deg)';
-
-            // Add event listener for collapse events
-            targetElement.addEventListener('hide.bs.collapse', function() {
-                icon.style.transform = 'rotate(0deg)';
-            });
-
-            targetElement.addEventListener('show.bs.collapse', function() {
-                icon.style.transform = 'rotate(90deg)';
-            });
-        });
+        // Zone collapse functionality has been removed
 
         // Helper function to show toast notifications
         function showToast(message, bgClass = 'bg-success') {
