@@ -1,0 +1,429 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0" style="color: #1cc88a;">Edit Calendar Event</h1>
+  </div>
+
+  <!-- Event Edit Form -->
+  <div class="card shadow mb-4" style="border-radius: 15px;">
+    <div class="card-header py-3 d-flex align-items-center" style="background-color: white; border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
+      <h6 class="m-0 font-weight-bold" style="color: #1cc88a;">
+        <i class="fas fa-edit me-2"></i>Event Details
+      </h6>
+    </div>
+    <div class="card-body">
+      <form id="editEventForm" action="{{ url_for('main.edit_event', event_id=event.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Event Title -->
+        <div class="form-group mb-4">
+          <label for="eventTitle" class="form-label fw-bold" style="color: #5a5c69;">Event Title</label>
+          <input
+            type="text"
+            class="form-control form-control-lg"
+            id="eventTitle"
+            name="eventTitle"
+            placeholder="Add title"
+            value="{{ event.title }}"
+            required
+            style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+          />
+        </div>
+
+        <!-- Location -->
+        <div class="form-group mb-3">
+          <label for="location" class="form-label fw-bold" style="color: #5a5c69;">Location</label>
+          <input
+            type="text"
+            class="form-control"
+            id="location"
+            name="location"
+            placeholder="Add location or video call"
+            value="{{ event.location or '' }}"
+            style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+          />
+        </div>
+
+        <!-- All Day Event -->
+        <div class="form-group mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="allDayEvent"
+              name="allDayEvent"
+              {% if event.all_day %}checked{% endif %}
+            />
+            <label class="form-check-label" for="allDayEvent">
+              All day event
+            </label>
+          </div>
+        </div>
+
+        <!-- Date and Time -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="startDate" class="form-label fw-bold" style="color: #5a5c69;">Start Date</label>
+              <input
+                type="date"
+                class="form-control"
+                id="startDate"
+                name="startDate"
+                value="{{ event.start_datetime.strftime('%Y-%m-%d') }}"
+                required
+                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+              />
+            </div>
+            <div class="form-group mt-2" id="startTimeContainer" {% if event.all_day %}style="display: none;"{% endif %}>
+              <label for="startTime" class="form-label fw-bold" style="color: #5a5c69;">Start Time</label>
+              <input
+                type="time"
+                class="form-control"
+                id="startTime"
+                name="startTime"
+                value="{{ event.start_datetime.strftime('%H:%M') if not event.all_day else '00:00' }}"
+                required
+                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+              />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="endDate" class="form-label fw-bold" style="color: #5a5c69;">End Date</label>
+              <input
+                type="date"
+                class="form-control"
+                id="endDate"
+                name="endDate"
+                value="{{ event.end_datetime.strftime('%Y-%m-%d') if event.end_datetime else event.start_datetime.strftime('%Y-%m-%d') }}"
+                required
+                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+              />
+            </div>
+            <div class="form-group mt-2" id="endTimeContainer" {% if event.all_day %}style="display: none;"{% endif %}>
+              <label for="endTime" class="form-label fw-bold" style="color: #5a5c69;">End Time</label>
+              <input
+                type="time"
+                class="form-control"
+                id="endTime"
+                name="endTime"
+                value="{{ event.end_datetime.strftime('%H:%M') if event.end_datetime and not event.all_day else '23:59' }}"
+                required
+                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Repeat Options -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="repeatOption" class="form-label fw-bold" style="color: #5a5c69;">Repeat</label>
+              <select class="form-select" id="repeatOption" name="repeatOption" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;">
+                <option value="none" {% if not event.repeat_type %}selected{% endif %}>Never</option>
+                <option value="daily" {% if event.repeat_type == 'daily' %}selected{% endif %}>Every Day</option>
+                <option value="weekly" {% if event.repeat_type == 'weekly' %}selected{% endif %}>Every Week</option>
+                <option value="biweekly" {% if event.repeat_type == 'biweekly' %}selected{% endif %}>Every 2 Weeks</option>
+                <option value="monthly" {% if event.repeat_type == 'monthly' %}selected{% endif %}>Every Month</option>
+                <option value="yearly" {% if event.repeat_type == 'yearly' %}selected{% endif %}>Every Year</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6" id="endRepeatContainer" {% if not event.repeat_type %}style="display: none;"{% endif %}>
+            <div class="form-group">
+              <label for="endRepeat" class="form-label fw-bold" style="color: #5a5c69;">End Repeat</label>
+              <select class="form-select" id="endRepeat" name="endRepeat" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;">
+                <option value="" {% if not event.repeat_end_date %}selected{% endif %}>Never</option>
+                <option value="on" {% if event.repeat_end_date %}selected{% endif %}>On Date</option>
+              </select>
+              <input
+                type="date"
+                class="form-control mt-2"
+                id="endRepeatDate"
+                name="endRepeatDate"
+                value="{{ event.repeat_end_date.strftime('%Y-%m-%d') if event.repeat_end_date else '' }}"
+                {% if not event.repeat_end_date %}style="display: none;"{% endif %}
+                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar Type -->
+        <div class="form-group mb-3">
+          <label for="calendar" class="form-label fw-bold" style="color: #5a5c69;">Calendar</label>
+          <select class="form-select" id="calendar" name="calendar" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;">
+            <option value="work" style="color: #1cc88a" {% if event.calendar_type == 'work' %}selected{% endif %}>Work</option>
+            <option value="community" style="color: #4e73df" {% if event.calendar_type == 'community' %}selected{% endif %}>
+              Community
+            </option>
+            <option value="school" style="color: #f6c23e" {% if event.calendar_type == 'school' %}selected{% endif %}>School</option>
+            <option value="personal" style="color: #e74a3b" {% if event.calendar_type == 'personal' %}selected{% endif %}>
+              Personal
+            </option>
+          </select>
+        </div>
+
+        <!-- Invitees Section -->
+        <div class="form-group mb-3">
+          <label for="invitees" class="form-label fw-bold" style="color: #5a5c69;">Invitees</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border: 1px solid rgba(28, 200, 138, 0.2); border-right: none; border-radius: 0.75rem 0 0 0.75rem;"><i class="fas fa-users"></i></span>
+            <input
+              type="text"
+              class="form-control"
+              id="invitees"
+              name="invitees"
+              placeholder="Add invitees (comma separated emails)"
+              value="{% for invitee in event.invitees %}{% if invitee.email %}{{ invitee.email }}{% else %}{{ invitee.user.email }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}"
+              style="border: 1px solid rgba(28, 200, 138, 0.2); border-left: none; border-radius: 0 0.75rem 0.75rem 0; padding: 0.75rem;"
+            />
+          </div>
+        </div>
+
+        <!-- Garden and Plant Selection -->
+        <div class="form-group mb-3">
+          <label for="garden_id" class="form-label fw-bold" style="color: #5a5c69;">Garden</label>
+          <select class="form-select" id="garden_id" name="garden_id" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;">
+            <option value="">None</option>
+            {% for garden in gardens %}
+            <option value="{{ garden.id }}" {% if event.garden_id == garden.id %}selected{% endif %}>{{ garden.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="plant_id" class="form-label fw-bold" style="color: #5a5c69;">Plant</label>
+          <select class="form-select" id="plant_id" name="plant_id" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;">
+            <option value="">None</option>
+            {% for plant in plants %}
+            <option value="{{ plant.id }}" {% if event.plant_id == plant.id %}selected{% endif %}>{{ plant.plant_detail.name }} {% if plant.variety %}({{ plant.variety.name }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Alert -->
+        <div class="form-group mb-3">
+          <label for="alert" class="form-label fw-bold" style="color: #5a5c69;">Alert</label>
+          <select class="form-select" id="alert" name="alert" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;">
+            <option value="0" {% if event.alert_before_minutes == 0 %}selected{% endif %}>At time of event</option>
+            <option value="5" {% if event.alert_before_minutes == 5 %}selected{% endif %}>5 minutes before</option>
+            <option value="10" {% if event.alert_before_minutes == 10 %}selected{% endif %}>10 minutes before</option>
+            <option value="15" {% if event.alert_before_minutes == 15 %}selected{% endif %}>15 minutes before</option>
+            <option value="30" {% if event.alert_before_minutes == 30 %}selected{% endif %}>30 minutes before</option>
+            <option value="60" {% if event.alert_before_minutes == 60 %}selected{% endif %}>1 hour before</option>
+            <option value="1440" {% if event.alert_before_minutes == 1440 %}selected{% endif %}>1 day before</option>
+          </select>
+        </div>
+
+        <!-- Private Event -->
+        <div class="form-group mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="privateEvent"
+              name="privateEvent"
+              {% if event.is_private %}checked{% endif %}
+            />
+            <label class="form-check-label fw-bold" for="privateEvent" style="color: #5a5c69;">
+              Private event
+            </label>
+          </div>
+        </div>
+
+        <!-- URL -->
+        <div class="form-group mb-3">
+          <label for="eventUrl" class="form-label fw-bold" style="color: #5a5c69;">URL</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border: 1px solid rgba(28, 200, 138, 0.2); border-right: none; border-radius: 0.75rem 0 0 0.75rem;"><i class="fas fa-link"></i></span>
+            <input
+              type="url"
+              class="form-control"
+              id="eventUrl"
+              name="eventUrl"
+              placeholder="Add URL"
+              value="{{ event.url or '' }}"
+              style="border: 1px solid rgba(28, 200, 138, 0.2); border-left: none; border-radius: 0 0.75rem 0.75rem 0; padding: 0.75rem;"
+            />
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group mb-4">
+          <label for="notes" class="form-label fw-bold" style="color: #5a5c69;">Notes</label>
+          <textarea
+            class="form-control"
+            id="notes"
+            name="notes"
+            rows="3"
+            placeholder="Add notes"
+            style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem;"
+          >{{ event.description or '' }}</textarea>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <a href="{{ url_for('main.calendar') }}" class="btn"
+             style="background: rgba(133, 135, 150, 0.1);
+                    color: #858796;
+                    border: 1px solid rgba(133, 135, 150, 0.2);
+                    border-radius: 0.75rem;
+                    padding: 0.5rem 1.5rem;">
+            <i class="fas fa-arrow-left me-2"></i>Back
+          </a>
+          <div>
+            <button type="button" class="btn me-2" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal"
+                    style="background: rgba(231, 74, 59, 0.1);
+                           color: #e74a3b;
+                           border: 1px solid rgba(231, 74, 59, 0.2);
+                           border-radius: 0.75rem;
+                           padding: 0.5rem 1.5rem;">
+              <i class="fas fa-trash me-2"></i>Delete
+            </button>
+            <button type="submit" class="btn"
+                    style="background: rgba(28, 200, 138, 0.1);
+                           color: #1cc88a;
+                           border: 1px solid rgba(28, 200, 138, 0.2);
+                           border-radius: 0.75rem;
+                           padding: 0.5rem 1.5rem;">
+              <i class="fas fa-save me-2"></i>Save Changes
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius: 15px;">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="deleteConfirmModalLabel" style="color: #e74a3b;">
+          <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this event? This action cannot be undone.
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn" data-bs-dismiss="modal"
+                style="background: rgba(133, 135, 150, 0.1);
+                       color: #858796;
+                       border: 1px solid rgba(133, 135, 150, 0.2);
+                       border-radius: 0.75rem;
+                       padding: 0.5rem 1.5rem;">
+          Cancel
+        </button>
+        <form action="{{ url_for('main.delete_event', event_id=event.id) }}" method="POST" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn ms-2"
+                  style="background: rgba(231, 74, 59, 0.1);
+                         color: #e74a3b;
+                         border: 1px solid rgba(231, 74, 59, 0.2);
+                         border-radius: 0.75rem;
+                         padding: 0.5rem 1.5rem;">
+            <i class="fas fa-trash me-2"></i>Delete Event
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add styles -->
+<style>
+  .form-control:focus {
+    border-color: rgba(28, 200, 138, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+
+  .form-label {
+    color: #5a5c69;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-content {
+    border: none;
+  }
+
+  .modal-header, .modal-footer {
+    border: none;
+  }
+</style>
+
+<!-- Add this JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Handle all-day event toggle
+    const allDayCheckbox = document.getElementById("allDayEvent");
+    const startTimeContainer = document.getElementById("startTimeContainer");
+    const endTimeContainer = document.getElementById("endTimeContainer");
+
+    allDayCheckbox.addEventListener("change", function () {
+      startTimeContainer.style.display = this.checked ? "none" : "block";
+      endTimeContainer.style.display = this.checked ? "none" : "block";
+    });
+
+    // Handle repeat option changes
+    const repeatOption = document.getElementById("repeatOption");
+    const endRepeatContainer = document.getElementById("endRepeatContainer");
+    const endRepeatSelect = document.getElementById("endRepeat");
+    const endRepeatDate = document.getElementById("endRepeatDate");
+
+    repeatOption.addEventListener("change", function () {
+      endRepeatContainer.style.display =
+        this.value === "none" ? "none" : "block";
+    });
+
+    endRepeatSelect.addEventListener("change", function() {
+      endRepeatDate.style.display = this.value === "on" ? "block" : "none";
+    });
+
+    // Fix for modal backdrop issue
+    const fixBackdropIssue = () => {
+      // Remove any lingering backdrops
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => {
+        backdrop.remove();
+      });
+      // Remove modal-open class from body
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+
+    // Add event listeners to all modal close buttons
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+      button.addEventListener('click', fixBackdropIssue);
+    });
+
+    // Handle ESC key to close modals
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        fixBackdropIssue();
+      }
+    });
+
+    // Initialize modals with proper handling
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    if (deleteConfirmModal) {
+      deleteConfirmModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
+    }
+  });
+</script>
+{% endblock content %}

@@ -34,12 +34,26 @@ def index():
 
 
 @main.route("/calendar")
+@main.route("/calendar/<date_str>")
 @login_required
-def calendar():
-    # Get the current date and calculate the start of the week (Monday)
-    today = datetime.now()
-    start_of_week = today - timedelta(days=today.weekday())
+def calendar(date_str=None):
+    # If a date is provided, use it as the reference date, otherwise use today
+    if date_str:
+        try:
+            reference_date = datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            # If invalid date format, default to today
+            reference_date = datetime.now()
+    else:
+        reference_date = datetime.now()
+
+    # Calculate the start of the week (Monday) based on the reference date
+    start_of_week = reference_date - timedelta(days=reference_date.weekday())
     end_of_week = start_of_week + timedelta(days=6)
+
+    # Calculate previous and next week dates
+    prev_week = (start_of_week - timedelta(days=7)).strftime('%Y-%m-%d')
+    next_week = (start_of_week + timedelta(days=7)).strftime('%Y-%m-%d')
 
     # Format the date range for display
     date_range = f"{start_of_week.strftime('%B %d')} - {end_of_week.strftime('%d, %Y')}"
@@ -90,7 +104,7 @@ def calendar():
     # Get upcoming events for the sidebar
     upcoming_events = CalendarEvent.query.filter(
         CalendarEvent.user_id == current_user.id,
-        CalendarEvent.start_datetime >= today
+        CalendarEvent.start_datetime >= datetime.now()
     ).order_by(CalendarEvent.start_datetime).limit(5).all()
 
     # Get all gardens for the user to associate with events
@@ -105,7 +119,9 @@ def calendar():
                          date_range=date_range,
                          upcoming_events=upcoming_events,
                          gardens=gardens,
-                         plants=plants)
+                         plants=plants,
+                         prev_week=prev_week,
+                         next_week=next_week)
 
 @main.route("/calendar/events", methods=['POST'])
 @login_required
@@ -268,6 +284,130 @@ def manage_event(event_id):
         db.session.delete(event)
         db.session.commit()
         return jsonify({'message': 'Event deleted successfully'})
+
+@main.route("/calendar/events/<int:event_id>/edit", methods=['GET', 'POST'])
+@login_required
+def edit_event(event_id):
+    event = CalendarEvent.query.get_or_404(event_id)
+
+    # Ensure the user owns the event
+    if event.user_id != current_user.id:
+        flash('You do not have permission to edit this event.', 'danger')
+        return redirect(url_for('main.calendar'))
+
+    # Get all gardens for the user to associate with events
+    gardens = Garden.query.join(Garden.members).filter(User.id == current_user.id).all()
+
+    # Get all plants for the user to associate with events
+    plants = Plant.query.join(Zone, Plant.zone_id == Zone.id).join(Garden, Zone.garden_id == Garden.id).join(Garden.members).filter(User.id == current_user.id).all()
+
+    if request.method == 'POST':
+        # Get form data
+        title = request.form.get('eventTitle')
+        location = request.form.get('location')
+        all_day = 'allDayEvent' in request.form
+        start_date = request.form.get('startDate')
+        start_time = request.form.get('startTime') if not all_day else '00:00'
+        end_date = request.form.get('endDate')
+        end_time = request.form.get('endTime') if not all_day else '23:59'
+        repeat_type = request.form.get('repeatOption')
+        repeat_end_date = request.form.get('endRepeatDate') if request.form.get('endRepeat') == 'on' else None
+        calendar_type = request.form.get('calendar')
+        invitees = request.form.get('invitees')
+        alert_before_minutes = request.form.get('alert')
+        is_private = 'privateEvent' in request.form
+        url = request.form.get('eventUrl')
+        description = request.form.get('notes')
+        garden_id = request.form.get('garden_id')
+        plant_id = request.form.get('plant_id')
+
+        # Convert dates and times to datetime objects
+        try:
+            start_datetime = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M")
+            end_datetime = datetime.strptime(f"{end_date} {end_time}", "%Y-%m-%d %H:%M") if end_date else None
+            repeat_end_datetime = datetime.strptime(repeat_end_date, "%Y-%m-%d") if repeat_end_date else None
+        except ValueError as e:
+            flash(f'Invalid date format: {str(e)}', 'danger')
+            return redirect(url_for('main.edit_event', event_id=event_id))
+
+        # Convert alert_before_minutes to integer if provided
+        if alert_before_minutes:
+            try:
+                alert_before_minutes = int(alert_before_minutes)
+            except ValueError:
+                alert_before_minutes = None
+
+        # Update event fields
+        event.title = title
+        event.description = description
+        event.location = location
+        event.start_datetime = start_datetime
+        event.end_datetime = end_datetime
+        event.all_day = all_day
+        event.repeat_type = repeat_type if repeat_type != 'none' else None
+        event.repeat_end_date = repeat_end_datetime
+        event.calendar_type = calendar_type
+        event.url = url
+        event.is_private = is_private
+        event.alert_before_minutes = alert_before_minutes
+        event.garden_id = garden_id if garden_id else None
+        event.plant_id = plant_id if plant_id else None
+
+        # Process invitees if any
+        if invitees:
+            # Remove existing invitees
+            CalendarEventInvitee.query.filter_by(event_id=event.id).delete()
+
+            for invitee in invitees.split(','):
+                invitee = invitee.strip()
+                if not invitee:
+                    continue
+
+                # Check if invitee is a user or an email
+                user = User.query.filter_by(email=invitee).first()
+                if user:
+                    event_invitee = CalendarEventInvitee(
+                        event_id=event.id,
+                        user_id=user.id,
+                        status='pending'
+                    )
+                else:
+                    # Assume it's an email
+                    event_invitee = CalendarEventInvitee(
+                        event_id=event.id,
+                        email=invitee,
+                        status='pending'
+                    )
+                from greenbyte import db
+                db.session.add(event_invitee)
+
+        from greenbyte import db
+        db.session.commit()
+        flash('Event updated successfully!', 'success')
+        return redirect(url_for('main.calendar'))
+
+    return render_template('edit_calendar_event.html',
+                         title='Edit Event',
+                         event=event,
+                         gardens=gardens,
+                         plants=plants)
+
+@main.route("/calendar/events/<int:event_id>/delete", methods=['POST'])
+@login_required
+def delete_event(event_id):
+    event = CalendarEvent.query.get_or_404(event_id)
+
+    # Ensure the user owns the event
+    if event.user_id != current_user.id:
+        flash('You do not have permission to delete this event.', 'danger')
+        return redirect(url_for('main.calendar'))
+
+    from greenbyte import db
+    db.session.delete(event)
+    db.session.commit()
+
+    flash('Event deleted successfully!', 'success')
+    return redirect(url_for('main.calendar'))
 
 @main.route("/analytics")
 def analytics():

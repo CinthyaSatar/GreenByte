@@ -13,7 +13,8 @@
               Weekly Schedule
             </h6>
             <div class="d-flex align-items-center" style="margin-left: 3rem">
-              <button
+              <a
+                href="{{ url_for('main.calendar', date_str=prev_week) }}"
                 class="btn btn-sm mr-2"
                 style="
                   border: 1px solid rgba(28, 200, 138, 0.2);
@@ -21,9 +22,10 @@
                 "
               >
                 <i class="fas fa-chevron-left"></i>
-              </button>
+              </a>
               <h6 class="m-0">{{ date_range }}</h6>
-              <button
+              <a
+                href="{{ url_for('main.calendar', date_str=next_week) }}"
                 class="btn btn-sm ml-2"
                 style="
                   border: 1px solid rgba(28, 200, 138, 0.2);
@@ -31,7 +33,7 @@
                 "
               >
                 <i class="fas fa-chevron-right"></i>
-              </button>
+              </a>
             </div>
           </div>
           <a
@@ -450,7 +452,7 @@
       <div class="modal-footer" style="border-top: 1px solid rgba(28, 200, 138, 0.2)">
         <button type="button" class="btn btn-danger" onclick="confirmDeleteEvent()">Delete</button>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-success" onclick="editEvent()">Edit</button>
+        <a id="editEventLink" href="#" class="btn btn-success">Edit</a>
       </div>
     </div>
   </div>
@@ -583,6 +585,9 @@
         </div>
       </div>
     `;
+
+    // Update the edit link
+    document.getElementById('editEventLink').href = `/calendar/events/${eventId}/edit`;
 
     // Show the modal
     const viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
