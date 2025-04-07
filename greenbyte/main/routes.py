@@ -183,24 +183,66 @@ def calendar(date_str=None):
         {'name': 'Sunday', 'date': end_of_week.strftime('%d'), 'events': []}
     ]
 
-    # Add events to the appropriate day
+    # Add events to the appropriate day(s)
     for event in events:
-        # Get the event date and ensure it's within our week
-        event_date = event.start_datetime.date()
-        days_since_start = (event_date - start_of_week.date()).days
+        # Get the event start date and ensure it's within our week
+        event_start_date = event.start_datetime.date()
+        days_since_start = (event_start_date - start_of_week.date()).days
 
-        # Only add events that fall within this week (0-6 days from start_of_week)
-        if 0 <= days_since_start <= 6:
-            weekday = event.start_datetime.weekday()  # 0 = Monday, 6 = Sunday
-            event_dict = {
-                'id': event.id,
-                'title': event.title,
-                'time': event.start_datetime.strftime('%I:%M %p') if not event.all_day else 'All Day',
-                'type': event.calendar_type,
-                'all_day': event.all_day
-            }
-            days_of_week[weekday]['events'].append(event_dict)
-            print(f"Added event '{event.title}' to {days_of_week[weekday]['name']} (index {weekday}) - Date: {event_date}")
+        # Calculate event duration
+        if event.end_datetime:
+            event_end_date = event.end_datetime.date()
+            event_duration = (event_end_date - event_start_date).days + 1  # +1 to include the end day
+        else:
+            event_end_date = event_start_date
+            event_duration = 1
+
+        # Determine if this is a multi-day event
+        is_multi_day = event_duration > 1
+
+        # If the event starts before this week, adjust the start day
+        if days_since_start < 0:
+            # Calculate how many days of the event have already passed
+            days_passed = abs(days_since_start)
+            # Adjust the start day to the beginning of the week
+            days_since_start = 0
+            # Adjust the duration to account for days that have passed
+            event_duration -= days_passed
+
+        # If the event ends after this week, adjust the end day
+        if days_since_start + event_duration > 7:
+            event_duration = 7 - days_since_start
+
+        # Only process events that have at least one day in this week
+        if event_duration > 0 and 0 <= days_since_start <= 6:
+            # For multi-day events, create an event for each day
+            for day_offset in range(event_duration):
+                current_day = days_since_start + day_offset
+                if current_day > 6:  # Skip days beyond Sunday
+                    break
+
+                # Calculate which day of the event this is (1-based)
+                if days_since_start < 0:
+                    day_number = day_offset + abs(days_since_start) + 1
+                else:
+                    day_number = day_offset + 1
+
+                # Create the event dictionary for this day
+                event_dict = {
+                    'id': event.id,
+                    'title': event.title,
+                    'time': event.start_datetime.strftime('%I:%M %p') if not event.all_day else 'All Day',
+                    'type': event.calendar_type,
+                    'all_day': event.all_day,
+                    'multi_day': is_multi_day,
+                    'duration': event_duration,
+                    'day_number': day_number,
+                    'total_days': event_duration if not is_multi_day else (event_end_date - event_start_date).days + 1
+                }
+
+                # Add the event to the appropriate day
+                days_of_week[current_day]['events'].append(event_dict)
+                print(f"Added event '{event.title}' to {days_of_week[current_day]['name']} (index {current_day}) - Date: {(start_of_week + timedelta(days=current_day)).strftime('%Y-%m-%d')}")
 
     # Debug output for days_of_week
     for i, day in enumerate(days_of_week):
