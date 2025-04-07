@@ -373,6 +373,12 @@
                         try {
                             // Try to parse as JSON
                             const json = JSON.parse(text);
+                            // If it's a status mismatch error, return the parsed JSON
+                            if (json.status_mismatch) {
+                                console.log('Status mismatch detected in response');
+                                return json;
+                            }
+                            // Otherwise throw an error with the error message
                             throw new Error(json.error || `Server returned ${response.status}: ${response.statusText}`);
                         } catch (e) {
                             // If parsing fails, use the raw text
@@ -451,8 +457,15 @@
                     // Re-add event listeners
                     addEventListenersToPlantRow(plantRow);
 
-                    // Show error message
-                    showToast('Error moving plant: ' + data.error, 'bg-danger');
+                    // Check if this is a status mismatch error
+                    if (data.status_mismatch) {
+                        console.log('Status mismatch error:', data.current_status, 'not in', data.available_statuses);
+                        // Show a more informative error message
+                        showToast(data.error, 'bg-warning');
+                    } else {
+                        // Show generic error message
+                        showToast('Error moving plant: ' + data.error, 'bg-danger');
+                    }
                 }
             })
             .catch(error => {

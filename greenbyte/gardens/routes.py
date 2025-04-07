@@ -155,8 +155,20 @@ def move_plant(plant_id, zone_id):
     if not (current_user in current_garden.members and current_user in new_garden.members):
         abort(403)
 
-    # Move the plant
+    # Check if the plant is already in the target zone
     old_zone = plant.zone.name
+    if plant.zone_id == zone_id:
+        flash(f'{plant.plant_detail.name} is already in {new_zone.name}!', 'info')
+        return redirect(url_for('gardens.view_gardens'))
+
+    # Check if the plant's current status is available in the target zone
+    current_status = plant.status
+    target_zone_statuses = new_zone.get_plant_statuses()
+    if current_status not in target_zone_statuses:
+        flash(f"Cannot move {plant.plant_detail.name} to {new_zone.name}. The plant's current status '{current_status}' is not available in the target zone.", 'danger')
+        return redirect(url_for('gardens.view_gardens'))
+
+    # Move the plant
     plant.zone_id = zone_id
 
     # Update the timestamp with correct timezone
@@ -205,6 +217,26 @@ def move_plant_ajax(plant_id, zone_id):
                 'already_in_zone': True,
                 'garden_zones': [{'id': z.id, 'name': z.name} for z in garden_zones]
             })
+
+        # Check if the plant's current status is available in the target zone
+        current_status = plant.status
+        target_zone_statuses = new_zone.get_plant_statuses()
+        if current_status not in target_zone_statuses:
+            print(f"Plant status '{current_status}' not available in target zone {zone_id}")
+            garden_zones = [z for z in new_zone.garden.zones]
+            return jsonify({
+                'success': False,
+                'error': f"Cannot move plant to {new_zone.name}. The plant's current status '{current_status}' is not available in the target zone.",
+                'plant_id': plant_id,
+                'plant_name': plant_name,
+                'new_zone_name': new_zone.name,
+                'new_zone_id': new_zone.id,
+                'old_zone_name': old_zone_name,
+                'old_zone_id': old_zone_id,
+                'status_mismatch': True,
+                'current_status': current_status,
+                'available_statuses': target_zone_statuses
+            }), 400
 
         # Move the plant
         plant.zone_id = zone_id
