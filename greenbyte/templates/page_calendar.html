@@ -22,7 +22,7 @@
               >
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <h6 class="m-0">March 11 - 17, 2024</h6>
+              <h6 class="m-0">{{ date_range }}</h6>
               <button
                 class="btn btn-sm ml-2"
                 style="
@@ -51,30 +51,23 @@
         <div class="card-body p-0">
           <div class="weekly-board">
             <div class="board-columns">
-              {% for day in [ {'name': 'Monday', 'date': '11', 'events': [
-              {'title': 'Water Plants', 'time': '9:00 AM', 'type':
-              'maintenance'}, {'title': 'Check Soil pH', 'time': '2:00 PM',
-              'type': 'monitoring'} ]}, {'name': 'Tuesday', 'date': '12',
-              'events': []}, {'name': 'Wednesday', 'date': '13', 'events': [
-              {'title': 'Harvest Tomatoes', 'time': '10:00 AM', 'type':
-              'harvest'} ]}, {'name': 'Thursday', 'date': '14', 'events': []},
-              {'name': 'Friday', 'date': '15', 'events': [ {'title': 'Plant New
-              Seeds', 'time': '11:00 AM', 'type': 'planting'} ]}, {'name':
-              'Saturday', 'date': '16', 'events': []}, {'name': 'Sunday',
-              'date': '17', 'events': []} ] %}
+              {% for day in days %}
               <div class="board-column">
                 <div class="column-header">
                   <div class="day-name">{{ day.name }}</div>
                   <div class="day-date">{{ day.date }}</div>
                 </div>
                 <div class="column-content">
+                  <!-- Debug: {{ day.name }} has {{ day.events|length }} events -->
                   {% for event in day.events %}
-                  <div class="event-card">
-                    <div class="event-title">{{ event.title }}</div>
-                    <div class="event-time">
+                  <div class="event-card" data-event-id="{{ event.id }}" onclick="openViewEventModal({{ event.id }})" style="background-color: #f8f9fc; border-left: 3px solid {% if event.type == 'work' %}#1cc88a{% elif event.type == 'community' %}#4e73df{% elif event.type == 'school' %}#f6c23e{% elif event.type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %}; margin-bottom: 8px; padding: 8px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div class="event-title" style="font-weight: bold;">{{ event.title }}</div>
+                    <div class="event-time" style="font-size: 0.8rem; color: #666;">
                       <i class="fas fa-clock fa-sm"></i> {{ event.time }}
                     </div>
                   </div>
+                  {% else %}
+                  <!-- No events for {{ day.name }} -->
                   {% endfor %}
                 </div>
               </div>
@@ -141,42 +134,32 @@
           </h6>
         </div>
         <div class="card-body">
+          {% for event in upcoming_events %}
           <div
-            class="upcoming-event d-flex align-items-center p-2 mb-3"
+            class="upcoming-event d-flex align-items-center p-2 {% if not loop.last %}mb-3{% endif %}"
             style="
-              border-left: 3px solid #1cc88a;
+              border-left: 3px solid {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};
               background: rgba(28, 200, 138, 0.05);
             "
+            data-event-id="{{ event.id }}"
+            onclick="openViewEventModal({{ event.id }})"
           >
             <div class="event-date text-center me-3" style="min-width: 50px">
-              <small class="text-gray-500 d-block">MAR</small>
-              <div class="h5 mb-0" style="color: #1cc88a">15</div>
+              <small class="text-gray-500 d-block">{{ event.start_datetime.strftime('%b').upper() }}</small>
+              <div class="h5 mb-0" style="color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
             </div>
             <div class="event-details">
-              <h6 class="mb-0">Harvest Day - Tomatoes</h6>
+              <h6 class="mb-0">{{ event.title }}</h6>
               <small class="text-gray-600">
-                <i class="fas fa-clock fa-sm me-1"></i>9:00 AM
+                <i class="fas fa-clock fa-sm me-1"></i>{{ event.start_datetime.strftime('%I:%M %p') if not event.all_day else 'All Day' }}
               </small>
             </div>
           </div>
-          <div
-            class="upcoming-event d-flex align-items-center p-2"
-            style="
-              border-left: 3px solid #1cc88a;
-              background: rgba(28, 200, 138, 0.05);
-            "
-          >
-            <div class="event-date text-center me-3" style="min-width: 50px">
-              <small class="text-gray-500 d-block">MAR</small>
-              <div class="h5 mb-0" style="color: #1cc88a">18</div>
-            </div>
-            <div class="event-details">
-              <h6 class="mb-0">Planting - Lettuce</h6>
-              <small class="text-gray-600">
-                <i class="fas fa-clock fa-sm me-1"></i>2:00 PM
-              </small>
-            </div>
+          {% else %}
+          <div class="text-center py-3">
+            <p class="text-muted">No upcoming events</p>
           </div>
+          {% endfor %}
         </div>
       </div>
     </div>
@@ -208,13 +191,15 @@
         ></button>
       </div>
       <div class="modal-body">
-        <form id="eventForm">
+        <form id="eventForm" action="{{ url_for('main.add_event') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <!-- Title and Location Section -->
           <div class="form-group mb-3">
             <input
               type="text"
               class="form-control form-control-lg"
               id="eventTitle"
+              name="eventTitle"
               placeholder="Add title"
               required
             />
@@ -228,6 +213,7 @@
                 type="text"
                 class="form-control"
                 id="location"
+                name="location"
                 placeholder="Add location or video call"
               />
             </div>
@@ -241,6 +227,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="allDayEvent"
+                  name="allDayEvent"
                 />
                 <label class="form-check-label" for="allDayEvent"
                   >All-day</label
@@ -255,6 +242,7 @@
                   type="date"
                   class="form-control"
                   id="startDate"
+                  name="startDate"
                   required
                 />
               </div>
@@ -263,6 +251,7 @@
                   type="time"
                   class="form-control"
                   id="startTime"
+                  name="startTime"
                   required
                 />
               </div>
@@ -271,10 +260,10 @@
             <div class="row">
               <label class="col-2">Ends</label>
               <div class="col-5">
-                <input type="date" class="form-control" id="endDate" required />
+                <input type="date" class="form-control" id="endDate" name="endDate" required />
               </div>
               <div class="col-5" id="endTimeContainer">
-                <input type="time" class="form-control" id="endTime" required />
+                <input type="time" class="form-control" id="endTime" name="endTime" required />
               </div>
             </div>
           </div>
@@ -284,24 +273,24 @@
             <div class="row">
               <label class="col-2">Repeat</label>
               <div class="col-10">
-                <select class="form-select" id="repeatOption">
-                  <option value="never">Never</option>
+                <select class="form-select" id="repeatOption" name="repeatOption">
+                  <option value="none">Never</option>
                   <option value="daily">Every Day</option>
                   <option value="weekly">Every Week</option>
                   <option value="biweekly">Every 2 Weeks</option>
                   <option value="monthly">Every Month</option>
                   <option value="yearly">Every Year</option>
-                  <option value="custom">Custom...</option>
                 </select>
               </div>
             </div>
             <div class="row mt-2">
               <label class="col-2">End Repeat</label>
               <div class="col-10">
-                <select class="form-select" id="endRepeat">
-                  <option value="never">Never</option>
+                <select class="form-select" id="endRepeat" name="endRepeat">
+                  <option value="">Never</option>
                   <option value="on">On Date</option>
                 </select>
+                <input type="date" class="form-control mt-2" id="endRepeatDate" name="endRepeatDate" style="display: none;" />
               </div>
             </div>
           </div>
@@ -311,7 +300,7 @@
             <div class="row">
               <label class="col-2">Calendar</label>
               <div class="col-10">
-                <select class="form-select" id="calendar">
+                <select class="form-select" id="calendar" name="calendar">
                   <option value="work" style="color: #1cc88a">Work</option>
                   <option value="community" style="color: #4e73df">
                     Community
@@ -333,11 +322,38 @@
                 type="text"
                 class="form-control"
                 id="invitees"
-                placeholder="Add invitees"
+                name="invitees"
+                placeholder="Add invitees (comma separated emails)"
               />
-              <button class="btn btn-outline-secondary" type="button">
-                Add
-              </button>
+            </div>
+          </div>
+
+          <!-- Garden and Plant Selection -->
+          <div class="form-group mb-3">
+            <div class="row">
+              <label class="col-2">Garden</label>
+              <div class="col-10">
+                <select class="form-select" id="garden_id" name="garden_id">
+                  <option value="">None</option>
+                  {% for garden in gardens %}
+                  <option value="{{ garden.id }}">{{ garden.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <div class="row">
+              <label class="col-2">Plant</label>
+              <div class="col-10">
+                <select class="form-select" id="plant_id" name="plant_id">
+                  <option value="">None</option>
+                  {% for plant in plants %}
+                  <option value="{{ plant.id }}">{{ plant.plant_detail.name }} {% if plant.variety %}({{ plant.variety.name }}){% endif %}</option>
+                  {% endfor %}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -346,7 +362,7 @@
             <div class="row">
               <label class="col-2">Alert</label>
               <div class="col-10">
-                <select class="form-select" id="alert">
+                <select class="form-select" id="alert" name="alert">
                   <option value="0">At time of event</option>
                   <option value="5">5 minutes before</option>
                   <option value="10">10 minutes before</option>
@@ -366,6 +382,7 @@
                 class="form-check-input"
                 type="checkbox"
                 id="privateEvent"
+                name="privateEvent"
               />
               <label class="form-check-label" for="privateEvent">Private</label>
             </div>
@@ -379,6 +396,7 @@
                 type="url"
                 class="form-control"
                 id="eventUrl"
+                name="eventUrl"
                 placeholder="Add URL"
               />
             </div>
@@ -389,6 +407,7 @@
             <textarea
               class="form-control"
               id="notes"
+              name="notes"
               rows="3"
               placeholder="Add notes"
             ></textarea>
@@ -410,8 +429,56 @@
   </div>
 </div>
 
+<!-- View/Edit Event Modal -->
+<div class="modal fade" id="viewEventModal" tabindex="-1" aria-labelledby="viewEventModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)">
+        <h5 class="modal-title" id="viewEventModalLabel" style="color: #1cc88a">Event Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="eventDetails">
+          <!-- Event details will be loaded here -->
+          <div class="text-center py-4">
+            <div class="spinner-border text-success" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(28, 200, 138, 0.2)">
+        <button type="button" class="btn btn-danger" onclick="confirmDeleteEvent()">Delete</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" onclick="editEvent()">Edit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(220, 53, 69, 0.2)">
+        <h5 class="modal-title" id="deleteConfirmModalLabel" style="color: #dc3545">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this event?</p>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(220, 53, 69, 0.2)">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="deleteEvent()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Add this JavaScript -->
 <script>
+  let currentEventId = null;
+
   document.addEventListener("DOMContentLoaded", function () {
     // Set default dates to today
     const today = new Date();
@@ -433,54 +500,236 @@
     const repeatOption = document.getElementById("repeatOption");
     const endRepeatContainer =
       document.getElementById("endRepeat").parentElement.parentElement;
+    const endRepeatSelect = document.getElementById("endRepeat");
+    const endRepeatDate = document.getElementById("endRepeatDate");
 
     repeatOption.addEventListener("change", function () {
       endRepeatContainer.style.display =
-        this.value === "never" ? "none" : "flex";
+        this.value === "none" ? "none" : "flex";
     });
+
+    endRepeatSelect.addEventListener("change", function() {
+      endRepeatDate.style.display = this.value === "on" ? "block" : "none";
+    });
+
+    // Initialize event cards to be clickable
+    document.querySelectorAll('.event-card').forEach(card => {
+      card.addEventListener('click', function() {
+        const eventId = this.getAttribute('data-event-id');
+        if (eventId) {
+          openViewEventModal(eventId);
+        }
+      });
+    });
+
+    // Fix for modal backdrop issue
+    const fixBackdropIssue = () => {
+      // Remove any lingering backdrops
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => {
+        backdrop.remove();
+      });
+      // Remove modal-open class from body
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+
+    // Add event listeners to all modal close buttons
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+      button.addEventListener('click', fixBackdropIssue);
+    });
+
+    // Handle ESC key to close modals
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        fixBackdropIssue();
+      }
+    });
+
+    // Initialize modals with proper handling
+    const viewEventModal = document.getElementById('viewEventModal');
+    if (viewEventModal) {
+      viewEventModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
+    }
+
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    if (deleteConfirmModal) {
+      deleteConfirmModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
+    }
+
+    const addEventModal = document.getElementById('addEventModal');
+    if (addEventModal) {
+      addEventModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
+    }
   });
 
   function saveEvent() {
-    // Get all form values
-    const formData = {
-      title: document.getElementById("eventTitle").value,
-      location: document.getElementById("location").value,
-      allDay: document.getElementById("allDayEvent").checked,
-      startDate: document.getElementById("startDate").value,
-      startTime: document.getElementById("startTime").value,
-      endDate: document.getElementById("endDate").value,
-      endTime: document.getElementById("endTime").value,
-      repeat: document.getElementById("repeatOption").value,
-      endRepeat: document.getElementById("endRepeat").value,
-      calendar: document.getElementById("calendar").value,
-      invitees: document.getElementById("invitees").value,
-      alert: document.getElementById("alert").value,
-      private: document.getElementById("privateEvent").checked,
-      url: document.getElementById("eventUrl").value,
-      notes: document.getElementById("notes").value,
-    };
+    // Get form element
+    const form = document.getElementById("eventForm");
 
-    // Validate required fields
-    if (
-      !formData.title ||
-      !formData.startDate ||
-      (!formData.allDay && !formData.startTime)
-    ) {
-      alert("Please fill in all required fields");
-      return;
+    // Submit the form
+    form.submit();
+  }
+
+  function openViewEventModal(eventId) {
+    currentEventId = eventId;
+
+    // Show loading spinner
+    document.getElementById('eventDetails').innerHTML = `
+      <div class="text-center py-4">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    `;
+
+    // Show the modal
+    const viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
+    viewEventModal.show();
+
+    // Fetch event details
+    fetch(`/calendar/events/${eventId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch event details');
+        }
+        return response.json();
+      })
+      .then(event => {
+        // Format dates
+        const startDate = new Date(event.start_datetime);
+        const endDate = event.end_datetime ? new Date(event.end_datetime) : null;
+
+        // Format time display
+        const timeDisplay = event.all_day ? 'All Day' :
+          `${startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} -
+           ${endDate ? endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}`;
+
+        // Get calendar color
+        let calendarColor = '#1cc88a'; // Default green
+        if (event.calendar_type === 'community') calendarColor = '#4e73df';
+        if (event.calendar_type === 'school') calendarColor = '#f6c23e';
+        if (event.calendar_type === 'personal') calendarColor = '#e74a3b';
+
+        // Build HTML for event details
+        let html = `
+          <div class="event-header mb-3 pb-2" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)">
+            <h4>${event.title}</h4>
+            <div class="d-flex align-items-center">
+              <span class="badge me-2" style="background-color: ${calendarColor}">${event.calendar_type}</span>
+              <i class="fas fa-clock fa-sm me-1"></i> ${timeDisplay}
+            </div>
+          </div>
+        `;
+
+        if (event.location) {
+          html += `
+            <div class="mb-3">
+              <i class="fas fa-map-marker-alt me-2"></i> ${event.location}
+            </div>
+          `;
+        }
+
+        if (event.description) {
+          html += `
+            <div class="mb-3">
+              <h6>Description</h6>
+              <p>${event.description}</p>
+            </div>
+          `;
+        }
+
+        if (event.repeat_type) {
+          html += `
+            <div class="mb-3">
+              <i class="fas fa-sync-alt me-2"></i> Repeats ${event.repeat_type}
+              ${event.repeat_end_date ? ` until ${new Date(event.repeat_end_date).toLocaleDateString()}` : ''}
+            </div>
+          `;
+        }
+
+        if (event.garden_id || event.plant_id) {
+          html += `<div class="mb-3">`;
+
+          if (event.garden_id) {
+            html += `<div><i class="fas fa-leaf me-2"></i> Garden: ${event.garden_id}</div>`;
+          }
+
+          if (event.plant_id) {
+            html += `<div><i class="fas fa-seedling me-2"></i> Plant: ${event.plant_id}</div>`;
+          }
+
+          html += `</div>`;
+        }
+
+        if (event.url) {
+          html += `
+            <div class="mb-3">
+              <i class="fas fa-link me-2"></i> <a href="${event.url}" target="_blank">${event.url}</a>
+            </div>
+          `;
+        }
+
+        // Update the modal content
+        document.getElementById('eventDetails').innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error fetching event details:', error);
+        document.getElementById('eventDetails').innerHTML = `
+          <div class="alert alert-danger">
+            Failed to load event details. Please try again.
+          </div>
+        `;
+      });
+  }
+
+  function confirmDeleteEvent() {
+    // Hide the view modal and show the delete confirmation modal
+    bootstrap.Modal.getInstance(document.getElementById('viewEventModal')).hide();
+    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    deleteConfirmModal.show();
+  }
+
+  function deleteEvent() {
+    if (!currentEventId) return;
+
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Send delete request
+    fetch(`/calendar/events/${currentEventId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to delete event');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Hide the modal
+      bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+
+      // Show success message and reload the page
+      alert('Event deleted successfully!');
+      window.location.reload();
+    })
+    .catch(error => {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
+    });
+  }
+
+  function editEvent() {
+    // Redirect to edit page or implement in-place editing
+    if (currentEventId) {
+      window.location.href = `/calendar/events/${currentEventId}/edit`;
     }
-
-    // TODO: Add your logic here to save the event
-    console.log("Saving event:", formData);
-
-    // Close the modal
-    const modal = bootstrap.Modal.getInstance(
-      document.getElementById("addEventModal")
-    );
-    modal.hide();
-
-    // Reset form
-    document.getElementById("eventForm").reset();
   }
 </script>
 

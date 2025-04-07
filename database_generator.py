@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 import random
 
 from flask_bcrypt import Bcrypt
@@ -7,7 +7,8 @@ import faker
 from greenbyte import db
 from run import app
 from greenbyte.models import (
-    User, Garden, Zone, Plant, PlantTracking, PlantDetail, PlantVariety, PlantStage
+    User, Garden, Zone, Plant, PlantTracking, PlantDetail, PlantVariety, PlantStage,
+    CalendarEvent, CalendarEventInvitee
 )
 from greenbyte.utils.timezone import now_in_timezone
 
@@ -20,6 +21,7 @@ NUM_GARDENS = 3
 MAX_MEMBERS_PER_GARDEN = 3
 MAX_ZONES_PER_GARDEN = 4
 MAX_PLANTS_PER_ZONE = 6
+NUM_EVENTS_PER_USER = 5  # Number of calendar events to generate per user
 
 def generate_database():
     with app.app_context():
@@ -356,8 +358,104 @@ def generate_database():
                             )
                             db.session.add(current_tracking)
 
+            # Generate calendar events
+            events = []
+            event_titles = [
+                "Water Plants", "Fertilize Garden", "Harvest Vegetables", "Plant Seeds",
+                "Prune Trees", "Check Soil pH", "Apply Compost", "Weed Garden",
+                "Inspect for Pests", "Transplant Seedlings", "Garden Planning", "Crop Rotation",
+                "Greenhouse Maintenance", "Tool Maintenance", "Garden Meeting", "Seed Starting",
+                "Mulching", "Irrigation Check", "Garden Cleanup", "Soil Testing"
+            ]
+
+            event_locations = [
+                "Main Garden", "Greenhouse", "Community Center", "Backyard", "Front Yard",
+                "Garden Shed", "Nursery", "Local Farm", "Garden Store", "Online Meeting"
+            ]
+
+            calendar_types = ["work", "community", "school", "personal"]
+
+            # Generate events for each user
+            for user in users:
+                # Get gardens this user is a member of
+                user_gardens = user.gardens
+
+                # Get plants from these gardens
+                user_plants = []
+                for garden in user_gardens:
+                    for zone in garden.zones:
+                        user_plants.extend(zone.plants)
+
+                # Generate random events
+                for _ in range(NUM_EVENTS_PER_USER):
+                    # Random date within 30 days before or after current date
+                    days_offset = random.randint(-30, 30)
+                    event_date = current_time + timedelta(days=days_offset)
+
+                    # Random time
+                    hour = random.randint(8, 20)  # Between 8 AM and 8 PM
+                    minute = random.choice([0, 15, 30, 45])
+                    event_date = event_date.replace(hour=hour, minute=minute)
+
+                    # Random duration between 30 minutes and 3 hours
+                    duration_minutes = random.choice([30, 60, 90, 120, 180])
+                    end_date = event_date + timedelta(minutes=duration_minutes)
+
+                    # Randomly decide if it's an all-day event
+                    all_day = random.random() < 0.2  # 20% chance of being all-day
+                    if all_day:
+                        event_date = event_date.replace(hour=0, minute=0)
+                        end_date = event_date.replace(hour=23, minute=59)
+
+                    # Randomly select a garden and plant (if available)
+                    garden = random.choice(user_gardens) if user_gardens else None
+                    plant = random.choice(user_plants) if user_plants and random.random() < 0.3 else None
+
+                    # Create event
+                    title = random.choice(event_titles)
+                    if plant:
+                        title = f"{title} - {plant.plant_detail.name}"
+
+                    event = CalendarEvent(
+                        title=title,
+                        description=fake.paragraph(),
+                        location=random.choice(event_locations) if random.random() < 0.7 else None,
+                        start_datetime=event_date,
+                        end_datetime=end_date,
+                        all_day=all_day,
+                        repeat_type=random.choice([None, 'daily', 'weekly', 'monthly']) if random.random() < 0.3 else None,
+                        calendar_type=random.choice(calendar_types),
+                        is_private=random.random() < 0.1,  # 10% chance of being private
+                        alert_before_minutes=random.choice([0, 5, 10, 15, 30, 60]) if random.random() < 0.7 else None,
+                        user_id=user.id,
+                        garden_id=garden.id if garden else None,
+                        plant_id=plant.id if plant else None
+                    )
+
+                    db.session.add(event)
+                    events.append(event)
+
+                    # Add invitees for some events
+                    if random.random() < 0.4:  # 40% chance of having invitees
+                        # Get potential invitees (other users)
+                        potential_invitees = [u for u in users if u != user]
+                        num_invitees = random.randint(1, min(3, len(potential_invitees)))
+                        invitees = random.sample(potential_invitees, num_invitees)
+
+                        # We need to commit the event first to get a valid ID
+                        db.session.flush()
+
+                        for invitee in invitees:
+                            event_invitee = CalendarEventInvitee(
+                                event_id=event.id,
+                                user_id=invitee.id,
+                                status=random.choice(['pending', 'accepted', 'declined'])
+                            )
+                            db.session.add(event_invitee)
+
             db.session.commit()
-            print("Database generated successfully with plant data!")
+            print(f"Created {len(events)} calendar events")
+            print("Database generated successfully with plant data and calendar events!")
 
 if __name__ == "__main__":
     generate_database()  # Add this line to create varieties

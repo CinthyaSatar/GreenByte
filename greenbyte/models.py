@@ -847,3 +847,70 @@ class PostPlant(db.Model):
     name = db.Column(db.String(50), nullable=False)  # e.g., 'Basil', 'Tomatoes'
     status = db.Column(db.String(20), nullable=False)  # e.g., 'Growing', 'Fruiting'
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)  # Optional link to actual plant
+
+class CalendarEvent(db.Model):
+    __tablename__ = 'calendar_event'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+    start_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=True)
+    all_day = db.Column(db.Boolean, default=False)
+    repeat_type = db.Column(db.String(20), nullable=True)  # 'daily', 'weekly', 'monthly', 'yearly'
+    repeat_end_date = db.Column(db.DateTime, nullable=True)
+    calendar_type = db.Column(db.String(20), default='work')  # 'work', 'community', 'school', 'personal'
+    url = db.Column(db.String(255), nullable=True)
+    is_private = db.Column(db.Boolean, default=False)
+    alert_before_minutes = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=now_in_timezone)
+    updated_at = db.Column(db.DateTime, default=now_in_timezone, onupdate=now_in_timezone)
+
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=True)
+    plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)
+
+    # Relationships
+    user = db.relationship('User', backref='calendar_events')
+    garden = db.relationship('Garden', backref='calendar_events')
+    plant = db.relationship('Plant', backref='calendar_events')
+    invitees = db.relationship('CalendarEventInvitee', backref='event', lazy=True, cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f"CalendarEvent({self.title}, {self.start_datetime})"
+
+    def to_dict(self):
+        """Convert event to dictionary for JSON response"""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'location': self.location,
+            'start_datetime': self.start_datetime.isoformat() if self.start_datetime else None,
+            'end_datetime': self.end_datetime.isoformat() if self.end_datetime else None,
+            'all_day': self.all_day,
+            'repeat_type': self.repeat_type,
+            'repeat_end_date': self.repeat_end_date.isoformat() if self.repeat_end_date else None,
+            'calendar_type': self.calendar_type,
+            'url': self.url,
+            'is_private': self.is_private,
+            'alert_before_minutes': self.alert_before_minutes,
+            'user_id': self.user_id,
+            'garden_id': self.garden_id,
+            'plant_id': self.plant_id
+        }
+
+class CalendarEventInvitee(db.Model):
+    __tablename__ = 'calendar_event_invitee'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('calendar_event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Can be null for external invitees
+    email = db.Column(db.String(120), nullable=True)  # For external invitees
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'accepted', 'declined'
+
+    # Relationship
+    user = db.relationship('User', backref='event_invitations')
+
+    def __repr__(self):
+        return f"CalendarEventInvitee(Event: {self.event_id}, User: {self.user_id if self.user_id else self.email})"
