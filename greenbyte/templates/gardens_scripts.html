@@ -243,6 +243,41 @@
             });
         }
 
+        // Helper function to add event listeners to a plant row
+        function addEventListenersToPlantRow(plantRow) {
+            console.log('Adding event listeners to plant row', plantRow);
+
+            // Add event listeners to status update links
+            const statusLinks = plantRow.querySelectorAll('.status-update-link');
+            console.log('Found', statusLinks.length, 'status update links');
+            statusLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const plantId = this.getAttribute('data-plant-id');
+                    const newStatus = this.getAttribute('data-status');
+                    const csrfToken = this.getAttribute('data-csrf-token');
+                    updatePlantStatus(plantId, newStatus, csrfToken);
+                });
+            });
+
+            // Add event listeners to move plant links
+            const moveLinks = plantRow.querySelectorAll('.move-plant-link');
+            console.log('Found', moveLinks.length, 'move plant links');
+            moveLinks.forEach(link => {
+                console.log('Adding click listener to move link', link);
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Move link clicked');
+                    const plantId = this.getAttribute('data-plant-id');
+                    const zoneId = this.getAttribute('data-zone-id');
+                    const zoneName = this.getAttribute('data-zone-name');
+                    const csrfToken = this.getAttribute('data-csrf-token');
+                    console.log('Moving plant', plantId, 'to zone', zoneId);
+                    movePlant(plantId, zoneId, zoneName, csrfToken, this.closest('.plant-row'));
+                });
+            });
+        }
+
         // Function to add a plant to a zone
         function addPlantToZone(data) {
             const newZonePlantsContainer = document.querySelector(`#zone-${data.new_zone_id} .plants-container`);
@@ -259,6 +294,10 @@
             const tempContainer = document.createElement('div');
             tempContainer.innerHTML = data.plant_html;
             const newPlantRow = tempContainer.firstElementChild;
+
+            // Explicitly set the data-zone-id attribute
+            newPlantRow.setAttribute('data-zone-id', data.new_zone_id);
+            console.log('Setting data-zone-id attribute to', data.new_zone_id);
 
             // Add the new plant row to the zone
             newZonePlantsContainer.appendChild(newPlantRow);
@@ -292,9 +331,35 @@
             updateRelativeTimestamps();
         }
 
+        // Function to get CSRF token from meta tag
+        function getCSRFToken() {
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                return metaTag.getAttribute('content');
+            }
+            return '';
+        }
+
         // Function to move a plant to a new zone
         function movePlant(plantId, zoneId, zoneName, csrfToken, plantRow) {
-            console.log('Moving plant', plantId, 'to zone', zoneId);
+            // Get CSRF token from meta tag if not provided
+            if (!csrfToken) {
+                csrfToken = getCSRFToken();
+                console.log('Got CSRF token from meta tag:', csrfToken);
+            }
+            // Get the current zone ID from the plant row
+            const currentZoneId = plantRow.getAttribute('data-zone-id');
+            console.log('Moving plant', plantId, 'from zone', currentZoneId, 'to zone', zoneId);
+
+            // Don't try to move to the same zone
+            if (zoneId == currentZoneId) {
+                showToast(`Plant is already in ${zoneName}`, 'bg-info');
+                return;
+            }
+
+            // Store original HTML for potential restoration
+            const originalHtml = plantRow.innerHTML;
+            console.log('Stored original HTML');
 
             // Show loading indicator
             plantRow.style.opacity = '0.5';
@@ -305,17 +370,61 @@
             `;
 
             // Send AJAX request
+            console.log('Using CSRF token:', csrfToken);
+
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('csrf_token', csrfToken);
+
             fetch(`/api/plant/${plantId}/move/${zoneId}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
                 }
+                // Don't include body for POST requests to this endpoint
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.log('Error response text:', text);
+                        try {
+                            // Try to parse as JSON
+                            const json = JSON.parse(text);
+                            throw new Error(json.error || `Server returned ${response.status}: ${response.statusText}`);
+                        } catch (e) {
+                            // If parsing fails, use the raw text
+                            throw new Error(`Server returned ${response.status}: ${response.statusText}. Response: ${text}`);
+                        }
+                    });
+                }
+                return response.json().catch(e => {
+                    console.error('Error parsing JSON:', e);
+                    throw new Error(`Error parsing server response: ${e.message}`);
+                });
+            })
             .then(data => {
                 if (data.success) {
                     console.log('Move successful', data);
+
+                    // Check if the plant is already in the target zone
+                    if (data.already_in_zone) {
+                        console.log('Plant is already in this zone');
+                        // Restore the plant row
+                        plantRow.style.opacity = '1';
+                        plantRow.innerHTML = originalHtml;
+
+                        // Make sure the data-zone-id attribute is set correctly
+                        plantRow.setAttribute('data-zone-id', data.new_zone_id);
+                        console.log('Set data-zone-id attribute to', data.new_zone_id);
+
+                        // Re-add event listeners
+                        addEventListenersToPlantRow(plantRow);
+
+                        // Show message
+                        showToast(data.message, 'bg-info');
+                        return;
+                    }
 
                     // Remove the plant row with animation
                     plantRow.style.transition = 'all 0.5s ease';
@@ -348,12 +457,43 @@
                 } else {
                     // Show error message
                     console.error('Error moving plant:', data.error);
+
+                    // Restore the original plant row
+                    plantRow.style.opacity = '1';
+                    plantRow.innerHTML = originalHtml;
+
+                    // Make sure the data-zone-id attribute is preserved
+                    // We don't change it since the move failed
+                    console.log('Preserving original data-zone-id attribute:', plantRow.getAttribute('data-zone-id'));
+
+                    // Re-add event listeners
+                    addEventListenersToPlantRow(plantRow);
+
+                    // Show error message
                     showToast('Error moving plant: ' + data.error, 'bg-danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('An error occurred while moving the plant.', 'bg-danger');
+
+                // Restore the original plant row
+                plantRow.style.opacity = '1';
+                plantRow.innerHTML = originalHtml;
+
+                // Make sure the data-zone-id attribute is preserved
+                // We don't change it since the move failed
+                console.log('Preserving original data-zone-id attribute:', plantRow.getAttribute('data-zone-id'));
+
+                // Re-add event listeners
+                addEventListenersToPlantRow(plantRow);
+
+                // Show detailed error message
+                let errorMessage = 'An error occurred while moving the plant.';
+                if (error.message) {
+                    errorMessage += ' ' + error.message;
+                }
+                console.log('Showing error toast with message:', errorMessage);
+                showToast(errorMessage, 'bg-danger');
             });
         }
 
