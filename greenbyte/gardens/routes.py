@@ -155,8 +155,20 @@ def move_plant(plant_id, zone_id):
     if not (current_user in current_garden.members and current_user in new_garden.members):
         abort(403)
 
-    # Move the plant
+    # Check if the plant is already in the target zone
     old_zone = plant.zone.name
+    if plant.zone_id == zone_id:
+        flash(f'{plant.plant_detail.name} is already in {new_zone.name}!', 'info')
+        return redirect(url_for('gardens.view_gardens'))
+
+    # Check if the plant's current status is available in the target zone
+    current_status = plant.status
+    target_zone_statuses = new_zone.get_plant_statuses()
+    if current_status not in target_zone_statuses:
+        flash(f"Cannot move {plant.plant_detail.name} to {new_zone.name}. The plant's current status '{current_status}' is not available in the target zone.", 'danger')
+        return redirect(url_for('gardens.view_gardens'))
+
+    # Move the plant
     plant.zone_id = zone_id
 
     # Update the timestamp with correct timezone
@@ -187,6 +199,44 @@ def move_plant_ajax(plant_id, zone_id):
         plant_name = plant.plant_detail.name
         old_zone_name = plant.zone.name
         old_zone_id = plant.zone_id
+
+        # Check if the plant is already in the target zone
+        if old_zone_id == zone_id:
+            print(f"Plant {plant_id} is already in zone {zone_id}")
+            # Get all zones in the garden for move dropdown
+            garden_zones = [z for z in new_zone.garden.zones]
+            return jsonify({
+                'success': True,
+                'message': f'{plant_name} is already in {new_zone.name}',
+                'plant_id': plant_id,
+                'plant_name': plant_name,
+                'new_zone_name': new_zone.name,
+                'new_zone_id': new_zone.id,
+                'old_zone_name': old_zone_name,
+                'old_zone_id': old_zone_id,
+                'already_in_zone': True,
+                'garden_zones': [{'id': z.id, 'name': z.name} for z in garden_zones]
+            })
+
+        # Check if the plant's current status is available in the target zone
+        current_status = plant.status
+        target_zone_statuses = new_zone.get_plant_statuses()
+        if current_status not in target_zone_statuses:
+            print(f"Plant status '{current_status}' not available in target zone {zone_id}")
+            garden_zones = [z for z in new_zone.garden.zones]
+            return jsonify({
+                'success': False,
+                'error': f"Cannot move plant to {new_zone.name}. The plant's current status '{current_status}' is not available in the target zone.",
+                'plant_id': plant_id,
+                'plant_name': plant_name,
+                'new_zone_name': new_zone.name,
+                'new_zone_id': new_zone.id,
+                'old_zone_name': old_zone_name,
+                'old_zone_id': old_zone_id,
+                'status_mismatch': True,
+                'current_status': current_status,
+                'available_statuses': target_zone_statuses
+            }), 400
 
         # Move the plant
         plant.zone_id = zone_id
@@ -344,6 +394,10 @@ def move_plant_ajax(plant_id, zone_id):
         '''
 
         # Render the plant row HTML
+        from flask_wtf.csrf import generate_csrf
+        csrf_token = generate_csrf()
+        print(f"Generated new CSRF token: {csrf_token}")
+
         plant_html = render_template_string(
             plant_row_template,
             plant=plant,
@@ -351,7 +405,7 @@ def move_plant_ajax(plant_id, zone_id):
             timestamp=timestamp,
             new_zone=new_zone,
             garden_zones=garden_zones,
-            csrf_token=request.form.get('csrf_token', '')
+            csrf_token=csrf_token
         )
 
         return jsonify({
@@ -363,11 +417,32 @@ def move_plant_ajax(plant_id, zone_id):
             'new_zone_id': new_zone.id,
             'old_zone_name': old_zone_name,
             'old_zone_id': old_zone_id,
-            'plant_html': plant_html
+            'plant_html': plant_html,
+            'garden_zones': [{'id': z.id, 'name': z.name} for z in garden_zones],
+            'csrf_token': csrf_token
         })
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        error_message = str(e)
+        print(f"Error moving plant: {error_message}")
+        import traceback
+        traceback.print_exc()
+
+        # Add more context to common errors
+        if "already in zone" in error_message.lower():
+            error_message = f"Plant is already in this zone. {error_message}"
+        elif "permission denied" in error_message.lower():
+            error_message = f"You don't have permission to move this plant. {error_message}"
+        elif "not found" in error_message.lower():
+            error_message = f"Plant or zone not found. {error_message}"
+        elif "string did not match" in error_message.lower() or "expected pattern" in error_message.lower():
+            error_message = f"Invalid data format. Please try again. {error_message}"
+
+        return jsonify({
+            'success': False,
+            'error': error_message,
+            'exception_type': e.__class__.__name__
+        }), 500
 
 
 @gardens.route("/garden/<int:garden_id>/edit", methods=['GET', 'POST'])

@@ -22,14 +22,8 @@
                     box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
             <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
                  style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
-                        border-radius: 1rem !important;
-                        cursor: pointer;"
-                 data-bs-toggle="collapse"
-                 data-bs-target="#garden-content-{{ garden.id }}"
-                 aria-expanded="true"
-                 aria-controls="garden-content-{{ garden.id }}">
+                        border-radius: 1rem !important;">
                 <div class="d-flex align-items-center">
-                    <i class="fas fa-chevron-right me-3 garden-collapse-icon" style="color: #1cc88a; transition: transform 0.3s;"></i>
                     <div>
                         <h4 class="text-success m-0">{{ garden.name }}</h4>
                         <div class="text-muted small">
@@ -76,7 +70,7 @@
 
 
             <!-- Garden Content -->
-            <div id="garden-content-{{ garden.id }}" class="collapse show">
+            <div id="garden-content-{{ garden.id }}">
                 <!-- Garden Zones -->
                 <div class="card-body p-4" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
                 <div class="row">
@@ -84,17 +78,10 @@
                     <div class="col-12">
                         <div id="zone-{{ zone.id }}" class="card shadow mb-4">
                             <div class="card-header py-3 d-flex justify-content-between align-items-center"
-                                 data-bs-toggle="collapse"
-                                 data-bs-target="#zone-content-{{ zone.id }}"
-                                 aria-expanded="true"
-                                 aria-controls="zone-content-{{ zone.id }}"
-                                 onclick="event.stopPropagation();"
-                                 style="cursor: pointer;
-                                        border-radius: 0.75rem !important;
+                                 style="border-radius: 0.75rem !important;
                                         background-color: rgba(28, 200, 138, 0.05);
                                         border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
                                 <div class="d-flex align-items-center">
-                                    <i class="fas fa-chevron-right me-2 zone-collapse-icon" style="color: #1cc88a; transition: transform 0.3s;"></i>
                                     <h6 class="m-0 d-flex align-items-center gap-2"
                                         style="color: #1cc88a;
                                                font-size: 1.1rem;
@@ -131,7 +118,7 @@
                             </div>
 
                             <!-- Zone Content -->
-                            <div id="zone-content-{{ zone.id }}" class="collapse show">
+                            <div id="zone-content-{{ zone.id }}">
                                 <!-- Status Flow Visualization -->
                                 <div class="border-bottom" style="border-color: rgba(28, 200, 138, 0.2) !important;">
                                 <div class="d-flex align-items-center gap-2 overflow-auto py-2 px-4" style="scrollbar-width: thin;">
