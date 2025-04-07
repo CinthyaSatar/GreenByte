@@ -1,0 +1,428 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Client Management</h1>
+        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="modal" data-target="#addClientModal">
+            <i class="fas fa-user-plus fa-sm text-white-50 mr-1"></i> Add New Client
+        </a>
+    </div>
+
+    <!-- Search and Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-success">Search Clients</h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="filterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-filter fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="filterDropdown">
+                    <div class="dropdown-header">Filter By:</div>
+                    <a class="dropdown-item" href="#">Active Clients</a>
+                    <a class="dropdown-item" href="#">Inactive Clients</a>
+                    <a class="dropdown-item" href="#">New Clients</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Restaurants</a>
+                    <a class="dropdown-item" href="#">Markets</a>
+                    <a class="dropdown-item" href="#">Individuals</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Clear Filters</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Search clients by name, email, or phone..." id="clientSearch">
+                        <div class="input-group-append">
+                            <button class="btn btn-success" type="button">
+                                <i class="fas fa-search fa-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" id="clientType">
+                        <option value="all">All Client Types</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="market">Market</option>
+                        <option value="individual">Individual</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" id="clientStatus">
+                        <option value="all">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="new">New</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clients Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">Client List</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="clientsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Client ID</th>
+                            <th>Client Name</th>
+                            <th>Contact Info</th>
+                            <th>Status</th>
+                            <th>Last Order</th>
+                            <th>Total Orders</th>
+                            <th>Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="client-row" data-client-id="1">
+                            <td>CL-001</td>
+                            <td><a href="#" class="client-name-link">Farm Fresh Restaurant</a></td>
+                            <td>
+                                <div>John Doe</div>
+                                <div class="small text-muted">john@farmfresh.com</div>
+                                <div class="small text-muted">(555) 123-4567</div>
+                            </td>
+                            <td><span class="badge badge-success">Active</span></td>
+                            <td>Apr 15, 2023</td>
+                            <td>24</td>
+                            <td>$5,245.00</td>
+                        </tr>
+                        <tr class="client-row" data-client-id="2">
+                            <td>CL-002</td>
+                            <td><a href="#" class="client-name-link">Green Leaf Cafe</a></td>
+                            <td>
+                                <div>Jane Smith</div>
+                                <div class="small text-muted">jane@greenleaf.com</div>
+                                <div class="small text-muted">(555) 234-5678</div>
+                            </td>
+                            <td><span class="badge badge-success">Active</span></td>
+                            <td>Apr 14, 2023</td>
+                            <td>18</td>
+                            <td>$3,780.00</td>
+                        </tr>
+                        <tr class="client-row" data-client-id="3">
+                            <td>CL-003</td>
+                            <td><a href="#" class="client-name-link">Harvest Market</a></td>
+                            <td>
+                                <div>Robert Johnson</div>
+                                <div class="small text-muted">robert@harvestmarket.com</div>
+                                <div class="small text-muted">(555) 345-6789</div>
+                            </td>
+                            <td><span class="badge badge-success">Active</span></td>
+                            <td>Apr 13, 2023</td>
+                            <td>12</td>
+                            <td>$2,950.00</td>
+                        </tr>
+                        <tr class="client-row" data-client-id="4">
+                            <td>CL-004</td>
+                            <td><a href="#" class="client-name-link">John Smith</a></td>
+                            <td>
+                                <div>John Smith</div>
+                                <div class="small text-muted">john.smith@email.com</div>
+                                <div class="small text-muted">(555) 456-7890</div>
+                            </td>
+                            <td><span class="badge badge-info">New</span></td>
+                            <td>Apr 12, 2023</td>
+                            <td>1</td>
+                            <td>$87.25</td>
+                        </tr>
+                        <tr class="client-row" data-client-id="5">
+                            <td>CL-005</td>
+                            <td><a href="#" class="client-name-link">Organic Delights</a></td>
+                            <td>
+                                <div>Sarah Williams</div>
+                                <div class="small text-muted">sarah@organicdelights.com</div>
+                                <div class="small text-muted">(555) 567-8901</div>
+                            </td>
+                            <td><span class="badge badge-warning">Inactive</span></td>
+                            <td>Mar 28, 2023</td>
+                            <td>8</td>
+                            <td>$1,450.00</td>
+                        </tr>
+                        <tr class="client-row" data-client-id="6">
+                            <td>CL-006</td>
+                            <td><a href="#" class="client-name-link">Fresh & Local Co-op</a></td>
+                            <td>
+                                <div>Michael Brown</div>
+                                <div class="small text-muted">michael@freshandlocal.org</div>
+                                <div class="small text-muted">(555) 678-9012</div>
+                            </td>
+                            <td><span class="badge badge-success">Active</span></td>
+                            <td>Apr 10, 2023</td>
+                            <td>15</td>
+                            <td>$3,125.00</td>
+                        </tr>
+                        <tr class="client-row" data-client-id="7">
+                            <td>CL-007</td>
+                            <td><a href="#" class="client-name-link">Garden Bistro</a></td>
+                            <td>
+                                <div>Emily Davis</div>
+                                <div class="small text-muted">emily@gardenbistro.com</div>
+                                <div class="small text-muted">(555) 789-0123</div>
+                            </td>
+                            <td><span class="badge badge-success">Active</span></td>
+                            <td>Apr 9, 2023</td>
+                            <td>10</td>
+                            <td>$2,175.00</td>
+                        </tr>
+                        <tr class="client-row" data-client-id="8">
+                            <td>CL-008</td>
+                            <td><a href="#" class="client-name-link">Sunshine Grocers</a></td>
+                            <td>
+                                <div>David Wilson</div>
+                                <div class="small text-muted">david@sunshinegrocers.com</div>
+                                <div class="small text-muted">(555) 890-1234</div>
+                            </td>
+                            <td><span class="badge badge-warning">Inactive</span></td>
+                            <td>Feb 15, 2023</td>
+                            <td>5</td>
+                            <td>$875.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal fade" id="addClientModal" tabindex="-1" role="dialog" aria-labelledby="addClientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addClientModalLabel">Add New Client</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="clientName">Client Name</label>
+                            <input type="text" class="form-control" id="clientName" placeholder="Business or Individual Name">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="clientType">Client Type</label>
+                            <select class="form-control" id="clientTypeSelect">
+                                <option value="restaurant">Restaurant</option>
+                                <option value="market">Market</option>
+                                <option value="individual">Individual</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="contactName">Contact Name</label>
+                            <input type="text" class="form-control" id="contactName" placeholder="Primary Contact Person">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="contactEmail">Email</label>
+                            <input type="email" class="form-control" id="contactEmail" placeholder="Email Address">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="contactPhone">Phone</label>
+                            <input type="tel" class="form-control" id="contactPhone" placeholder="Phone Number">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="clientStatus">Status</label>
+                            <select class="form-control" id="clientStatusSelect">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="new" selected>New</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientAddress">Address</label>
+                        <input type="text" class="form-control" id="clientAddress" placeholder="Street Address">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="clientCity">City</label>
+                            <input type="text" class="form-control" id="clientCity" placeholder="City">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="clientState">State</label>
+                            <input type="text" class="form-control" id="clientState" placeholder="State">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="clientZip">Zip</label>
+                            <input type="text" class="form-control" id="clientZip" placeholder="Zip Code">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientNotes">Notes</label>
+                        <textarea class="form-control" id="clientNotes" rows="3" placeholder="Additional notes about this client..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success">Add Client</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS for badges and modern table -->
+<style>
+    /* Badge styles */
+    .badge-success {
+        background-color: #1cc88a;
+        color: white;
+    }
+    .badge-warning {
+        background-color: #f6c23e;
+        color: white;
+    }
+    .badge-info {
+        background-color: #36b9cc;
+        color: white;
+    }
+    .badge-danger {
+        background-color: #e74a3b;
+        color: white;
+    }
+    
+    /* Modern table styles */
+    #clientsTable {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    #clientsTable th {
+        background-color: #f8f9fc;
+        color: #5a5c69;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        border-top: none;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 1rem;
+    }
+    
+    #clientsTable td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-top: none;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    
+    #clientsTable tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .client-row {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .client-row:hover {
+        background-color: rgba(28, 200, 138, 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+        border-radius: 30px;
+        font-size: 0.75rem;
+    }
+    
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.02);
+    }
+    
+    /* Client name link styling */
+    .client-name-link {
+        color: #1cc88a;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    
+    .client-name-link:hover {
+        color: #169b6b;
+        text-decoration: none;
+    }
+</style>
+
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#clientsTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "info": true,
+            "searching": true
+        });
+        
+        // Client search functionality
+        $('#clientSearch').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            $('#clientsTable tbody tr').filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+        
+        // Client type filter
+        $('#clientType').change(function() {
+            var type = $(this).val().toLowerCase();
+            if (type === 'all') {
+                $('#clientsTable tbody tr').show();
+            } else {
+                // This is a simplified example - in a real app, you'd have the client type as data
+                // For now, we'll just show all rows since we don't have that data
+                $('#clientsTable tbody tr').show();
+            }
+        });
+        
+        // Client status filter
+        $('#clientStatus').change(function() {
+            var status = $(this).val().toLowerCase();
+            if (status === 'all') {
+                $('#clientsTable tbody tr').show();
+            } else {
+                $('#clientsTable tbody tr').each(function() {
+                    var rowStatus = $(this).find('td:nth-child(4) span').text().toLowerCase();
+                    $(this).toggle(rowStatus === status);
+                });
+            }
+        });
+        
+        // Client row click handler
+        $('.client-row').click(function(e) {
+            // Only navigate if the click wasn't on a button or link
+            if (!$(e.target).is('button, a, input')) {
+                var clientId = $(this).data('client-id');
+                // This would navigate to the client detail page
+                // window.location.href = '/commercial/clients/' + clientId;
+                alert('Navigate to client details for ID: ' + clientId);
+            }
+        });
+    });
+</script>
+{% endblock scripts %}

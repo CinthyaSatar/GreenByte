@@ -1,0 +1,619 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Main Content Column -->
+    <div class="col-lg-8">
+      <!-- Revenue Section -->
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+        >
+          <h6 class="m-0 font-weight-bold text-success">Revenue Overview</h6>
+          <div class="dropdown no-arrow">
+            <a
+              class="dropdown-toggle"
+              href="#"
+              role="button"
+              id="revenueDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div
+              class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+              aria-labelledby="revenueDropdown"
+            >
+              <div class="dropdown-header">View Options:</div>
+              <a class="dropdown-item" href="#"
+                ><i
+                  class="fas fa-calendar-week fa-sm fa-fw mr-2 text-gray-400"
+                ></i
+                >Weekly</a
+              >
+              <a class="dropdown-item" href="#"
+                ><i
+                  class="fas fa-calendar-alt fa-sm fa-fw mr-2 text-gray-400"
+                ></i
+                >Monthly</a
+              >
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-calendar fa-sm fa-fw mr-2 text-gray-400"></i
+                >Yearly</a
+              >
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#"
+                ><i
+                  class="fas fa-file-export fa-sm fa-fw mr-2 text-gray-400"
+                ></i
+                >Export Data</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                Total Revenue
+              </div>
+              <div class="h2 mb-0 font-weight-bold text-success">
+                $24,568.00
+              </div>
+              <div class="text-xs font-weight-bold text-success mt-1">
+                <i class="fas fa-arrow-up mr-1"></i> 8.3% from last month
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="text-right">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-file-invoice-dollar mr-1"></i> New Invoice
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-chart-line mr-1"></i> View Reports
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Revenue Chart -->
+          <div class="chart-area">
+            <canvas id="monthlyRevenueChart"></canvas>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-md-4">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Current Month
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                $4,235.00
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Previous Month
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                $3,910.00
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Year to Date
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                $24,568.00
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products and Quick Actions Row -->
+      <div class="row">
+        <!-- Products Section -->
+        <div class="col-lg-7">
+          <div class="card shadow mb-4">
+            <div
+              class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+            >
+              <h6 class="m-0 font-weight-bold text-success">Top Products</h6>
+              <div class="dropdown no-arrow">
+                <a
+                  class="dropdown-toggle"
+                  href="#"
+                  role="button"
+                  id="productsDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div
+                  class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                  aria-labelledby="productsDropdown"
+                >
+                  <div class="dropdown-header">View Options:</div>
+                  <a class="dropdown-item" href="#"
+                    ><i
+                      class="fas fa-sort-amount-down fa-sm fa-fw mr-2 text-gray-400"
+                    ></i
+                    >By Revenue</a
+                  >
+                  <a class="dropdown-item" href="#"
+                    ><i
+                      class="fas fa-sort-numeric-down fa-sm fa-fw mr-2 text-gray-400"
+                    ></i
+                    >By Quantity</a
+                  >
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="#"
+                    ><i class="fas fa-plus fa-sm fa-fw mr-2 text-gray-400"></i
+                    >Add New Product</a
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <h6 class="font-weight-bold mb-3">Top Products by Revenue</h6>
+              <div class="progress mb-3" style="height: 25px">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: 100%"
+                  aria-valuenow="100"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span class="font-weight-bold">Tomatoes (Roma) - $3,245</span>
+                </div>
+              </div>
+              <div class="progress mb-3" style="height: 25px">
+                <div
+                  class="progress-bar bg-info"
+                  role="progressbar"
+                  style="width: 85%"
+                  aria-valuenow="85"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span class="font-weight-bold"
+                    >Lettuce (Romaine) - $2,758</span
+                  >
+                </div>
+              </div>
+              <div class="progress mb-3" style="height: 25px">
+                <div
+                  class="progress-bar bg-primary"
+                  role="progressbar"
+                  style="width: 70%"
+                  aria-valuenow="70"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span class="font-weight-bold">Basil (Sweet) - $2,285</span>
+                </div>
+              </div>
+              <div class="progress mb-3" style="height: 25px">
+                <div
+                  class="progress-bar bg-warning"
+                  role="progressbar"
+                  style="width: 55%"
+                  aria-valuenow="55"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span class="font-weight-bold"
+                    >Carrots (Nantes) - $1,785</span
+                  >
+                </div>
+              </div>
+              <div class="progress mb-3" style="height: 25px">
+                <div
+                  class="progress-bar bg-danger"
+                  role="progressbar"
+                  style="width: 40%"
+                  aria-valuenow="40"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span class="font-weight-bold">Bell Peppers - $1,295</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="col-lg-5">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-success">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+              <div class="list-group">
+                <a
+                  href="#"
+                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
+                >
+                  <div class="icon-circle bg-success">
+                    <i class="fas fa-user-plus text-white"></i>
+                  </div>
+                  <div>
+                    <div class="font-weight-bold">New Client</div>
+                    <div class="small text-muted">
+                      Add a new client to your network
+                    </div>
+                  </div>
+                </a>
+                <a
+                  href="#"
+                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
+                >
+                  <div class="icon-circle bg-primary mr-4">
+                    <i class="fas fa-shopping-cart text-white"></i>
+                  </div>
+                  <div>
+                    <div class="font-weight-bold">New Order</div>
+                    <div class="small text-muted">
+                      Create a new client order
+                    </div>
+                  </div>
+                </a>
+                <a
+                  href="#"
+                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
+                >
+                  <div class="icon-circle bg-info mr-4">
+                    <i class="fas fa-file-invoice-dollar text-white"></i>
+                  </div>
+                  <div>
+                    <div class="font-weight-bold">Generate Invoice</div>
+                    <div class="small text-muted">
+                      Create a new invoice for a client
+                    </div>
+                  </div>
+                </a>
+                <a
+                  href="#"
+                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
+                >
+                  <div class="icon-circle bg-warning mr-4">
+                    <i class="fas fa-truck text-white"></i>
+                  </div>
+                  <div>
+                    <div class="font-weight-bold">Schedule Delivery</div>
+                    <div class="small text-muted">
+                      Arrange delivery for an order
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <style>
+                .icon-circle {
+                  height: 2.5rem;
+                  width: 2.5rem;
+                  border-radius: 100%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex-shrink: 0;
+                  margin-right: 1.5rem !important;
+                }
+                .list-group-item:hover {
+                  background-color: #f8f9fc;
+                }
+                .badge-success {
+                  background-color: #1cc88a;
+                  color: white;
+                }
+                .badge-warning {
+                  background-color: #f6c23e;
+                  color: white;
+                }
+                .badge-info {
+                  background-color: #36b9cc;
+                  color: white;
+                }
+                .badge-danger {
+                  background-color: #e74a3b;
+                  color: white;
+                }
+              </style>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Section -->
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+        >
+          <h6 class="m-0 font-weight-bold text-success">Latest Orders</h6>
+          <div class="dropdown no-arrow">
+            <a
+              class="dropdown-toggle"
+              href="#"
+              role="button"
+              id="ordersDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div
+              class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+              aria-labelledby="ordersDropdown"
+            >
+              <div class="dropdown-header">Order Actions:</div>
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-plus fa-sm fa-fw mr-2 text-gray-400"></i>New
+                Order</a
+              >
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>View
+                All Orders</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Client</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ORD-2023-042</td>
+                  <td>Farm Fresh Restaurant</td>
+                  <td>Apr 15, 2023</td>
+                  <td>$345.00</td>
+                  <td><span class="badge badge-success">Delivered</span></td>
+                </tr>
+                <tr>
+                  <td>ORD-2023-041</td>
+                  <td>Green Leaf Cafe</td>
+                  <td>Apr 14, 2023</td>
+                  <td>$278.50</td>
+                  <td><span class="badge badge-warning">In Transit</span></td>
+                </tr>
+                <tr>
+                  <td>ORD-2023-040</td>
+                  <td>Harvest Market</td>
+                  <td>Apr 13, 2023</td>
+                  <td>$512.75</td>
+                  <td><span class="badge badge-info">Processing</span></td>
+                </tr>
+                <tr>
+                  <td>ORD-2023-039</td>
+                  <td>John Smith</td>
+                  <td>Apr 12, 2023</td>
+                  <td>$87.25</td>
+                  <td><span class="badge badge-success">Delivered</span></td>
+                </tr>
+                <tr>
+                  <td>ORD-2023-038</td>
+                  <td>Farm Fresh Restaurant</td>
+                  <td>Apr 10, 2023</td>
+                  <td>$325.00</td>
+                  <td><span class="badge badge-success">Delivered</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Stats & Info -->
+    <div class="col-lg-4">
+      <!-- Client Stats Card -->
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+        >
+          <h6 class="m-0 font-weight-bold text-success">Client Statistics</h6>
+          <div class="dropdown no-arrow">
+            <a
+              class="dropdown-toggle"
+              href="#"
+              role="button"
+              id="clientStatsDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div
+              class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+              aria-labelledby="clientStatsDropdown"
+            >
+              <div class="dropdown-header">Client Actions:</div>
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-user-plus fa-sm fa-fw mr-2 text-gray-400"></i
+                >Add New Client</a
+              >
+              <a class="dropdown-item" href="#"
+                ><i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>View
+                All Clients</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <div class="h1 mb-0 font-weight-bold text-gray-800">28</div>
+            <div
+              class="text-xs font-weight-bold text-success text-uppercase mb-1"
+            >
+              Total Active Clients
+            </div>
+          </div>
+
+          <!-- New vs Returning -->
+          <h6 class="font-weight-bold">New vs. Returning Clients</h6>
+          <div class="chart-pie mb-4">
+            <canvas id="clientTypeChart"></canvas>
+          </div>
+
+          <!-- Client Retention -->
+          <h6 class="font-weight-bold">Client Retention Rate</h6>
+          <div class="mb-4">
+            <div class="d-flex justify-content-between">
+              <span>Retention Rate</span>
+              <span class="font-weight-bold">85%</span>
+            </div>
+            <div class="progress" style="height: 10px">
+              <div
+                class="progress-bar bg-success"
+                role="progressbar"
+                style="width: 85%"
+                aria-valuenow="85"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Top Clients -->
+          <h6 class="font-weight-bold">Top Clients by Revenue</h6>
+          <div class="list-group">
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">Farm Fresh Restaurant</h6>
+                <small class="text-success">$5,245</small>
+              </div>
+              <small class="text-muted">12 orders this month</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">Green Leaf Cafe</h6>
+                <small class="text-success">$3,780</small>
+              </div>
+              <small class="text-muted">8 orders this month</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">Harvest Market</h6>
+                <small class="text-success">$2,950</small>
+              </div>
+              <small class="text-muted">5 orders this month</small>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Monthly Revenue Chart
+  var ctx = document.getElementById("monthlyRevenueChart").getContext("2d");
+  var monthlyRevenueChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      datasets: [
+        {
+          label: "Monthly Revenue",
+          data: [
+            2100, 2400, 2800, 3200, 3500, 3800, 4100, 3900, 4200, 4500, 4800,
+            5100,
+          ],
+          backgroundColor: "rgba(28, 200, 138, 0.1)",
+          borderColor: "rgba(28, 200, 138, 1)",
+          borderWidth: 2,
+          pointBackgroundColor: "rgba(28, 200, 138, 1)",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          tension: 0.3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              return "$" + value.toLocaleString();
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Client Type Chart
+  var ctx3 = document.getElementById("clientTypeChart").getContext("2d");
+  var clientTypeChart = new Chart(ctx3, {
+    type: "pie",
+    data: {
+      labels: ["Returning Clients", "New Clients"],
+      datasets: [
+        {
+          data: [22, 6],
+          backgroundColor: [
+            "rgba(28, 200, 138, 0.8)",
+            "rgba(54, 185, 204, 0.8)",
+          ],
+          borderColor: "#ffffff",
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+        },
+      },
+    },
+  });
+</script>
+{% endblock scripts %}

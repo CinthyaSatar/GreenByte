@@ -60,11 +60,13 @@ def createApp(configClass=Config):
     from greenbyte.main.routes import main
     from greenbyte.errors.handlers import errors
     from greenbyte.gardens.routes import gardens
+    from greenbyte.commercial import commercial
 
     app.register_blueprint(users)
     app.register_blueprint(posts)
     app.register_blueprint(main)
     app.register_blueprint(errors)
     app.register_blueprint(gardens)
+    app.register_blueprint(commercial)
 
     return app
