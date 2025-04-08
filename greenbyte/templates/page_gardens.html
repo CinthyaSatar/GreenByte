@@ -1052,25 +1052,54 @@
                 const todoTitle = todoItem.querySelector('.todo-title');
 
                 if (this.checked) {
-                    // Mark as completed
+                    // Mark as completed visually
                     if (todoTitle) {
                         todoTitle.style.textDecoration = 'line-through';
                         todoTitle.style.opacity = '0.6';
                     }
                     todoItem.style.opacity = '0.7';
 
-                    // Here you would typically send an AJAX request to mark the event as completed
-                    // For now, we'll just simulate it with a timeout
-                    setTimeout(() => {
-                        todoItem.style.display = 'none';
-                    }, 2000);
+                    // Send AJAX request to mark the event as completed
+                    fetch(`/calendar/events/${todoId}/complete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Success - task will remain visible but crossed out until page refresh
+                            const todoTitle = todoItem.querySelector('.todo-title')?.textContent || 'Task';
+                            window.showToast(`"${todoTitle.trim()}" marked as completed!`, 'bg-success');
+                        } else {
+                            // Error - revert visual changes
+                            this.checked = false;
+                            if (todoTitle) {
+                                todoTitle.style.textDecoration = 'none';
+                                todoTitle.style.opacity = '1';
+                            }
+                            todoItem.style.opacity = '1';
+                            window.showToast(data.message || 'Error completing task', 'bg-danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Revert visual changes on error
+                        this.checked = false;
+                        if (todoTitle) {
+                            todoTitle.style.textDecoration = 'none';
+                            todoTitle.style.opacity = '1';
+                        }
+                        todoItem.style.opacity = '1';
+                        window.showToast('An error occurred while completing the task', 'bg-danger');
+                    });
                 } else {
-                    // Mark as not completed
-                    if (todoTitle) {
-                        todoTitle.style.textDecoration = 'none';
-                        todoTitle.style.opacity = '1';
-                    }
-                    todoItem.style.opacity = '1';
+                    // Unchecking is not supported - force it back to checked
+                    this.checked = true;
+                    window.showToast('Tasks cannot be unmarked as completed', 'bg-warning');
                 }
             });
         }

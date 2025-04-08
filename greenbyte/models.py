@@ -863,6 +863,8 @@ class CalendarEvent(db.Model):
     url = db.Column(db.String(255), nullable=True)
     is_private = db.Column(db.Boolean, default=False)
     alert_before_minutes = db.Column(db.Integer, nullable=True)
+    completed = db.Column(db.Boolean, default=False)  # Track completion status for TODO tasks
+    completed_at = db.Column(db.DateTime, nullable=True)  # When the task was completed
     created_at = db.Column(db.DateTime, default=now_in_timezone)
     updated_at = db.Column(db.DateTime, default=now_in_timezone, onupdate=now_in_timezone)
 

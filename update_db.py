@@ -5,8 +5,20 @@ from sqlalchemy import text
 app = createApp()
 
 with app.app_context():
-    # Add the zone_id column to the calendar_event table
+    # Add the completed and completed_at columns to the calendar_event table
     with db.engine.connect() as conn:
-        conn.execute(text('ALTER TABLE calendar_event ADD COLUMN zone_id INTEGER REFERENCES zone(id)'))
-        conn.commit()
-    print("Added zone_id column to calendar_event table")
+        try:
+            conn.execute(text('ALTER TABLE calendar_event ADD COLUMN completed BOOLEAN DEFAULT FALSE'))
+            conn.commit()
+            print("Added completed column to calendar_event table")
+        except Exception as e:
+            print(f"Error adding completed column: {e}")
+            conn.rollback()
+
+        try:
+            conn.execute(text('ALTER TABLE calendar_event ADD COLUMN completed_at DATETIME'))
+            conn.commit()
+            print("Added completed_at column to calendar_event table")
+        except Exception as e:
+            print(f"Error adding completed_at column: {e}")
+            conn.rollback()

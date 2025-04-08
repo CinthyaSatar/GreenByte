@@ -676,3 +676,27 @@ def delete_event(event_id):
 def analytics():
     return render_template('analytics.html')
 
+@main.route("/calendar/events/<int:event_id>/complete", methods=['POST'])
+@login_required
+def complete_todo(event_id):
+    event = CalendarEvent.query.get_or_404(event_id)
+
+    # Ensure the user owns the event
+    if event.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'You do not have permission to update this event.'}), 403
+
+    # Only allow completing TODO tasks
+    if event.calendar_type.lower() != 'todo':
+        return jsonify({'success': False, 'message': 'Only TODO tasks can be marked as completed.'}), 400
+
+    # Update the completion status
+    from greenbyte import db
+    from datetime import datetime
+    from greenbyte.utils.timezone import now_in_timezone
+
+    event.completed = True
+    event.completed_at = now_in_timezone()
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Task marked as completed.'})
+
