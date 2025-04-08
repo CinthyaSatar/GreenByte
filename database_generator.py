@@ -22,6 +22,9 @@ MAX_MEMBERS_PER_GARDEN = 3
 MAX_ZONES_PER_GARDEN = 4
 MAX_PLANTS_PER_ZONE = 6
 NUM_EVENTS_PER_USER = 5  # Number of calendar events to generate per user
+NUM_GARDEN_EVENTS = 3  # Number of events per garden
+NUM_ZONE_EVENTS = 2  # Number of events per zone
+NUM_PLANT_EVENTS = 1  # Number of events per plant
 
 def generate_database():
     with app.app_context():
@@ -360,12 +363,30 @@ def generate_database():
 
             # Generate calendar events
             events = []
-            event_titles = [
-                "Water Plants", "Fertilize Garden", "Harvest Vegetables", "Plant Seeds",
-                "Prune Trees", "Check Soil pH", "Apply Compost", "Weed Garden",
-                "Inspect for Pests", "Transplant Seedlings", "Garden Planning", "Crop Rotation",
-                "Greenhouse Maintenance", "Tool Maintenance", "Garden Meeting", "Seed Starting",
-                "Mulching", "Irrigation Check", "Garden Cleanup", "Soil Testing"
+
+            # Event titles categorized by type
+            general_event_titles = [
+                "Garden Planning", "Tool Maintenance", "Garden Meeting", "Seed Starting",
+                "Garden Cleanup", "Soil Testing", "Garden Workshop", "Seed Exchange",
+                "Garden Tour", "Composting Workshop"
+            ]
+
+            garden_event_titles = [
+                "Water Garden", "Fertilize Garden", "Garden Maintenance", "Garden Inspection",
+                "Garden Cleanup", "Mulching Garden", "Irrigation Setup", "Garden Expansion",
+                "Garden Party", "Garden Photography"
+            ]
+
+            zone_event_titles = [
+                "Zone Planting", "Zone Maintenance", "Zone Cleanup", "Zone Irrigation",
+                "Zone Fertilizing", "Zone Mulching", "Zone Inspection", "Zone Redesign",
+                "Zone Soil Amendment", "Zone Pest Control"
+            ]
+
+            plant_event_titles = [
+                "Harvest", "Pruning", "Fertilizing", "Pest Treatment",
+                "Staking", "Transplanting", "Propagation", "Watering",
+                "Disease Treatment", "Growth Tracking"
             ]
 
             event_locations = [
@@ -412,7 +433,7 @@ def generate_database():
                     plant = random.choice(user_plants) if user_plants and random.random() < 0.3 else None
 
                     # Create event
-                    title = random.choice(event_titles)
+                    title = random.choice(general_event_titles)
                     if plant:
                         title = f"{title} - {plant.plant_detail.name}"
 
@@ -452,6 +473,127 @@ def generate_database():
                                 status=random.choice(['pending', 'accepted', 'declined'])
                             )
                             db.session.add(event_invitee)
+
+            # Generate garden-specific events
+            for garden in gardens:
+                for _ in range(NUM_GARDEN_EVENTS):
+                    # Generate random dates within the next 14 days
+                    start_days_offset = random.randint(1, 14)
+                    start_datetime = current_time + timedelta(days=start_days_offset)
+
+                    # Adjust time to a reasonable hour (8am to 6pm)
+                    hour = random.randint(8, 18)
+                    minute = random.choice([0, 15, 30, 45])
+                    start_datetime = start_datetime.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+                    # Set end time (1-2 hours later)
+                    duration_hours = random.randint(1, 2)
+                    end_datetime = start_datetime + timedelta(hours=duration_hours)
+
+                    # Create the garden event
+                    garden_event = CalendarEvent(
+                        title=random.choice(garden_event_titles),
+                        description=f"Garden event for {garden.name}: {fake.sentence()}",
+                        location=garden.location if garden.location else random.choice(event_locations),
+                        start_datetime=start_datetime,
+                        end_datetime=end_datetime,
+                        all_day=False,  # Garden events are typically not all-day
+                        calendar_type="work",  # Garden events are typically work-related
+                        user_id=garden.owner_id,  # Assign to garden owner
+                        garden_id=garden.id  # Link to the garden
+                    )
+
+                    db.session.add(garden_event)
+                    events.append(garden_event)
+
+            # Generate zone-specific events
+            for zone in zones:
+                for _ in range(NUM_ZONE_EVENTS):
+                    # Generate random dates within the next 10 days
+                    start_days_offset = random.randint(1, 10)
+                    start_datetime = current_time + timedelta(days=start_days_offset)
+
+                    # Adjust time to a reasonable hour (8am to 6pm)
+                    hour = random.randint(8, 18)
+                    minute = random.choice([0, 15, 30, 45])
+                    start_datetime = start_datetime.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+                    # Set end time (30min-1.5 hours later)
+                    duration_minutes = random.randint(30, 90)
+                    end_datetime = start_datetime + timedelta(minutes=duration_minutes)
+
+                    # Get the garden for this zone
+                    garden = Garden.query.get(zone.garden_id)
+
+                    # Create the zone event
+                    zone_event = CalendarEvent(
+                        title=random.choice(zone_event_titles),
+                        description=f"Zone event for {zone.name} in {garden.name}: {fake.sentence()}",
+                        location=garden.location if garden.location else random.choice(event_locations),
+                        start_datetime=start_datetime,
+                        end_datetime=end_datetime,
+                        all_day=False,
+                        calendar_type=random.choice(["work", "community"]),
+                        user_id=garden.owner_id,
+                        garden_id=garden.id,
+                        zone_id=zone.id  # Link to the zone
+                    )
+
+                    db.session.add(zone_event)
+                    events.append(zone_event)
+
+            # Get all plants for plant-specific events
+            plants = []
+            for zone in zones:
+                plants.extend(zone.plants)
+
+            # Generate plant-specific events
+            for plant in plants:
+                # Only create events for some plants (50% chance)
+                if random.random() < 0.5:
+                    for _ in range(NUM_PLANT_EVENTS):
+                        # Generate random dates within the next 7 days
+                        start_days_offset = random.randint(1, 7)
+                        start_datetime = current_time + timedelta(days=start_days_offset)
+
+                        # Adjust time to a reasonable hour (8am to 6pm)
+                        hour = random.randint(8, 18)
+                        minute = random.choice([0, 15, 30, 45])
+                        start_datetime = start_datetime.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+                        # Set end time (15-45 minutes later)
+                        duration_minutes = random.randint(15, 45)
+                        end_datetime = start_datetime + timedelta(minutes=duration_minutes)
+
+                        # Get the zone and garden for this plant
+                        zone = Zone.query.get(plant.zone_id)
+                        garden = Garden.query.get(zone.garden_id)
+
+                        # Create a title based on plant status
+                        if plant.status in ["Seedling", "Growing"]:
+                            title_options = ["Watering", "Fertilizing", "Check Growth", "Pest Inspection"]
+                        elif plant.status in ["Mature", "Flowering", "Fruiting"]:
+                            title_options = ["Harvesting", "Pruning", "Support Check", "Pest Treatment"]
+                        else:
+                            title_options = plant_event_titles
+
+                        # Create the plant event
+                        plant_event = CalendarEvent(
+                            title=f"{random.choice(title_options)} {plant.plant_detail.name}",
+                            description=f"Plant care for {plant.plant_detail.name} ({plant.status}) in {zone.name}: {fake.sentence()}",
+                            location=garden.location if garden.location else f"{zone.name} in {garden.name}",
+                            start_datetime=start_datetime,
+                            end_datetime=end_datetime,
+                            all_day=False,
+                            calendar_type="work",
+                            user_id=garden.owner_id,
+                            garden_id=garden.id,
+                            zone_id=zone.id,
+                            plant_id=plant.id  # Link to the plant
+                        )
+
+                        db.session.add(plant_event)
+                        events.append(plant_event)
 
             db.session.commit()
             print(f"Created {len(events)} calendar events")

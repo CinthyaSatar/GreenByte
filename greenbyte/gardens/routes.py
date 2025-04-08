@@ -5,9 +5,9 @@ from greenbyte import db
 from greenbyte.gardens.forms import GardenForm, ZoneForm, PlantForm
 from greenbyte.models import (
     User, Garden, Zone, Plant, PlantTracking,
-    Harvest, user_garden, PlantDetail, PlantVariety
+    Harvest, user_garden, PlantDetail, PlantVariety, CalendarEvent
 )
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask import current_app
 from greenbyte.utils.timezone import now_in_timezone, localize_datetime
 
@@ -50,7 +50,7 @@ def add_garden():
         flash('Your garden has been created!', 'success')
         return redirect(url_for('gardens.view_gardens'))
 
-    return render_template('add_garden.html',
+    return render_template('add_page_gardens.html',
                          title='New Garden',
                          form=form)
 
@@ -93,10 +93,49 @@ def view_gardens():
         'extra_style': ''
     }
 
-    return render_template('gardens.html',
+    # Get upcoming events for the next 7 days
+    today = date.today()
+    next_week = today + timedelta(days=7)
+
+    # Fetch all upcoming events for the user's gardens, zones, and plants
+    upcoming_events = CalendarEvent.query.filter(
+        CalendarEvent.user_id == current_user.id,
+        CalendarEvent.start_datetime >= today,
+        CalendarEvent.start_datetime <= next_week,
+        (CalendarEvent.garden_id != None) | (CalendarEvent.zone_id != None) | (CalendarEvent.plant_id != None)
+    ).order_by(CalendarEvent.start_datetime).all()
+
+    # Create dictionaries to organize events by garden, zone, and plant
+    garden_events = {}
+    zone_events = {}
+    plant_events = {}
+
+    for event in upcoming_events:
+        # Add to garden events
+        if event.garden_id:
+            if event.garden_id not in garden_events:
+                garden_events[event.garden_id] = []
+            garden_events[event.garden_id].append(event)
+
+        # Add to zone events
+        if event.zone_id:
+            if event.zone_id not in zone_events:
+                zone_events[event.zone_id] = []
+            zone_events[event.zone_id].append(event)
+
+        # Add to plant events
+        if event.plant_id:
+            if event.plant_id not in plant_events:
+                plant_events[event.plant_id] = []
+            plant_events[event.plant_id].append(event)
+
+    return render_template('page_gardens.html',
                          gardens=gardens,
                          status_style_mapping=status_style_mapping,
-                         default_style=default_style)
+                         default_style=default_style,
+                         garden_events=garden_events,
+                         zone_events=zone_events,
+                         plant_events=plant_events)
 
 
 @gardens.route('/garden/<int:garden_id>/add_zone', methods=['GET', 'POST'])
@@ -469,7 +508,7 @@ def edit_garden(garden_id):
         form.name.data = garden.name
         form.location.data = garden.location
 
-    return render_template('edit_garden.html', form=form, garden=garden)
+    return render_template('edit_page_gardens.html', form=form, garden=garden)
 
 
 @gardens.route("/api/users/search", methods=['GET'])
