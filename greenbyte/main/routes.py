@@ -37,6 +37,8 @@ def index():
 @main.route("/calendar/<date_str>")
 @login_required
 def calendar(date_str=None):
+    # Import event utilities
+    from greenbyte.utils.event_utils import batch_update_events_completion
     # If a date is provided, use it as the reference date, otherwise use today
     if date_str:
         try:
@@ -169,6 +171,12 @@ def calendar(date_str=None):
     # Use strict date range to ensure events are only shown in their correct week
     week_start_datetime = datetime.combine(start_of_week, datetime.min.time())
     week_end_datetime = datetime.combine(end_of_week, datetime.max.time())
+
+    # Get all events for the current user
+    user_events = CalendarEvent.query.filter_by(user_id=current_user.id).all()
+
+    # Update completion status for events
+    updated_count = batch_update_events_completion(user_events)
 
     events = CalendarEvent.query.filter(
         CalendarEvent.user_id == current_user.id,

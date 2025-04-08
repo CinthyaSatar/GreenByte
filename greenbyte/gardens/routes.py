@@ -97,11 +97,21 @@ def view_gardens():
     today = date.today()
     next_week = today + timedelta(days=7)
 
+    # Import event utilities
+    from greenbyte.utils.event_utils import batch_update_events_completion, is_event_overdue
+
+    # Get all events for the current user
+    user_events = CalendarEvent.query.filter_by(user_id=current_user.id).all()
+
+    # Update completion status for events
+    updated_count = batch_update_events_completion(user_events)
+
     # Fetch all upcoming events for the user's gardens, zones, and plants
     # Also include TODO tasks regardless of their associations
     upcoming_events = CalendarEvent.query.filter(
         CalendarEvent.user_id == current_user.id,
-        CalendarEvent.start_datetime >= today,
+        ((CalendarEvent.start_datetime >= today) |
+         ((CalendarEvent.calendar_type == 'todo') & (CalendarEvent.completed == False))),  # Include overdue TODO tasks
         CalendarEvent.start_datetime <= next_week,
         ((CalendarEvent.garden_id != None) | (CalendarEvent.zone_id != None) | (CalendarEvent.plant_id != None) | (CalendarEvent.calendar_type == 'todo'))
     ).order_by(CalendarEvent.start_datetime).all()
@@ -114,7 +124,8 @@ def view_gardens():
 
     for event in upcoming_events:
         # Add TODO events to a separate list if they don't have garden, zone, or plant associations
-        if event.calendar_type == 'todo' and not (event.garden_id or event.zone_id or event.plant_id):
+        # Only include non-completed TODO tasks
+        if event.calendar_type == 'todo' and not event.completed and not (event.garden_id or event.zone_id or event.plant_id):
             todo_events_list.append(event)
 
         # Add to garden events
@@ -135,6 +146,9 @@ def view_gardens():
                 plant_events[event.plant_id] = []
             plant_events[event.plant_id].append(event)
 
+    # Get current time for checking overdue tasks
+    now = now_in_timezone()
+
     return render_template('page_gardens.html',
                          gardens=gardens,
                          status_style_mapping=status_style_mapping,
@@ -142,7 +156,9 @@ def view_gardens():
                          garden_events=garden_events,
                          zone_events=zone_events,
                          plant_events=plant_events,
-                         todo_events_list=todo_events_list)
+                         todo_events_list=todo_events_list,
+                         now=now,
+                         all_events=upcoming_events)
 
 
 @gardens.route('/garden/<int:garden_id>/add_zone', methods=['GET', 'POST'])
