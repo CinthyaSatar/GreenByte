@@ -191,7 +191,24 @@
                 <option value="todo" style="color: #36b9cc" {% if event.calendar_type == 'todo' %}selected{% endif %}>
                   TODO Task
                 </option>
+                <option value="custom" style="color: #858796" {% if event.calendar_type == 'custom' %}selected{% endif %}>
+                  Custom Event Type
+                </option>
               </select>
+
+              <!-- Custom Event Type Selection (hidden by default) -->
+              <div id="customEventTypeContainer" class="mt-3" {% if event.calendar_type != 'custom' %}style="display: none;"{% endif %}>
+                <label class="form-label">Select Custom Event Type</label>
+                <select class="form-select" id="eventTypeId" name="event_type_id" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                  <option value="" selected disabled>Select a custom event type</option>
+                  <!-- Custom event types will be loaded via AJAX -->
+                </select>
+                <div class="d-flex justify-content-end mt-2">
+                  <a href="{{ url_for('event_types.new_event_type') }}" target="_blank" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-plus"></i> Create New Type
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -430,6 +447,8 @@
             </div>
           </div>
         </div>
+            <!-- Tips Column -->
+
       </div>
     </div>
   </div>
@@ -647,5 +666,64 @@
       }
     });
   }
+
+  // Handle custom event type selection
+  document.addEventListener("DOMContentLoaded", function() {
+    const calendarSelect = document.getElementById("calendar");
+    const customEventTypeContainer = document.getElementById("customEventTypeContainer");
+    const eventTypeSelect = document.getElementById("eventTypeId");
+
+    // Function to load custom event types
+    function loadCustomEventTypes() {
+      fetch('/api/event-types')
+        .then(response => response.json())
+        .then(eventTypes => {
+          // Clear current options
+          eventTypeSelect.innerHTML = '<option value="" selected disabled>Select a custom event type</option>';
+
+          // Add options for each event type
+          eventTypes.forEach(eventType => {
+            const option = document.createElement('option');
+            option.value = eventType.id;
+            option.textContent = eventType.name;
+            option.style.color = eventType.color;
+
+            // Select the current event type if it matches
+            {% if event.event_type_id %}
+            if (eventType.id == {{ event.event_type_id }}) {
+              option.selected = true;
+            }
+            {% endif %}
+
+            eventTypeSelect.appendChild(option);
+          });
+
+          // If no custom event types, show a message
+          if (eventTypes.length === 0) {
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "No custom event types available";
+            option.disabled = true;
+            eventTypeSelect.appendChild(option);
+          }
+        })
+        .catch(error => console.error('Error loading custom event types:', error));
+    }
+
+    // Toggle custom event type container based on calendar selection
+    calendarSelect.addEventListener('change', function() {
+      if (calendarSelect.value === 'custom') {
+        customEventTypeContainer.style.display = 'block';
+        loadCustomEventTypes();
+      } else {
+        customEventTypeContainer.style.display = 'none';
+      }
+    });
+
+    // Load custom event types if calendar type is 'custom'
+    if (calendarSelect.value === 'custom') {
+      loadCustomEventTypes();
+    }
+  });
 </script>
 {% endblock content %}

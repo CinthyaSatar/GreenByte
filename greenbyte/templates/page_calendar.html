@@ -3,7 +3,7 @@
   <div class="row">
     <!-- Weekly Calendar Section (Left) -->
     <div class="col-xl-9 col-lg-8">
-      <div class="card shadow mb-4">
+      <div class="card shadow mb-4" style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
         <div
           class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
           style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
@@ -48,7 +48,7 @@
             <i class="fas fa-plus fa-sm"></i>
           </a>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body p-0" style="flex: 1; overflow: auto;">
           <div class="weekly-board">
             <div class="board-columns">
               {% for day in days %}
@@ -64,7 +64,7 @@
                        data-event-id="{{ event.id }}"
                        onclick="openViewEventModal({{ event.id }})"
                        style="background-color: #f8f9fc;
-                              border-left: 3px solid {% if event.type == 'work' %}#1cc88a{% elif event.type == 'community' %}#4e73df{% elif event.type == 'school' %}#f6c23e{% elif event.type == 'personal' %}#e74a3b{% elif event.type == 'todo' %}#36b9cc{% else %}#1cc88a{% endif %};
+                              border-left: 3px solid {% if event.type == 'work' %}#1cc88a{% elif event.type == 'community' %}#4e73df{% elif event.type == 'school' %}#f6c23e{% elif event.type == 'personal' %}#e74a3b{% elif event.type == 'todo' %}#36b9cc{% elif event.type == 'custom' and event.custom_type %}{{ event.custom_type.color }}{% else %}#1cc88a{% endif %};
                               margin-bottom: 8px;
                               padding: 8px;
                               border-radius: 4px;
@@ -72,6 +72,9 @@
                               {% if event.type == 'todo' and event.completed %}opacity: 0.7;{% endif %}">
                     <div class="event-title" style="font-weight: bold;{% if event.type == 'todo' and event.completed %}text-decoration: line-through;{% endif %}">
                       {{ event.title }}
+                      {% if event.type == 'custom' and event.custom_type %}
+                      <span class="badge" style="background-color: {{ event.custom_type.color }}; font-size: 0.7em;">{{ event.custom_type.name }}</span>
+                      {% endif %}
                       {% if event.multi_day %}
                       <span class="badge bg-secondary" style="font-size: 0.7rem; margin-left: 5px;">Day {{ event.day_number }}/{{ event.total_days }}</span>
                       {% endif %}
@@ -180,7 +183,7 @@
           <div
             class="upcoming-event d-flex align-items-center p-2 {% if not loop.last %}mb-3{% endif %}"
             style="
-              border-left: 3px solid {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};
+              border-left: 3px solid {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% elif event.calendar_type == 'todo' %}#36b9cc{% elif event.calendar_type == 'custom' and event.event_type %}{{ event.event_type.color }}{% else %}#1cc88a{% endif %};
               background: rgba(28, 200, 138, 0.05);
             "
             data-event-id="{{ event.id }}"
@@ -188,10 +191,15 @@
           >
             <div class="event-date text-center me-3" style="min-width: 50px">
               <small class="text-gray-500 d-block">{{ event.start_datetime.strftime('%b').upper() }}</small>
-              <div class="h5 mb-0" style="color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
+              <div class="h5 mb-0" style="color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% elif event.calendar_type == 'todo' %}#36b9cc{% elif event.calendar_type == 'custom' and event.event_type %}{{ event.event_type.color }}{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
             </div>
             <div class="event-details">
-              <h6 class="mb-0" {% if event.calendar_type == 'todo' and event.completed %}style="text-decoration: line-through; opacity: 0.7;"{% endif %}>{{ event.title }}</h6>
+              <h6 class="mb-0" {% if event.calendar_type == 'todo' and event.completed %}style="text-decoration: line-through; opacity: 0.7;"{% endif %}>
+                {{ event.title }}
+                {% if event.calendar_type == 'custom' and event.event_type %}
+                <span class="badge" style="background-color: {{ event.event_type.color }}; font-size: 0.7em;">{{ event.event_type.name }}</span>
+                {% endif %}
+              </h6>
               <small class="text-gray-600">
                 <i class="fas fa-clock fa-sm me-1"></i>{{ event.start_datetime.strftime('%I:%M %p') if not event.all_day else 'All Day' }}
               </small>
@@ -204,6 +212,8 @@
           {% endfor %}
         </div>
       </div>
+
+     
     </div>
   </div>
 </div>
@@ -229,9 +239,16 @@
         </div>
       </div>
       <div class="modal-footer" style="border-top: 1px solid rgba(28, 200, 138, 0.2)">
-        <button type="button" class="btn btn-danger" onclick="confirmDeleteEvent()">Delete</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <a id="editEventLink" href="#" class="btn btn-success">Edit</a>
+        <div class="d-flex justify-content-between w-100">
+          <div>
+            <button type="button" class="btn btn-danger" onclick="confirmDeleteEvent()">Delete</button>
+            <button id="toggleCompletionBtn" type="button" class="btn btn-info d-none" onclick="toggleTaskCompletion()">Mark as Completed</button>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <a id="editEventLink" href="#" class="btn btn-success">Edit</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -359,6 +376,13 @@
     // Update the edit link
     document.getElementById('editEventLink').href = `/calendar/events/${eventId}/edit`;
 
+    // Hide the toggle completion button by default
+    const toggleCompletionBtn = document.getElementById('toggleCompletionBtn');
+    toggleCompletionBtn.classList.add('d-none');
+    toggleCompletionBtn.classList.remove('btn-warning');
+    toggleCompletionBtn.classList.add('btn-info');
+    toggleCompletionBtn.textContent = 'Mark as Completed';
+
     // Show the modal
     const viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
     viewEventModal.show();
@@ -386,13 +410,38 @@
         if (event.calendar_type === 'community') calendarColor = '#4e73df';
         if (event.calendar_type === 'school') calendarColor = '#f6c23e';
         if (event.calendar_type === 'personal') calendarColor = '#e74a3b';
+        if (event.calendar_type === 'todo') calendarColor = '#36b9cc';
+        if (event.calendar_type === 'custom' && event.event_type) calendarColor = event.event_type.color;
+
+        // Show toggle completion button for TODO tasks
+        if (event.calendar_type === 'todo') {
+          // Update the global variable to track completion status
+          currentEventCompleted = event.completed || false;
+
+          // Show the toggle completion button
+          toggleCompletionBtn.classList.remove('d-none');
+
+          // Update button text and style based on current completion status
+          if (currentEventCompleted) {
+            toggleCompletionBtn.textContent = 'Mark as Incomplete';
+            toggleCompletionBtn.classList.remove('btn-info');
+            toggleCompletionBtn.classList.add('btn-warning');
+          } else {
+            toggleCompletionBtn.textContent = 'Mark as Completed';
+            toggleCompletionBtn.classList.remove('btn-warning');
+            toggleCompletionBtn.classList.add('btn-info');
+          }
+        }
 
         // Build HTML for event details
         let html = `
           <div class="event-header mb-3 pb-2" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)">
             <h4 ${event.calendar_type === 'todo' && event.completed ? 'style="text-decoration: line-through; opacity: 0.7;"' : ''}>${event.title}</h4>
             <div class="d-flex align-items-center">
-              <span class="badge me-2" style="background-color: ${calendarColor}">${event.calendar_type}</span>
+              ${event.calendar_type === 'custom' && event.event_type ?
+                `<span class="badge me-2" style="background-color: ${event.event_type.color}">${event.event_type.name}</span>` :
+                `<span class="badge me-2" style="background-color: ${calendarColor}">${event.calendar_type}</span>`
+              }
               <i class="fas fa-clock fa-sm me-1"></i> ${timeDisplay}
               ${event.calendar_type === 'todo' ? `<span class="ms-2 badge ${event.completed ? 'bg-success' : 'bg-warning'}"><i class="fas ${event.completed ? 'fa-check' : 'fa-hourglass-half'}"></i> ${event.completed ? 'Completed' : 'Pending'}</span>` : ''}
             </div>
@@ -506,6 +555,74 @@
     if (currentEventId) {
       window.location.href = `/calendar/events/${currentEventId}/edit`;
     }
+  }
+
+  // Global variable to track the current event's completion status
+  let currentEventCompleted = false;
+
+  // Function to toggle task completion status
+  function toggleTaskCompletion() {
+    if (!currentEventId) return;
+
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Determine which endpoint to call based on current completion status
+    const endpoint = currentEventCompleted ? 'uncomplete' : 'complete';
+
+    // Send request to toggle completion status
+    fetch(`/calendar/events/${currentEventId}/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to ${currentEventCompleted ? 'unmark' : 'mark'} task as completed`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // Update the button text and current status
+        currentEventCompleted = !currentEventCompleted;
+        const toggleBtn = document.getElementById('toggleCompletionBtn');
+        toggleBtn.textContent = currentEventCompleted ? 'Mark as Incomplete' : 'Mark as Completed';
+        toggleBtn.classList.toggle('btn-info');
+        toggleBtn.classList.toggle('btn-warning');
+
+        // Update the event details to reflect the new status
+        const eventTitle = document.querySelector('#eventDetails h4');
+        if (eventTitle) {
+          if (currentEventCompleted) {
+            eventTitle.style.textDecoration = 'line-through';
+            eventTitle.style.opacity = '0.7';
+          } else {
+            eventTitle.style.textDecoration = 'none';
+            eventTitle.style.opacity = '1';
+          }
+        }
+
+        // Update the status badge
+        const statusBadge = document.querySelector('#eventDetails .badge:last-of-type');
+        if (statusBadge) {
+          statusBadge.className = `ms-2 badge ${currentEventCompleted ? 'bg-success' : 'bg-warning'}`;
+          statusBadge.innerHTML = `<i class="fas ${currentEventCompleted ? 'fa-check' : 'fa-hourglass-half'}"></i> ${currentEventCompleted ? 'Completed' : 'Pending'}`;
+        }
+
+        // Show success message
+        alert(data.message);
+      } else {
+        // Show error message
+        alert(data.message || `Failed to ${currentEventCompleted ? 'unmark' : 'mark'} task as completed`);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert(`An error occurred while ${currentEventCompleted ? 'unmarking' : 'marking'} the task as completed`);
+    });
   }
 </script>
 

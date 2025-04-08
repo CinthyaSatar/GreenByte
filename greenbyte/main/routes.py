@@ -260,6 +260,14 @@ def calendar(date_str=None):
                     'completed': event.completed
                 }
 
+                # Add custom event type information if available
+                if event.calendar_type == 'custom' and event.event_type:
+                    event_dict['custom_type'] = {
+                        'id': event.event_type.id,
+                        'name': event.event_type.name,
+                        'color': event.event_type.color
+                    }
+
                 # Add the event to the appropriate day
                 days_of_week[current_day]['events'].append(event_dict)
                 print(f"Added event '{event.title}' to {days_of_week[current_day]['name']} (index {current_day}) - Date: {(start_of_week + timedelta(days=current_day)).strftime('%Y-%m-%d')}")
@@ -280,6 +288,10 @@ def calendar(date_str=None):
     # Get all plants for the user to associate with events
     plants = Plant.query.join(Zone, Plant.zone_id == Zone.id).join(Garden, Zone.garden_id == Garden.id).join(Garden.members).filter(User.id == current_user.id).all()
 
+    # Get custom event types for the user
+    from greenbyte.models import EventType
+    custom_event_types = EventType.query.filter_by(user_id=current_user.id).all()
+
     return render_template('page_calendar.html',
                          title='Calendar',
                          days=days_of_week,
@@ -294,7 +306,8 @@ def calendar(date_str=None):
                          year=year,
                          prev_month=prev_month,
                          next_month=next_month,
-                         current_day=current_day)
+                         current_day=current_day,
+                         custom_event_types=custom_event_types)
 
 @main.route("/calendar/add", methods=['GET'])
 @login_required
@@ -325,6 +338,14 @@ def add_event():
     repeat_end_date = request.form.get('endRepeat')
     calendar_type = request.form.get('calendar')
     print(f"Calendar type from form: {calendar_type}")
+
+    # Handle custom event type
+    event_type_id = None
+    if calendar_type == 'custom':
+        event_type_id = request.form.get('event_type_id')
+        if not event_type_id:
+            flash('Please select a custom event type', 'danger')
+            return redirect(url_for('main.add_calendar_event'))
 
     # Force calendar_type to 'todo' if it's coming from the TODO task form
     if calendar_type == 'todo':
@@ -404,6 +425,7 @@ def add_event():
         repeat_type=repeat_type if repeat_type != 'none' else None,
         repeat_end_date=repeat_end_datetime,
         calendar_type=calendar_type,
+        event_type_id=event_type_id if calendar_type == 'custom' else None,
         url=url,
         is_private=is_private,
         alert_before_minutes=alert_before_minutes,
@@ -573,6 +595,15 @@ def edit_event(event_id):
         repeat_type = request.form.get('repeatOption')
         repeat_end_date = request.form.get('endRepeatDate') if request.form.get('endRepeat') == 'on' else None
         calendar_type = request.form.get('calendar')
+
+        # Handle custom event type
+        event_type_id = None
+        if calendar_type == 'custom':
+            event_type_id = request.form.get('event_type_id')
+            if not event_type_id:
+                flash('Please select a custom event type', 'danger')
+                return redirect(url_for('main.edit_event', event_id=event_id))
+
         invitees = request.form.get('invitees')
         alert_before_minutes = request.form.get('alert')
         is_private = 'privateEvent' in request.form
@@ -613,6 +644,11 @@ def edit_event(event_id):
         if calendar_type == 'todo':
             event.calendar_type = 'todo'
             print("Forcing calendar_type to 'todo' in edit_event")
+            event.event_type_id = None
+        elif calendar_type == 'custom':
+            event.event_type_id = event_type_id
+        else:
+            event.event_type_id = None
 
         event.url = url
         event.is_private = is_private
@@ -708,4 +744,26 @@ def complete_todo(event_id):
     db.session.commit()
 
     return jsonify({'success': True, 'message': 'Task marked as completed.'})
+
+@main.route("/calendar/events/<int:event_id>/uncomplete", methods=['POST'])
+@login_required
+def uncomplete_todo(event_id):
+    event = CalendarEvent.query.get_or_404(event_id)
+
+    # Ensure the user owns the event
+    if event.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'You do not have permission to update this event.'}), 403
+
+    # Only allow uncompleting TODO tasks
+    if event.calendar_type.lower() != 'todo':
+        return jsonify({'success': False, 'message': 'Only TODO tasks can be unmarked as completed.'}), 400
+
+    # Update the completion status
+    from greenbyte import db
+
+    event.completed = False
+    event.completed_at = None
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Task unmarked as completed.'})
 

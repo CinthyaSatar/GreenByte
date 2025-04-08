@@ -61,6 +61,7 @@ def createApp(configClass=Config):
     from greenbyte.errors.handlers import errors
     from greenbyte.gardens.routes import gardens
     from greenbyte.commercial import commercial
+    from greenbyte.main.event_type_routes import event_types
 
     app.register_blueprint(users)
     app.register_blueprint(posts)
@@ -68,5 +69,6 @@ def createApp(configClass=Config):
     app.register_blueprint(errors)
     app.register_blueprint(gardens)
     app.register_blueprint(commercial)
+    app.register_blueprint(event_types)
 
     return app

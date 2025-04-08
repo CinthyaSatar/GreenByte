@@ -1100,9 +1100,50 @@
                         window.showToast('An error occurred while completing the task', 'bg-danger');
                     });
                 } else {
-                    // Unchecking is not supported - force it back to checked
-                    this.checked = true;
-                    window.showToast('Tasks cannot be unmarked as completed', 'bg-warning');
+                    // Handle unmarking a task as completed
+                    if (todoTitle) {
+                        todoTitle.style.textDecoration = 'none';
+                        todoTitle.style.opacity = '1';
+                    }
+                    todoItem.style.opacity = '1';
+
+                    // Send AJAX request to unmark the event as completed
+                    fetch(`/calendar/events/${todoId}/uncomplete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Success - task will be unmarked
+                            const todoTitle = todoItem.querySelector('.todo-title')?.textContent || 'Task';
+                            window.showToast(`"${todoTitle.trim()}" unmarked as completed!`, 'bg-info');
+                        } else {
+                            // Error - revert visual changes
+                            this.checked = true;
+                            if (todoTitle) {
+                                todoTitle.style.textDecoration = 'line-through';
+                                todoTitle.style.opacity = '0.6';
+                            }
+                            todoItem.style.opacity = '0.7';
+                            window.showToast(data.message || 'Error unmarking task', 'bg-danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Revert visual changes on error
+                        this.checked = true;
+                        if (todoTitle) {
+                            todoTitle.style.textDecoration = 'line-through';
+                            todoTitle.style.opacity = '0.6';
+                        }
+                        todoItem.style.opacity = '0.7';
+                        window.showToast('An error occurred while unmarking the task', 'bg-danger');
+                    });
                 }
             });
         }

@@ -848,6 +848,29 @@ class PostPlant(db.Model):
     status = db.Column(db.String(20), nullable=False)  # e.g., 'Growing', 'Fruiting'
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)  # Optional link to actual plant
 
+class EventType(db.Model):
+    __tablename__ = 'event_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    color = db.Column(db.String(20), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_default = db.Column(db.Boolean, default=False)  # True for system default types
+
+    # Relationship with User
+    user = db.relationship('User', backref=db.backref('event_types', lazy=True))
+
+    def __repr__(self):
+        return f"EventType('{self.name}', '{self.color}')"
+
+    def to_dict(self):
+        """Convert event type to dictionary for JSON response"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'color': self.color,
+            'is_default': self.is_default
+        }
+
 class CalendarEvent(db.Model):
     __tablename__ = 'calendar_event'
     id = db.Column(db.Integer, primary_key=True)
@@ -859,7 +882,8 @@ class CalendarEvent(db.Model):
     all_day = db.Column(db.Boolean, default=False)
     repeat_type = db.Column(db.String(20), nullable=True)  # 'daily', 'weekly', 'monthly', 'yearly'
     repeat_end_date = db.Column(db.DateTime, nullable=True)
-    calendar_type = db.Column(db.String(20), default='work')  # 'work', 'community', 'school', 'personal', 'todo'
+    calendar_type = db.Column(db.String(20), default='work')  # 'work', 'community', 'school', 'personal', 'todo', 'custom'
+    event_type_id = db.Column(db.Integer, db.ForeignKey('event_type.id'), nullable=True)  # For custom event types
     url = db.Column(db.String(255), nullable=True)
     is_private = db.Column(db.Boolean, default=False)
     alert_before_minutes = db.Column(db.Integer, nullable=True)
@@ -879,6 +903,7 @@ class CalendarEvent(db.Model):
     garden = db.relationship('Garden', backref='calendar_events')
     zone = db.relationship('Zone', backref='calendar_events')
     plant = db.relationship('Plant', backref='calendar_events')
+    event_type = db.relationship('EventType', backref='events')
     invitees = db.relationship('CalendarEventInvitee', backref='event', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
@@ -886,7 +911,7 @@ class CalendarEvent(db.Model):
 
     def to_dict(self):
         """Convert event to dictionary for JSON response"""
-        return {
+        event_dict = {
             'id': self.id,
             'title': self.title,
             'description': self.description,
@@ -904,10 +929,18 @@ class CalendarEvent(db.Model):
             'garden_id': self.garden_id,
             'zone_id': self.zone_id,
             'plant_id': self.plant_id,
+            'completed': self.completed,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'garden': {'id': self.garden.id, 'name': self.garden.name} if self.garden else None,
             'zone': {'id': self.zone.id, 'name': self.zone.name} if self.zone else None,
             'plant': {'id': self.plant.id, 'name': self.plant.plant_detail.name} if self.plant else None
         }
+
+        # Add event_type information if available
+        if self.event_type_id and self.event_type:
+            event_dict['event_type'] = self.event_type.to_dict()
+
+        return event_dict
 
 class CalendarEventInvitee(db.Model):
     __tablename__ = 'calendar_event_invitee'
