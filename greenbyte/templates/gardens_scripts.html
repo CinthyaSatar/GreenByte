@@ -255,11 +255,11 @@
             }
 
             // Check if the zone has table headers
-            const hasHeaders = newZonePlantsContainer.querySelector('.d-flex[style*="background-color: rgba(28, 200, 138, 0.05)"]');
+            const hasHeaders = newZonePlantsContainer.querySelector('.plant-table-header');
             if (!hasHeaders) {
                 // Add table headers
                 const headers = document.createElement('div');
-                headers.className = 'd-flex align-items-center py-2 px-4 border-bottom';
+                headers.className = 'd-flex align-items-center py-2 px-4 border-bottom plant-table-header';
                 headers.style.backgroundColor = 'rgba(28, 200, 138, 0.05)';
                 headers.style.fontWeight = '500';
                 headers.innerHTML = `

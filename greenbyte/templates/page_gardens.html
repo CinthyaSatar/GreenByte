@@ -141,14 +141,14 @@
                                        onclick="event.stopPropagation();">
                                         <i class="fas fa-seedling me-1"></i>Add Plant
                                     </a>
-                                    <a href="{{ url_for('main.add_calendar_event') }}?zone_id={{ zone.id }}&garden_id={{ garden.id }}"
+                                    <a href="{{ url_for('main.add_calendar_event') }}?zone_id={{ zone.id }}&garden_id={{ garden.id }}&calendar=todo"
                                        class="btn btn-sm"
-                                       style="background: rgba(255, 193, 7, 0.1);
-                                              color: #ffc107;
-                                              border: 1px solid rgba(255, 193, 7, 0.2);
+                                       style="background: rgba(54, 185, 204, 0.1);
+                                              color: #36b9cc;
+                                              border: 1px solid rgba(54, 185, 204, 0.2);
                                               font-size: 0.8rem;"
                                        onclick="event.stopPropagation();">
-                                        <i class="fas fa-calendar-plus me-1"></i>Add Event
+                                        <i class="fas fa-tasks me-1"></i>Add TODO
                                     </a>
 
                                     {% endif %}
@@ -157,44 +157,7 @@
 
                             <!-- Zone Content -->
                             <div id="zone-content-{{ zone.id }}">
-                                {% if zone_events and zone.id in zone_events and zone_events[zone.id]|length > 0 %}
-                                <!-- Upcoming Events for this Zone -->
-                                <div class="border-bottom" style="border-color: rgba(28, 200, 138, 0.2) !important;">
-                                    <div class="p-3" style="background-color: rgba(255, 193, 7, 0.05);">
-                                        <h6 class="mb-2 d-flex align-items-center" style="color: #ffc107;">
-                                            <i class="fas fa-calendar-alt me-2"></i>Upcoming Events
-                                        </h6>
-                                        <div class="upcoming-events-container">
-                                            {% for event in zone_events[zone.id] %}
-                                            <div class="upcoming-event d-flex align-items-center p-2 mb-2"
-                                                 style="border-left: 3px solid {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};
-                                                        background: rgba(255, 255, 255, 0.7);
-                                                        border-radius: 0.5rem;
-                                                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                                                <div class="event-date text-center me-3" style="min-width: 50px">
-                                                    <small class="text-gray-500 d-block">{{ event.start_datetime.strftime('%b').upper() }}</small>
-                                                    <div class="h5 mb-0" style="color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
-                                                </div>
-                                                <div class="event-details">
-                                                    <h6 class="mb-0">{{ event.title }}</h6>
-                                                    <small class="text-muted">
-                                                        <i class="far fa-clock me-1"></i>{{ event.start_datetime.strftime('%I:%M %p') }}
-                                                        {% if event.location %}
-                                                        <span class="ms-2"><i class="fas fa-map-marker-alt me-1"></i>{{ event.location }}</span>
-                                                        {% endif %}
-                                                    </small>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <a href="{{ url_for('main.edit_event', event_id=event.id) }}" class="btn btn-sm btn-light">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
+
 
                                 <!-- Status Flow Visualization -->
                                 <div class="border-bottom" style="border-color: rgba(28, 200, 138, 0.2) !important;">
@@ -247,8 +210,9 @@
                             <div class="plants-container">
                                 {% if zone.plants %}
                                     <!-- Column Headers -->
-                                    <div class="d-flex align-items-center py-2 px-4 border-bottom"
-                                          font-weight: 500;">
+                                    <div class="d-flex align-items-center py-2 px-4 border-bottom plant-table-header"
+                                         style="background-color: rgba(28, 200, 138, 0.05);
+                                                font-weight: 500;">
                                         <div class="col-3">Plant</div>
                                         <div class="col-2">Quantity</div>
                                         <div class="col-3">Status</div>
@@ -290,7 +254,7 @@
                                     } %}
                                     <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom"
                                          style="border-color: rgba(28, 200, 138, 0.1) !important;
-                                                    
+
                                                     transition: background-color 0.2s ease;">
                                         <!-- Plant Name & Variety -->
                                         <div class="col-3 d-flex align-items-center gap-2">
@@ -558,8 +522,235 @@
                     </div>
                 </div>
 
-           
 
+
+            </div>
+        </div>
+
+        <!-- TODO Tasks Card -->
+        <div id="todo-card" class="card shadow-sm mb-4" style="
+                    background: white;
+                    border: 1px solid rgba(54, 185, 204, 0.3);
+                    border-radius: 1rem !important;
+                    border-bottom: 4px solid rgba(54, 185, 204, 0.3);
+                    ">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 style="color: #36b9cc;">TODO Tasks</h4>
+                    <a href="{{ url_for('main.add_calendar_event') }}?calendar=todo" class="btn" style="background: rgba(54, 185, 204, 0.1);
+                                color: #36b9cc;
+                                border: 1px solid rgba(54, 185, 204, 0.2);
+                                border-radius: 0.5rem;
+                                transition: all 0.2s ease;">
+                        <i class="fas fa-plus"></i> Add TODO
+                    </a>
+                </div>
+
+                <div class="todo-list-container">
+                    <!-- Debug info -->
+                    <div class="debug-info" style="display: none;">
+                        <h5>Debug Info:</h5>
+                        <p>Garden Events: {{ garden_events|length if garden_events else 0 }} gardens</p>
+                        <p>Zone Events: {{ zone_events|length if zone_events else 0 }} zones</p>
+                        <p>Plant Events: {{ plant_events|length if plant_events else 0 }} plants</p>
+
+                        {% if garden_events %}
+                            <p>Garden IDs with events: {{ garden_events.keys()|list }}</p>
+                            {% for garden_id, events in garden_events.items() %}
+                                {% for event in events %}
+                                    <p>Event ID: {{ event.id }}, Title: {{ event.title }}, Type: {{ event.calendar_type }}</p>
+                                {% endfor %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if zone_events %}
+                            <p>Zone IDs with events: {{ zone_events.keys()|list }}</p>
+                            {% for zone_id, events in zone_events.items() %}
+                                {% for event in events %}
+                                    <p>Event ID: {{ event.id }}, Title: {{ event.title }}, Type: {{ event.calendar_type }}</p>
+                                {% endfor %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if plant_events %}
+                            <p>Plant IDs with events: {{ plant_events.keys()|list }}</p>
+                            {% for plant_id, events in plant_events.items() %}
+                                {% for event in events %}
+                                    <p>Event ID: {{ event.id }}, Title: {{ event.title }}, Type: {{ event.calendar_type }}</p>
+                                {% endfor %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    {% set todo_events = [] %}
+
+                    <!-- Add standalone TODO tasks -->
+                    {% if todo_events_list %}
+                        {% for event in todo_events_list %}
+                            {% set todo_data = {
+                                'id': event.id,
+                                'title': event.title,
+                                'start_datetime': event.start_datetime,
+                                'type': 'standalone',
+                                'garden_name': None,
+                                'zone_name': None,
+                                'plant_name': None
+                            } %}
+                            {% set _ = todo_events.append(todo_data) %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {% for garden in gardens %}
+                        {% if garden_events and garden.id in garden_events %}
+                            {% for event in garden_events[garden.id] %}
+                                {% if event.calendar_type|lower == 'todo' %}
+                                    {% set todo_data = {
+                                        'id': event.id,
+                                        'title': event.title,
+                                        'start_datetime': event.start_datetime,
+                                        'type': 'garden',
+                                        'garden_name': garden.name,
+                                        'zone_name': None,
+                                        'plant_name': None
+                                    } %}
+                                    {% set _ = todo_events.append(todo_data) %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        {% for zone in garden.zones %}
+                            {% if zone_events and zone.id in zone_events %}
+                                {% for event in zone_events[zone.id] %}
+                                    {% if event.calendar_type|lower == 'todo' %}
+                                        {% set todo_data = {
+                                            'id': event.id,
+                                            'title': event.title,
+                                            'start_datetime': event.start_datetime,
+                                            'type': 'zone',
+                                            'garden_name': garden.name,
+                                            'zone_name': zone.name,
+                                            'plant_name': None
+                                        } %}
+                                        {% set _ = todo_events.append(todo_data) %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+
+                            {% for plant in zone.plants %}
+                                {% if plant_events and plant.id in plant_events %}
+                                    {% for event in plant_events[plant.id] %}
+                                        {% if event.calendar_type|lower == 'todo' %}
+                                            {% set todo_data = {
+                                                'id': event.id,
+                                                'title': event.title,
+                                                'start_datetime': event.start_datetime,
+                                                'type': 'plant',
+                                                'garden_name': garden.name,
+                                                'zone_name': zone.name,
+                                                'plant_name': plant.plant_detail.name
+                                            } %}
+                                            {% set _ = todo_events.append(todo_data) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    <!-- Sort TODO tasks by date -->
+                    {% set todo_events = todo_events|sort(attribute='start_datetime') %}
+
+                    <!-- Display TODO tasks -->
+                    <div id="todo-list">
+                        {% if todo_events|length > 0 %}
+                            {% for todo in todo_events[:5] %}
+                                <div class="todo-item d-flex align-items-center p-2 mb-2 rounded"
+                                     data-todo-id="{{ todo.id }}">
+                                    <div class="me-2" style="min-width: 30px">
+                                        <div class="form-check">
+                                            <input class="form-check-input todo-checkbox" type="checkbox"
+                                                   data-todo-id="{{ todo.id }}"
+                                                   style="cursor: pointer; width: 20px; height: 20px;">
+                                        </div>
+                                    </div>
+                                    <div class="todo-details ms-2 flex-grow-1">
+                                        <div class="todo-title fw-bold">{{ todo.title }}</div>
+                                        <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
+                                            {% if todo.type == 'garden' %}
+                                                <i class="fas fa-leaf me-1 text-success"></i>{{ todo.garden_name }}
+                                            {% elif todo.type == 'zone' %}
+                                                <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ todo.garden_name }} - {{ todo.zone_name }}
+                                            {% elif todo.type == 'plant' %}
+                                                <i class="fas fa-seedling me-1 text-success"></i>{{ todo.plant_name }}
+                                            {% elif todo.type == 'standalone' %}
+                                                <i class="fas fa-tasks me-1 text-info"></i>General Task
+                                            {% endif %}
+                                            <span class="ms-2"><i class="far fa-calendar me-1"></i>{{ todo.start_datetime.strftime('%b %d') }}</span>
+                                        </small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <a href="{{ url_for('main.edit_event', event_id=todo.id) }}" class="btn btn-sm btn-light">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                            <!-- Hidden TODOs for load more functionality -->
+                            <div id="hidden-todos" style="display: none;" data-total-todos="{{ todo_events|length }}">
+                                {% for todo in todo_events[5:] %}
+                                    <div class="todo-item d-flex align-items-center p-2 mb-2 rounded"
+                                         data-todo-index="{{ loop.index + 5 }}"
+                                         data-todo-id="{{ todo.id }}">
+                                        <div class="me-2" style="min-width: 30px">
+                                            <div class="form-check">
+                                                <input class="form-check-input todo-checkbox" type="checkbox"
+                                                       data-todo-id="{{ todo.id }}"
+                                                       style="cursor: pointer; width: 20px; height: 20px;">
+                                            </div>
+                                        </div>
+                                        <div class="todo-details ms-2 flex-grow-1">
+                                            <div class="todo-title fw-bold">{{ todo.title }}</div>
+                                            <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
+                                                {% if todo.type == 'garden' %}
+                                                    <i class="fas fa-leaf me-1 text-success"></i>{{ todo.garden_name }}
+                                                {% elif todo.type == 'zone' %}
+                                                    <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ todo.garden_name }} - {{ todo.zone_name }}
+                                                {% elif todo.type == 'plant' %}
+                                                    <i class="fas fa-seedling me-1 text-success"></i>{{ todo.plant_name }}
+                                                {% elif todo.type == 'standalone' %}
+                                                    <i class="fas fa-tasks me-1 text-info"></i>General Task
+                                                {% endif %}
+                                                <span class="ms-2"><i class="far fa-calendar me-1"></i>{{ todo.start_datetime.strftime('%b %d') }}</span>
+                                            </small>
+                                        </div>
+                                        <div class="ms-auto">
+                                            <a href="{{ url_for('main.edit_event', event_id=todo.id) }}" class="btn btn-sm btn-light">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if todo_events|length > 5 %}
+                            <div class="text-center mt-3">
+                                <button id="load-more-todos" class="btn" style="background: rgba(54, 185, 204, 0.1);
+                                            color: #36b9cc;
+                                            border: 1px solid rgba(54, 185, 204, 0.2);
+                                            border-radius: 0.5rem;
+                                            transition: all 0.2s ease;">
+                                    <i class="fas fa-plus-circle me-1"></i> Load More Tasks
+                                </button>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-3">
+                                <p class="text-muted">No TODO tasks</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -659,16 +850,29 @@
                         {% if all_events|length > 0 %}
                             {% for event in all_events[:5] %}
                                 <div class="upcoming-event d-flex align-items-center p-2 mb-2 rounded event-item"
+                                     data-event-id="{{ event.id }}"
                                      style="background-color: rgba(255, 193, 7, 0.05);
-                                            border-left: 3px solid {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %}">
+                                            border-left: 3px solid {% if event.calendar_type|lower == 'todo' %}#36b9cc{% elif event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %}">
+                                    {% if event.calendar_type|lower == 'todo' %}
+                                    <div class="me-2" style="min-width: 30px">
+                                        <div class="form-check">
+                                            <input class="form-check-input todo-checkbox" type="checkbox"
+                                                   data-event-id="{{ event.id }}"
+                                                   style="cursor: pointer; width: 20px; height: 20px;">
+                                        </div>
+                                    </div>
+                                    {% else %}
                                     <div class="event-date text-center me-2" style="min-width: 40px">
                                         <small class="text-gray-500 d-block" style="font-size: 0.7rem;">{{ event.start_datetime.strftime('%b').upper() }}</small>
-                                        <div style="font-size: 1rem; font-weight: bold; color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
+                                        <div style="font-size: 1rem; font-weight: bold; color: {% if event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
                                     </div>
+                                    {% endif %}
                                     <div class="event-details ms-2">
-                                        <div class="small fw-bold">{{ event.title }}</div>
+                                        <div class="small fw-bold {% if event.calendar_type|lower == 'todo' %}todo-title{% endif %}">{{ event.title }}</div>
                                         <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
-                                            {% if event.type == 'garden' %}
+                                            {% if event.calendar_type|lower == 'todo' %}
+                                                <i class="fas fa-tasks me-1" style="color: #36b9cc;"></i>TODO
+                                            {% elif event.type == 'garden' %}
                                                 <i class="fas fa-leaf me-1 text-success"></i>{{ event.garden_name }}
                                             {% elif event.type == 'zone' %}
                                                 <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ event.garden_name }} - {{ event.zone_name }}
@@ -692,16 +896,29 @@
                         {% for event in all_events[5:] %}
                             <div class="upcoming-event d-flex align-items-center p-2 mb-2 rounded event-item"
                                  data-event-index="{{ loop.index + 5 }}"
+                                 data-event-id="{{ event.id }}"
                                  style="background-color: rgba(255, 193, 7, 0.05);
-                                        border-left: 3px solid {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %}">
+                                        border-left: 3px solid {% if event.calendar_type|lower == 'todo' %}#36b9cc{% elif event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %}">
+                                {% if event.calendar_type|lower == 'todo' %}
+                                <div class="me-2" style="min-width: 30px">
+                                    <div class="form-check">
+                                        <input class="form-check-input todo-checkbox" type="checkbox"
+                                               data-event-id="{{ event.id }}"
+                                               style="cursor: pointer; width: 20px; height: 20px;">
+                                    </div>
+                                </div>
+                                {% else %}
                                 <div class="event-date text-center me-2" style="min-width: 40px">
                                     <small class="text-gray-500 d-block" style="font-size: 0.7rem;">{{ event.start_datetime.strftime('%b').upper() }}</small>
-                                    <div style="font-size: 1rem; font-weight: bold; color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
+                                    <div style="font-size: 1rem; font-weight: bold; color: {% if event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
                                 </div>
+                                {% endif %}
                                 <div class="event-details ms-2">
-                                    <div class="small fw-bold">{{ event.title }}</div>
+                                    <div class="small fw-bold {% if event.calendar_type|lower == 'todo' %}todo-title{% endif %}">{{ event.title }}</div>
                                     <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
-                                        {% if event.type == 'garden' %}
+                                        {% if event.calendar_type|lower == 'todo' %}
+                                            <i class="fas fa-tasks me-1" style="color: #36b9cc;"></i>TODO
+                                        {% elif event.type == 'garden' %}
                                             <i class="fas fa-leaf me-1 text-success"></i>{{ event.garden_name }}
                                         {% elif event.type == 'zone' %}
                                             <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ event.garden_name }} - {{ event.zone_name }}
@@ -770,6 +987,12 @@
                 nextBatch.forEach(event => {
                     const clone = event.cloneNode(true);
                     eventsList.appendChild(clone);
+
+                    // Add event listeners to checkboxes in the cloned elements
+                    const checkbox = clone.querySelector('.todo-checkbox');
+                    if (checkbox) {
+                        addTodoCheckboxListener(checkbox);
+                    }
                 });
 
                 // Update counter
@@ -781,6 +1004,81 @@
                 }
             });
         }
+
+        // Load more TODOs functionality
+        const loadMoreTodosBtn = document.getElementById('load-more-todos');
+        if (loadMoreTodosBtn) {
+            const hiddenTodos = document.getElementById('hidden-todos');
+            const todosList = document.getElementById('todo-list');
+            const totalTodos = parseInt(hiddenTodos.dataset.totalTodos || 0);
+            let currentlyShownTodos = 5;
+            const todoBatchSize = 5;
+
+            loadMoreTodosBtn.addEventListener('click', function() {
+                // Get the next batch of todos
+                const nextBatch = Array.from(hiddenTodos.querySelectorAll(`.todo-item[data-todo-index]`))
+                    .filter(todo => {
+                        const index = parseInt(todo.dataset.todoIndex);
+                        return index > currentlyShownTodos && index <= currentlyShownTodos + todoBatchSize;
+                    });
+
+                // Clone and append them to the visible list
+                nextBatch.forEach(todo => {
+                    const clone = todo.cloneNode(true);
+                    todosList.appendChild(clone);
+
+                    // Add event listeners to checkboxes in the cloned elements
+                    const checkbox = clone.querySelector('.todo-checkbox');
+                    if (checkbox) {
+                        addTodoCheckboxListener(checkbox);
+                    }
+                });
+
+                // Update counter
+                currentlyShownTodos += nextBatch.length;
+
+                // Hide button if we've shown all todos
+                if (currentlyShownTodos >= totalTodos) {
+                    loadMoreTodosBtn.parentElement.style.display = 'none';
+                }
+            });
+        }
+
+        // Add event listeners to all todo checkboxes
+        function addTodoCheckboxListener(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const todoId = this.dataset.todoId || this.dataset.eventId;
+                const todoItem = this.closest('.todo-item') || this.closest('.event-item');
+                const todoTitle = todoItem.querySelector('.todo-title');
+
+                if (this.checked) {
+                    // Mark as completed
+                    if (todoTitle) {
+                        todoTitle.style.textDecoration = 'line-through';
+                        todoTitle.style.opacity = '0.6';
+                    }
+                    todoItem.style.opacity = '0.7';
+
+                    // Here you would typically send an AJAX request to mark the event as completed
+                    // For now, we'll just simulate it with a timeout
+                    setTimeout(() => {
+                        todoItem.style.display = 'none';
+                    }, 2000);
+                } else {
+                    // Mark as not completed
+                    if (todoTitle) {
+                        todoTitle.style.textDecoration = 'none';
+                        todoTitle.style.opacity = '1';
+                    }
+                    todoItem.style.opacity = '1';
+                }
+            });
+        }
+
+        // Initialize all visible todo checkboxes
+        document.querySelectorAll('.todo-checkbox').forEach(checkbox => {
+            addTodoCheckboxListener(checkbox);
+        });
     });
 </script>
 {% endblock %}

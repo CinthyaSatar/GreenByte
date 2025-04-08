@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container-fluid">
   <!-- Page Heading -->
- 
+
 
   <div class="row">
     <!-- Main Add Form Column -->
@@ -172,6 +172,9 @@
                     <option value="personal" style="color: #e74a3b">
                       Personal
                     </option>
+                    <option value="todo" style="color: #36b9cc">
+                      TODO Task
+                    </option>
                   </select>
                 </div>
               </div>
@@ -334,27 +337,27 @@
         </div>
         <div class="card-body p-4">
           <p class="text-muted small mb-3">Here are some helpful tips for creating effective calendar events:</p>
-          
+
           <div class="mb-3">
             <h6 class="text-dark"><i class="fas fa-clock text-success me-2"></i>Time Management</h6>
             <p class="small text-muted">Use the all-day option for events that don't have specific start and end times. For timed events, be precise with your scheduling.</p>
           </div>
-          
+
           <div class="mb-3">
             <h6 class="text-dark"><i class="fas fa-sync-alt text-success me-2"></i>Recurring Events</h6>
             <p class="small text-muted">Set up recurring events for regular activities like watering, fertilizing, or harvesting. This saves time and ensures consistency.</p>
           </div>
-          
+
           <div class="mb-3">
             <h6 class="text-dark"><i class="fas fa-leaf text-success me-2"></i>Garden & Zone Selection</h6>
             <p class="small text-muted">Link events to specific gardens, zones, and plants to keep your garden management organized and track plant-specific activities.</p>
           </div>
-          
+
           <div class="mb-3">
             <h6 class="text-dark"><i class="fas fa-bell text-success me-2"></i>Alerts</h6>
             <p class="small text-muted">Set alerts to remind you of important garden tasks. Choose an appropriate time before the event based on the task's urgency.</p>
           </div>
-          
+
           <div class="mb-3">
             <h6 class="text-dark"><i class="fas fa-users text-success me-2"></i>Invitees</h6>
             <p class="small text-muted">Add email addresses of people you want to invite to your garden events. This is great for community gardens or collaborative projects.</p>
@@ -412,16 +415,29 @@
     const todayStr = today.toISOString().split("T")[0];
     document.getElementById("startDate").value = todayStr;
     document.getElementById("endDate").value = todayStr;
-    
+
     // Set default times
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     document.getElementById('startTime').value = `${hours}:${minutes}`;
-    
+
     // Set end time to 1 hour later
     const endHour = (now.getHours() + 1) % 24;
     document.getElementById('endTime').value = `${String(endHour).padStart(2, '0')}:${minutes}`;
+
+    // Check URL parameters for calendar type
+    const urlParams = new URLSearchParams(window.location.search);
+    const calendarType = urlParams.get('calendar');
+    if (calendarType === 'todo') {
+      const calendarSelect = document.getElementById('calendar');
+      for (let i = 0; i < calendarSelect.options.length; i++) {
+        if (calendarSelect.options[i].value === 'todo') {
+          calendarSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
 
     // Handle all-day event toggle
     const allDayCheckbox = document.getElementById("allDayEvent");
@@ -447,26 +463,26 @@
     endRepeatSelect.addEventListener("change", function() {
       endRepeatDate.style.display = this.value === "on" ? "block" : "none";
     });
-    
+
     // Form validation
     const form = document.getElementById('addEventForm');
-    
+
     form.addEventListener('submit', function(e) {
       // Validate that end date is not before start date
       const startDate = new Date(document.getElementById('startDate').value);
       const endDate = new Date(document.getElementById('endDate').value);
-      
+
       if (endDate < startDate) {
         e.preventDefault();
         alert('End date cannot be before start date');
         return;
       }
-      
+
       // If dates are the same, check times (if not all-day)
       if (startDate.getTime() === endDate.getTime() && !allDayCheckbox.checked) {
         const startTime = document.getElementById('startTime').value;
         const endTime = document.getElementById('endTime').value;
-        
+
         if (endTime < startTime) {
           e.preventDefault();
           alert('End time cannot be before start time on the same day');

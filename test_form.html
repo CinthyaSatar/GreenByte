@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Form</title>
+</head>
+<body>
+    <h1>Test Form</h1>
+    <form action="/calendar/events" method="POST">
+        <label for="eventTitle">Title:</label>
+        <input type="text" id="eventTitle" name="eventTitle" value="Test TODO" required><br><br>
+        
+        <label for="startDate">Start Date:</label>
+        <input type="date" id="startDate" name="startDate" value="2023-07-01" required><br><br>
+        
+        <label for="endDate">End Date:</label>
+        <input type="date" id="endDate" name="endDate" value="2023-07-01" required><br><br>
+        
+        <label for="calendar">Calendar Type:</label>
+        <select id="calendar" name="calendar">
+            <option value="work">Work</option>
+            <option value="community">Community</option>
+            <option value="school">School</option>
+            <option value="personal">Personal</option>
+            <option value="todo" selected>TODO Task</option>
+        </select><br><br>
+        
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

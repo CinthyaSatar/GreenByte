@@ -98,19 +98,25 @@ def view_gardens():
     next_week = today + timedelta(days=7)
 
     # Fetch all upcoming events for the user's gardens, zones, and plants
+    # Also include TODO tasks regardless of their associations
     upcoming_events = CalendarEvent.query.filter(
         CalendarEvent.user_id == current_user.id,
         CalendarEvent.start_datetime >= today,
         CalendarEvent.start_datetime <= next_week,
-        (CalendarEvent.garden_id != None) | (CalendarEvent.zone_id != None) | (CalendarEvent.plant_id != None)
+        ((CalendarEvent.garden_id != None) | (CalendarEvent.zone_id != None) | (CalendarEvent.plant_id != None) | (CalendarEvent.calendar_type == 'todo'))
     ).order_by(CalendarEvent.start_datetime).all()
 
     # Create dictionaries to organize events by garden, zone, and plant
     garden_events = {}
     zone_events = {}
     plant_events = {}
+    todo_events_list = []
 
     for event in upcoming_events:
+        # Add TODO events to a separate list if they don't have garden, zone, or plant associations
+        if event.calendar_type == 'todo' and not (event.garden_id or event.zone_id or event.plant_id):
+            todo_events_list.append(event)
+
         # Add to garden events
         if event.garden_id:
             if event.garden_id not in garden_events:
@@ -135,7 +141,8 @@ def view_gardens():
                          default_style=default_style,
                          garden_events=garden_events,
                          zone_events=zone_events,
-                         plant_events=plant_events)
+                         plant_events=plant_events,
+                         todo_events_list=todo_events_list)
 
 
 @gardens.route('/garden/<int:garden_id>/add_zone', methods=['GET', 'POST'])
@@ -336,7 +343,6 @@ def move_plant_ajax(plant_id, zone_id):
         plant_row_template = '''
         <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom"
              style="border-color: rgba(28, 200, 138, 0.1) !important;
-                    background-color: rgba(28, 200, 138, 0.08);
                     transition: background-color 0.2s ease;">
             <!-- Plant Name & Variety -->
             <div class="col-3 d-flex align-items-center gap-2">

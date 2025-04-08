@@ -859,7 +859,7 @@ class CalendarEvent(db.Model):
     all_day = db.Column(db.Boolean, default=False)
     repeat_type = db.Column(db.String(20), nullable=True)  # 'daily', 'weekly', 'monthly', 'yearly'
     repeat_end_date = db.Column(db.DateTime, nullable=True)
-    calendar_type = db.Column(db.String(20), default='work')  # 'work', 'community', 'school', 'personal'
+    calendar_type = db.Column(db.String(20), default='work')  # 'work', 'community', 'school', 'personal', 'todo'
     url = db.Column(db.String(255), nullable=True)
     is_private = db.Column(db.Boolean, default=False)
     alert_before_minutes = db.Column(db.Integer, nullable=True)

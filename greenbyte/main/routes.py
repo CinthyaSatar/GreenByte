@@ -315,6 +315,11 @@ def add_event():
     repeat_type = request.form.get('repeatOption')
     repeat_end_date = request.form.get('endRepeat')
     calendar_type = request.form.get('calendar')
+    print(f"Calendar type from form: {calendar_type}")
+
+    # Force calendar_type to 'todo' if it's coming from the TODO task form
+    if calendar_type == 'todo':
+        print("Setting calendar_type to 'todo'")
     invitees = request.form.get('invitees')
     alert_before_minutes = request.form.get('alert')
     is_private = 'privateEvent' in request.form
@@ -379,6 +384,7 @@ def add_event():
             alert_before_minutes = None
 
     # Create new event
+    print(f"Creating event with calendar_type: {calendar_type}")
     event = CalendarEvent(
         title=title,
         description=description,
@@ -398,10 +404,21 @@ def add_event():
         plant_id=plant_id if plant_id else None
     )
 
+    # Ensure the calendar_type is set correctly
+    if calendar_type == 'todo':
+        event.calendar_type = 'todo'
+
     # Add event to database
     from greenbyte import db
     db.session.add(event)
     db.session.commit()
+
+    # Debug: Print the saved event details
+    print(f"Saved event: ID={event.id}, Title={event.title}, Calendar Type={event.calendar_type}")
+
+    # Double-check the calendar_type after saving
+    saved_event = CalendarEvent.query.get(event.id)
+    print(f"Double-check: Calendar Type after save={saved_event.calendar_type}")
 
     # Process invitees if any
     if invitees:
@@ -581,6 +598,13 @@ def edit_event(event_id):
         event.repeat_type = repeat_type if repeat_type != 'none' else None
         event.repeat_end_date = repeat_end_datetime
         event.calendar_type = calendar_type
+        print(f"Setting calendar_type to {calendar_type} in edit_event")
+
+        # Ensure the calendar_type is set correctly
+        if calendar_type == 'todo':
+            event.calendar_type = 'todo'
+            print("Forcing calendar_type to 'todo' in edit_event")
+
         event.url = url
         event.is_private = is_private
         event.alert_before_minutes = alert_before_minutes
@@ -617,6 +641,11 @@ def edit_event(event_id):
 
         from greenbyte import db
         db.session.commit()
+
+        # Double-check the calendar_type after saving
+        saved_event = CalendarEvent.query.get(event.id)
+        print(f"Double-check: Calendar Type after edit={saved_event.calendar_type}")
+
         flash('Event updated successfully!', 'success')
         return redirect(url_for('main.calendar'))
 
