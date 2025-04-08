@@ -869,11 +869,13 @@ class CalendarEvent(db.Model):
     # Foreign Keys
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=True)
+    zone_id = db.Column(db.Integer, db.ForeignKey('zone.id'), nullable=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)
 
     # Relationships
     user = db.relationship('User', backref='calendar_events')
     garden = db.relationship('Garden', backref='calendar_events')
+    zone = db.relationship('Zone', backref='calendar_events')
     plant = db.relationship('Plant', backref='calendar_events')
     invitees = db.relationship('CalendarEventInvitee', backref='event', lazy=True, cascade='all, delete-orphan')
 
@@ -898,7 +900,11 @@ class CalendarEvent(db.Model):
             'alert_before_minutes': self.alert_before_minutes,
             'user_id': self.user_id,
             'garden_id': self.garden_id,
-            'plant_id': self.plant_id
+            'zone_id': self.zone_id,
+            'plant_id': self.plant_id,
+            'garden': {'id': self.garden.id, 'name': self.garden.name} if self.garden else None,
+            'zone': {'id': self.zone.id, 'name': self.zone.name} if self.zone else None,
+            'plant': {'id': self.plant.id, 'name': self.plant.plant_detail.name} if self.plant else None
         }
 
 class CalendarEventInvitee(db.Model):

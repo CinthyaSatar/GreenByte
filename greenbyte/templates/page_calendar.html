@@ -37,15 +37,13 @@
             </div>
           </div>
           <a
-            href="#"
+            href="{{ url_for('main.add_calendar_event') }}"
             class="btn btn-sm"
             style="
               background: rgba(28, 200, 138, 0.1);
               color: #1cc88a;
               border: 1px solid rgba(28, 200, 138, 0.2);
             "
-            data-bs-toggle="modal"
-            data-bs-target="#addEventModal"
           >
             <i class="fas fa-plus fa-sm"></i>
           </a>
@@ -146,8 +144,7 @@
               <div class="col px-1">
                 <div class="mini-day-wrapper">
                   <div
-                    class="mini-day p-1 {% if day.current_month and day.date == current_day %}bg-success-light{% endif %} {% if not day.current_month %}text-muted{% endif %}"
-                    style="border-radius: 4px; cursor: pointer"
+                    class="mini-day p-1 {% if not day.current_month %}text-muted{% endif %}"
                     {% if day.current_month %}
                     onclick="window.location.href='{{ url_for('main.calendar', date_str=day.date_str) }}'"
                     {% endif %}
@@ -210,268 +207,7 @@
   </div>
 </div>
 
-<!-- Add Event Modal -->
-<div
-  class="modal fade"
-  id="addEventModal"
-  tabindex="-1"
-  aria-labelledby="addEventModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div
-        class="modal-header"
-        style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
-      >
-        <h5 class="modal-title" id="addEventModalLabel" style="color: #1cc88a">
-          New Event
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-        <form id="eventForm" action="{{ url_for('main.add_event') }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <!-- Title and Location Section -->
-          <div class="form-group mb-3">
-            <input
-              type="text"
-              class="form-control form-control-lg"
-              id="eventTitle"
-              name="eventTitle"
-              placeholder="Add title"
-              required
-            />
-          </div>
-          <div class="form-group mb-3">
-            <div class="input-group">
-              <span class="input-group-text"
-                ><i class="fas fa-map-marker-alt"></i
-              ></span>
-              <input
-                type="text"
-                class="form-control"
-                id="location"
-                name="location"
-                placeholder="Add location or video call"
-              />
-            </div>
-          </div>
 
-          <!-- Date and Time Section -->
-          <div class="form-group mb-3">
-            <div class="d-flex align-items-center mb-2">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="allDayEvent"
-                  name="allDayEvent"
-                />
-                <label class="form-check-label" for="allDayEvent"
-                  >All-day</label
-                >
-              </div>
-            </div>
-
-            <div class="row mb-2">
-              <label class="col-2">Starts</label>
-              <div class="col-5">
-                <input
-                  type="date"
-                  class="form-control"
-                  id="startDate"
-                  name="startDate"
-                  required
-                />
-              </div>
-              <div class="col-5" id="startTimeContainer">
-                <input
-                  type="time"
-                  class="form-control"
-                  id="startTime"
-                  name="startTime"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="row">
-              <label class="col-2">Ends</label>
-              <div class="col-5">
-                <input type="date" class="form-control" id="endDate" name="endDate" required />
-              </div>
-              <div class="col-5" id="endTimeContainer">
-                <input type="time" class="form-control" id="endTime" name="endTime" required />
-              </div>
-            </div>
-          </div>
-
-          <!-- Repeat Section -->
-          <div class="form-group mb-3">
-            <div class="row">
-              <label class="col-2">Repeat</label>
-              <div class="col-10">
-                <select class="form-select" id="repeatOption" name="repeatOption">
-                  <option value="none">Never</option>
-                  <option value="daily">Every Day</option>
-                  <option value="weekly">Every Week</option>
-                  <option value="biweekly">Every 2 Weeks</option>
-                  <option value="monthly">Every Month</option>
-                  <option value="yearly">Every Year</option>
-                </select>
-              </div>
-            </div>
-            <div class="row mt-2">
-              <label class="col-2">End Repeat</label>
-              <div class="col-10">
-                <select class="form-select" id="endRepeat" name="endRepeat">
-                  <option value="">Never</option>
-                  <option value="on">On Date</option>
-                </select>
-                <input type="date" class="form-control mt-2" id="endRepeatDate" name="endRepeatDate" style="display: none;" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Calendar Selection -->
-          <div class="form-group mb-3">
-            <div class="row">
-              <label class="col-2">Calendar</label>
-              <div class="col-10">
-                <select class="form-select" id="calendar" name="calendar">
-                  <option value="work" style="color: #1cc88a">Work</option>
-                  <option value="community" style="color: #4e73df">
-                    Community
-                  </option>
-                  <option value="school" style="color: #f6c23e">School</option>
-                  <option value="personal" style="color: #e74a3b">
-                    Personal
-                  </option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Invitees Section -->
-          <div class="form-group mb-3">
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-users"></i></span>
-              <input
-                type="text"
-                class="form-control"
-                id="invitees"
-                name="invitees"
-                placeholder="Add invitees (comma separated emails)"
-              />
-            </div>
-          </div>
-
-          <!-- Garden and Plant Selection -->
-          <div class="form-group mb-3">
-            <div class="row">
-              <label class="col-2">Garden</label>
-              <div class="col-10">
-                <select class="form-select" id="garden_id" name="garden_id">
-                  <option value="">None</option>
-                  {% for garden in gardens %}
-                  <option value="{{ garden.id }}">{{ garden.name }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group mb-3">
-            <div class="row">
-              <label class="col-2">Plant</label>
-              <div class="col-10">
-                <select class="form-select" id="plant_id" name="plant_id">
-                  <option value="">None</option>
-                  {% for plant in plants %}
-                  <option value="{{ plant.id }}">{{ plant.plant_detail.name }} {% if plant.variety %}({{ plant.variety.name }}){% endif %}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Alert Section -->
-          <div class="form-group mb-3">
-            <div class="row">
-              <label class="col-2">Alert</label>
-              <div class="col-10">
-                <select class="form-select" id="alert" name="alert">
-                  <option value="0">At time of event</option>
-                  <option value="5">5 minutes before</option>
-                  <option value="10">10 minutes before</option>
-                  <option value="15">15 minutes before</option>
-                  <option value="30">30 minutes before</option>
-                  <option value="60">1 hour before</option>
-                  <option value="1440">1 day before</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Private Toggle -->
-          <div class="form-group mb-3">
-            <div class="form-check">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                id="privateEvent"
-                name="privateEvent"
-              />
-              <label class="form-check-label" for="privateEvent">Private</label>
-            </div>
-          </div>
-
-          <!-- URL -->
-          <div class="form-group mb-3">
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-link"></i></span>
-              <input
-                type="url"
-                class="form-control"
-                id="eventUrl"
-                name="eventUrl"
-                placeholder="Add URL"
-              />
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div class="form-group mb-3">
-            <textarea
-              class="form-control"
-              id="notes"
-              name="notes"
-              rows="3"
-              placeholder="Add notes"
-            ></textarea>
-          </div>
-        </form>
-      </div>
-      <div
-        class="modal-footer"
-        style="border-top: 1px solid rgba(28, 200, 138, 0.2)"
-      >
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-success" onclick="saveEvent()">
-          Add Event
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- View/Edit Event Modal -->
 <div class="modal fade" id="viewEventModal" tabindex="-1" aria-labelledby="viewEventModalLabel" aria-hidden="true">
@@ -602,19 +338,10 @@
       deleteConfirmModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
     }
 
-    const addEventModal = document.getElementById('addEventModal');
-    if (addEventModal) {
-      addEventModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
-    }
+
   });
 
-  function saveEvent() {
-    // Get form element
-    const form = document.getElementById("eventForm");
 
-    // Submit the form
-    form.submit();
-  }
 
   function openViewEventModal(eventId) {
     currentEventId = eventId;
@@ -990,4 +717,384 @@
     border-radius: 50%;
   }
 </style>
+
+<script>
+  // Initialize date pickers
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates
+    const today = new Date();
+    document.getElementById('startDate').valueAsDate = today;
+    document.getElementById('endDate').valueAsDate = today;
+
+    // Set default times
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('startTime').value = `${hours}:${minutes}`;
+    document.getElementById('endTime').value = `${hours}:${minutes}`;
+
+    // Handle all-day checkbox
+    const allDayCheckbox = document.getElementById('allDayEvent');
+    const startTimeContainer = document.getElementById('startTimeContainer');
+    const endTimeContainer = document.getElementById('endTimeContainer');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+
+    allDayCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        startTimeContainer.style.display = 'none';
+        endTimeContainer.style.display = 'none';
+        startTimeInput.required = false;
+        endTimeInput.required = false;
+      } else {
+        startTimeContainer.style.display = 'block';
+        endTimeContainer.style.display = 'block';
+        startTimeInput.required = true;
+        endTimeInput.required = true;
+      }
+    });
+
+    // Handle end repeat dropdown
+    const endRepeatSelect = document.getElementById('endRepeat');
+    const endRepeatDateInput = document.getElementById('endRepeatDate');
+
+    endRepeatSelect.addEventListener('change', function() {
+      if (this.value === 'on') {
+        endRepeatDateInput.style.display = 'block';
+        endRepeatDateInput.required = true;
+      } else {
+        endRepeatDateInput.style.display = 'none';
+        endRepeatDateInput.required = false;
+      }
+    });
+
+    // Initialize the event form modal
+    const addEventModal = new bootstrap.Modal(document.getElementById('addEventModal'));
+
+    // Form validation
+    const eventForm = document.getElementById('eventForm');
+    const saveEventBtn = document.getElementById('saveEventBtn');
+
+    // Handle save event button click
+    saveEventBtn.addEventListener('click', function() {
+      validateAndSubmitForm();
+    });
+
+    function validateAndSubmitForm() {
+      // Reset previous error messages
+      const errorMessages = document.querySelectorAll('.invalid-feedback');
+      errorMessages.forEach(el => el.remove());
+
+      const formInputs = eventForm.querySelectorAll('input, select');
+      formInputs.forEach(input => {
+        input.classList.remove('is-invalid');
+      });
+
+      let isValid = true;
+
+      // Validate title
+      const titleInput = document.getElementById('eventTitle');
+      if (!titleInput.value.trim()) {
+        showError(titleInput, 'Please enter an event title');
+        isValid = false;
+      }
+
+      // Validate dates
+      const startDate = document.getElementById('startDate');
+      const endDate = document.getElementById('endDate');
+      const startTime = document.getElementById('startTime');
+      const endTime = document.getElementById('endTime');
+
+      if (!startDate.value) {
+        showError(startDate, 'Please select a start date');
+        isValid = false;
+      }
+
+      if (!endDate.value) {
+        showError(endDate, 'Please select an end date');
+        isValid = false;
+      }
+
+      // Validate that end date is not before start date
+      if (startDate.value && endDate.value) {
+        const startDateObj = new Date(startDate.value);
+        const endDateObj = new Date(endDate.value);
+
+        // If dates are the same, check times (if not all-day)
+        if (startDateObj.getTime() === endDateObj.getTime() && !allDayCheckbox.checked) {
+          if (startTime.value && endTime.value && endTime.value < startTime.value) {
+            showError(endTime, 'End time cannot be before start time on the same day');
+            isValid = false;
+          }
+        }
+        // If end date is before start date
+        else if (endDateObj < startDateObj) {
+          showError(endDate, 'End date cannot be before start date');
+          isValid = false;
+        }
+      }
+
+      // Validate times if not all-day event
+      if (!allDayCheckbox.checked) {
+        if (!startTime.value) {
+          showError(startTime, 'Please select a start time');
+          isValid = false;
+        }
+
+        if (!endTime.value) {
+          showError(endTime, 'Please select an end time');
+          isValid = false;
+        }
+      }
+
+      // Validate end repeat date if needed
+      if (endRepeatSelect.value === 'on' && !endRepeatDateInput.value) {
+        showError(endRepeatDateInput, 'Please select an end repeat date');
+        isValid = false;
+      }
+
+      // Submit the form if validation passes
+      if (isValid) {
+        eventForm.submit();
+      }
+    }
+  });
+
+  // Helper function to show error messages
+  function showError(input, message) {
+    input.classList.add('is-invalid');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'invalid-feedback';
+    errorDiv.textContent = message;
+    input.parentNode.appendChild(errorDiv);
+  }
+
+  // Function to open the view event modal
+  function openViewEventModal(eventId) {
+    console.log('Opening event with ID:', eventId);
+    currentEventId = eventId;
+
+    // Show loading spinner
+    document.getElementById('eventDetails').innerHTML = `
+      <div class="text-center py-4">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    `;
+
+    // Open the modal
+    const viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
+    viewEventModal.show();
+
+    // Fetch event details
+    fetch(`/calendar/events/${eventId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch event details');
+        }
+        return response.json();
+      })
+      .then(event => {
+        // Format dates
+        const startDate = new Date(event.start_datetime);
+        const endDate = event.end_datetime ? new Date(event.end_datetime) : null;
+
+        // Format time for display
+        const formatTime = (date) => {
+          if (!date) return '';
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        };
+
+        // Format date for display
+        const formatDate = (date) => {
+          if (!date) return '';
+          return date.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        };
+
+        // Build HTML for event details
+        let html = `
+          <h4 class="mb-3">${event.title}</h4>
+
+          <div class="mb-3">
+            <strong><i class="fas fa-calendar"></i> Date:</strong>
+            <div class="ms-4">
+              ${formatDate(startDate)}
+              ${endDate && formatDate(endDate) !== formatDate(startDate) ? ` to ${formatDate(endDate)}` : ''}
+            </div>
+          </div>
+
+          ${!event.all_day ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-clock"></i> Time:</strong>
+            <div class="ms-4">
+              ${formatTime(startDate)}
+              ${endDate ? ` to ${formatTime(endDate)}` : ''}
+            </div>
+          </div>
+          ` : `
+          <div class="mb-3">
+            <strong><i class="fas fa-clock"></i> Time:</strong>
+            <div class="ms-4">All Day</div>
+          </div>
+          `}
+
+          ${event.location ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
+            <div class="ms-4">${event.location}</div>
+          </div>
+          ` : ''}
+
+          ${event.garden_id ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-leaf"></i> Garden:</strong>
+            <div class="ms-4">${event.garden ? event.garden.name : 'Unknown Garden'}</div>
+          </div>
+          ` : ''}
+
+          ${event.zone_id ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-map"></i> Zone:</strong>
+            <div class="ms-4">${event.zone ? event.zone.name : 'Unknown Zone'}</div>
+          </div>
+          ` : ''}
+
+          ${event.plant_id ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-seedling"></i> Plant:</strong>
+            <div class="ms-4">${event.plant ? event.plant.name : 'Unknown Plant'}</div>
+          </div>
+          ` : ''}
+
+          ${event.description ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-align-left"></i> Description:</strong>
+            <div class="ms-4">${event.description}</div>
+          </div>
+          ` : ''}
+
+          ${event.url ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-link"></i> URL:</strong>
+            <div class="ms-4"><a href="${event.url}" target="_blank">${event.url}</a></div>
+          </div>
+          ` : ''}
+
+          ${event.repeat_type ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-redo"></i> Repeats:</strong>
+            <div class="ms-4">
+              ${event.repeat_type.charAt(0).toUpperCase() + event.repeat_type.slice(1)}
+              ${event.repeat_end_date ? ` until ${new Date(event.repeat_end_date).toLocaleDateString()}` : ''}
+            </div>
+          </div>
+          ` : ''}
+        `;
+
+        // Update the modal content
+        document.getElementById('eventDetails').innerHTML = html;
+
+        // Update the edit link
+        document.getElementById('editEventLink').href = `/calendar/events/${event.id}/edit`;
+      })
+      .catch(error => {
+        console.error('Error fetching event details:', error);
+        document.getElementById('eventDetails').innerHTML = `
+          <div class="alert alert-danger">
+            Failed to load event details. Please try again.
+          </div>
+        `;
+      });
+  }
+
+  // Function to confirm event deletion
+  function confirmDeleteEvent() {
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    deleteModal.show();
+  }
+
+  // Function to delete an event
+  function deleteEvent() {
+    if (!currentEventId) return;
+
+    fetch(`/calendar/events/${currentEventId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to delete event');
+      }
+      // Close the modals
+      bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+      bootstrap.Modal.getInstance(document.getElementById('viewEventModal')).hide();
+
+      // Reload the page to show the updated calendar
+      window.location.reload();
+    })
+    .catch(error => {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
+    });
+  }
+
+  // Function to update zones based on selected garden
+  function updateZones() {
+    const gardenId = document.getElementById('garden_id').value;
+    const zoneSelect = document.getElementById('zone_id');
+
+    // Clear current options
+    zoneSelect.innerHTML = '<option value="">None</option>';
+
+    if (!gardenId) {
+      return;
+    }
+
+    // Fetch zones for the selected garden
+    fetch(`/api/gardens/${gardenId}/zones`)
+      .then(response => response.json())
+      .then(zones => {
+        zones.forEach(zone => {
+          const option = document.createElement('option');
+          option.value = zone.id;
+          option.textContent = zone.name;
+          zoneSelect.appendChild(option);
+        });
+      })
+      .catch(error => console.error('Error fetching zones:', error));
+  }
+
+  // Function to update plants based on selected zone
+  function updatePlants() {
+    const zoneId = document.getElementById('zone_id').value;
+    const plantSelect = document.getElementById('plant_id');
+
+    // Hide all plant options first
+    Array.from(plantSelect.options).forEach(option => {
+      if (option.value === '') {
+        // Keep the 'None' option visible
+        option.style.display = '';
+      } else {
+        // Hide all other options initially
+        option.style.display = 'none';
+      }
+    });
+
+    if (!zoneId) {
+      return;
+    }
+
+    // Show only plants from the selected zone
+    Array.from(plantSelect.options).forEach(option => {
+      if (option.dataset.zone === zoneId) {
+        option.style.display = '';
+      }
+    });
+  }
+</script>
+
 {% endblock content %}

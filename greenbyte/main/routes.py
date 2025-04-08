@@ -124,7 +124,18 @@ def calendar(date_str=None):
     # Get the next month's days that appear in the last week of the current month
     next_month_days = []
     total_days = len(prev_month_days) + len(current_month_days)
-    remaining_days = 42 - total_days  # 6 weeks * 7 days = 42
+
+    # Calculate how many days we need to complete the calendar
+    # First, determine if we need 5 or 6 weeks
+    days_in_5_weeks = 35  # 5 weeks * 7 days
+    days_in_6_weeks = 42  # 6 weeks * 7 days
+
+    # If the total days from previous and current month fit in 5 weeks (35 days),
+    # or if the 6th week would be entirely in the next month, use 5 weeks
+    if total_days <= days_in_5_weeks or (total_days > days_in_5_weeks and total_days % 7 == 0):
+        remaining_days = days_in_5_weeks - total_days
+    else:
+        remaining_days = days_in_6_weeks - total_days
 
     if remaining_days > 0:
         next_month_start = month_start.replace(day=1)
@@ -276,6 +287,20 @@ def calendar(date_str=None):
                          next_month=next_month,
                          current_day=current_day)
 
+@main.route("/calendar/add", methods=['GET'])
+@login_required
+def add_calendar_event():
+    # Get all gardens for the user to associate with events
+    gardens = Garden.query.join(Garden.members).filter(User.id == current_user.id).all()
+
+    # Get all plants for the user to associate with events
+    plants = Plant.query.join(Zone, Plant.zone_id == Zone.id).join(Garden, Zone.garden_id == Garden.id).join(Garden.members).filter(User.id == current_user.id).all()
+
+    return render_template('add_calendar_event.html',
+                         title='Add Event',
+                         gardens=gardens,
+                         plants=plants)
+
 @main.route("/calendar/events", methods=['POST'])
 @login_required
 def add_event():
@@ -296,15 +321,54 @@ def add_event():
     url = request.form.get('eventUrl')
     description = request.form.get('notes')
     garden_id = request.form.get('garden_id')
+    zone_id = request.form.get('zone_id')
     plant_id = request.form.get('plant_id')
+
+    # Server-side validation
+    errors = []
+
+    # Validate required fields
+    if not title:
+        errors.append('Event title is required')
+    if not start_date:
+        errors.append('Start date is required')
+    if not end_date:
+        errors.append('End date is required')
+    if not all_day and not start_time:
+        errors.append('Start time is required for non-all-day events')
+    if not all_day and not end_time:
+        errors.append('End time is required for non-all-day events')
+    if repeat_type == 'on' and not repeat_end_date:
+        errors.append('End repeat date is required when repeat is enabled')
+
+    # If there are validation errors, flash them and redirect back
+    if errors:
+        for error in errors:
+            flash(error, 'danger')
+        return redirect(url_for('main.calendar'))
 
     # Convert dates and times to datetime objects
     try:
+        # Add validation to ensure start_time and end_time are properly formatted
+        if not all_day:
+            if not start_time or len(start_time.strip()) < 5:
+                flash('Invalid start time format. Please use HH:MM format.', 'danger')
+                return redirect(url_for('main.calendar'))
+            if not end_time or len(end_time.strip()) < 5:
+                flash('Invalid end time format. Please use HH:MM format.', 'danger')
+                return redirect(url_for('main.calendar'))
+
         start_datetime = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M")
         end_datetime = datetime.strptime(f"{end_date} {end_time}", "%Y-%m-%d %H:%M") if end_date else None
         repeat_end_datetime = datetime.strptime(repeat_end_date, "%Y-%m-%d") if repeat_end_date else None
+
+        # Validate that end date is not before start date
+        if end_datetime and end_datetime < start_datetime:
+            flash('End date/time cannot be before start date/time', 'danger')
+            return redirect(url_for('main.calendar'))
+
     except ValueError as e:
-        flash(f'Invalid date format: {str(e)}', 'danger')
+        flash(f'Invalid date or time format: {str(e)}', 'danger')
         return redirect(url_for('main.calendar'))
 
     # Convert alert_before_minutes to integer if provided
@@ -330,6 +394,7 @@ def add_event():
         alert_before_minutes=alert_before_minutes,
         user_id=current_user.id,
         garden_id=garden_id if garden_id else None,
+        zone_id=zone_id if zone_id else None,
         plant_id=plant_id if plant_id else None
     )
 
@@ -362,6 +427,22 @@ def add_event():
 
     flash('Event added successfully!', 'success')
     return redirect(url_for('main.calendar'))
+
+@main.route("/api/gardens/<int:garden_id>/zones", methods=['GET'])
+@login_required
+def get_garden_zones(garden_id):
+    # Verify the user has access to this garden
+    garden = Garden.query.get_or_404(garden_id)
+    if current_user not in garden.members:
+        return jsonify({'error': 'Access denied'}), 403
+
+    # Get all zones for the garden
+    zones = Zone.query.filter_by(garden_id=garden_id).all()
+
+    # Convert to JSON
+    zones_data = [{'id': zone.id, 'name': zone.name} for zone in zones]
+
+    return jsonify(zones_data)
 
 @main.route("/calendar/events/<int:event_id>", methods=['GET', 'PUT', 'DELETE'])
 @login_required

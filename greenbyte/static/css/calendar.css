@@ -13,11 +13,25 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    border-radius: 4px;
 }
 
 .mini-day:hover {
     background-color: rgba(28, 200, 138, 0.1);
     cursor: pointer;
+}
+
+/* Style for days not in the current month */
+.mini-day.text-muted {
+    color: #c2c7d0 !important;
+    background-color: #f8f9fc;
+    opacity: 0.6;
+    cursor: default !important;
+}
+
+.mini-day.text-muted:hover {
+    background-color: #f8f9fc;
+    transform: none;
 }
 
 .event-indicator {

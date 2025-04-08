@@ -1,0 +1,533 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Heading -->
+ 
+
+  <div class="row">
+    <!-- Main Add Form Column -->
+    <div class="col-xl-8 col-lg-7">
+      <div class="card shadow-sm border-0" style="border-radius: 1rem; border: 1px solid rgba(28, 200, 138, 0.2) !important;">
+        <div class="card-body p-4">
+          <!-- Header -->
+          <div class="d-flex align-items-center mb-4">
+            <h1 class="h3 mb-0" style="color: #1cc88a;">Add Calendar Event</h1>
+          </div>
+          <form id="addEventForm" action="{{ url_for('main.add_event') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Title and Location Section -->
+            <div class="form-group mb-4">
+              <label for="eventTitle" class="form-label fw-bold">Event Title</label>
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                id="eventTitle"
+                name="eventTitle"
+                placeholder="Add title"
+                required
+                style="border: 1px solid rgba(28, 200, 138, 0.2);
+                       border-radius: 0.75rem;
+                       padding: 0.75rem;
+                       background: rgba(255, 255, 255, 0.9);"
+              />
+            </div>
+            <div class="form-group mb-4">
+              <label for="location" class="form-label fw-bold">Location</label>
+              <div class="input-group">
+                <span class="input-group-text" style="border: 1px solid rgba(28, 200, 138, 0.2); border-right: none; border-radius: 0.75rem 0 0 0.75rem;"><i class="fas fa-map-marker-alt"></i></span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="location"
+                  name="location"
+                  placeholder="Add location or video call"
+                  style="border: 1px solid rgba(28, 200, 138, 0.2); border-left: none; border-radius: 0 0.75rem 0.75rem 0; padding: 0.75rem;"
+                />
+              </div>
+            </div>
+
+            <!-- Date and Time Section -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Date & Time</label>
+              <div class="d-flex align-items-center mb-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="allDayEvent"
+                    name="allDayEvent"
+                  />
+                  <label class="form-check-label" for="allDayEvent">All-day event</label>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-2 col-form-label">Starts</label>
+                <div class="col-5">
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="startDate"
+                    name="startDate"
+                    required
+                    style="border: 1px solid rgba(28, 200, 138, 0.2);
+                           border-radius: 0.75rem;
+                           padding: 0.75rem;
+                           background: rgba(255, 255, 255, 0.9);"
+                  />
+                </div>
+                <div class="col-5" id="startTimeContainer">
+                  <input
+                    type="time"
+                    class="form-control"
+                    id="startTime"
+                    name="startTime"
+                    required
+                    style="border: 1px solid rgba(28, 200, 138, 0.2);
+                           border-radius: 0.75rem;
+                           padding: 0.75rem;
+                           background: rgba(255, 255, 255, 0.9);"
+                  />
+                </div>
+              </div>
+
+              <div class="row">
+                <label class="col-2 col-form-label">Ends</label>
+                <div class="col-5">
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="endDate"
+                    name="endDate"
+                    required
+                    style="border: 1px solid rgba(28, 200, 138, 0.2);
+                           border-radius: 0.75rem;
+                           padding: 0.75rem;
+                           background: rgba(255, 255, 255, 0.9);"
+                  />
+                </div>
+                <div class="col-5" id="endTimeContainer">
+                  <input
+                    type="time"
+                    class="form-control"
+                    id="endTime"
+                    name="endTime"
+                    required
+                    style="border: 1px solid rgba(28, 200, 138, 0.2);
+                           border-radius: 0.75rem;
+                           padding: 0.75rem;
+                           background: rgba(255, 255, 255, 0.9);"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Repeat Section -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Repeat Options</label>
+              <div class="row mb-2">
+                <label class="col-2 col-form-label">Repeat</label>
+                <div class="col-10">
+                  <select class="form-select" id="repeatOption" name="repeatOption" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                    <option value="none" selected>Never</option>
+                    <option value="daily">Every Day</option>
+                    <option value="weekly">Every Week</option>
+                    <option value="biweekly">Every 2 Weeks</option>
+                    <option value="monthly">Every Month</option>
+                    <option value="yearly">Every Year</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row" id="endRepeatContainer" style="display: none;">
+                <label class="col-2 col-form-label">End Repeat</label>
+                <div class="col-10">
+                  <select class="form-select mb-2" id="endRepeat" name="endRepeat" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                    <option value="" selected>Never</option>
+                    <option value="on">On Date</option>
+                  </select>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="endRepeatDate"
+                    name="endRepeatDate"
+                    style="display: none; border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Calendar Selection -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Calendar Type</label>
+              <div class="row">
+                <label class="col-2 col-form-label">Calendar</label>
+                <div class="col-10">
+                  <select class="form-select" id="calendar" name="calendar" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                    <option value="work" style="color: #1cc88a" selected>Work</option>
+                    <option value="community" style="color: #4e73df">
+                      Community
+                    </option>
+                    <option value="school" style="color: #f6c23e">School</option>
+                    <option value="personal" style="color: #e74a3b">
+                      Personal
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Invitees Section -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Invitees</label>
+              <div class="input-group">
+                <span class="input-group-text" style="border: 1px solid rgba(28, 200, 138, 0.2); border-right: none; border-radius: 0.75rem 0 0 0.75rem;"><i class="fas fa-users"></i></span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="invitees"
+                  name="invitees"
+                  placeholder="Add invitees (comma separated emails)"
+                  style="border: 1px solid rgba(28, 200, 138, 0.2); border-left: none; border-radius: 0 0.75rem 0.75rem 0; padding: 0.75rem;"
+                />
+              </div>
+            </div>
+
+            <!-- Garden, Zone, and Plant Selection -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Garden Details</label>
+              <div class="row mb-2">
+                <label class="col-2 col-form-label">Garden</label>
+                <div class="col-10">
+                  <select class="form-select" id="garden_id" name="garden_id" onchange="updateZones()" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                    <option value="">None</option>
+                    {% for garden in gardens %}
+                    <option value="{{ garden.id }}">{{ garden.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-2">
+                <label class="col-2 col-form-label">Zone</label>
+                <div class="col-10">
+                  <select class="form-select" id="zone_id" name="zone_id" onchange="updatePlants()" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                    <option value="">None</option>
+                    <!-- Zones will be populated dynamically based on selected garden -->
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <label class="col-2 col-form-label">Plant</label>
+                <div class="col-10">
+                  <select class="form-select" id="plant_id" name="plant_id" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                    <option value="">None</option>
+                    {% for plant in plants %}
+                    <option value="{{ plant.id }}" data-zone="{{ plant.zone_id }}">{{ plant.plant_detail.name }} {% if plant.variety %}({{ plant.variety.name }}){% endif %}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alert Section -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Notification Settings</label>
+              <div class="row mb-3">
+                <label class="col-2 col-form-label">Alert</label>
+                <div class="col-10">
+                  <select class="form-select" id="alert" name="alert" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                    <option value="0" selected>At time of event</option>
+                    <option value="5">5 minutes before</option>
+                    <option value="10">10 minutes before</option>
+                    <option value="15">15 minutes before</option>
+                    <option value="30">30 minutes before</option>
+                    <option value="60">1 hour before</option>
+                    <option value="1440">1 day before</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-10 offset-2">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="privateEvent"
+                      name="privateEvent"
+                    />
+                    <label class="form-check-label" for="privateEvent">Make this event private</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- URL -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">URL</label>
+              <div class="input-group">
+                <span class="input-group-text" style="border: 1px solid rgba(28, 200, 138, 0.2); border-right: none; border-radius: 0.75rem 0 0 0.75rem;"><i class="fas fa-link"></i></span>
+                <input
+                  type="url"
+                  class="form-control"
+                  id="eventUrl"
+                  name="eventUrl"
+                  placeholder="Add URL"
+                  style="border: 1px solid rgba(28, 200, 138, 0.2); border-left: none; border-radius: 0 0.75rem 0.75rem 0; padding: 0.75rem;"
+                />
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Notes</label>
+              <textarea
+                class="form-control"
+                id="notes"
+                name="notes"
+                rows="3"
+                placeholder="Add notes"
+                style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);"
+              ></textarea>
+            </div>
+
+            <!-- Form Buttons -->
+            <div class="d-flex justify-content-between align-items-center mt-4">
+              <a href="{{ url_for('main.calendar') }}" class="btn"
+                 style="background: rgba(133, 135, 150, 0.1);
+                        color: #858796;
+                        border: 1px solid rgba(133, 135, 150, 0.2);
+                        border-radius: 0.75rem;
+                        padding: 0.5rem 1.5rem;">
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </a>
+              <div>
+                <button type="submit" class="btn"
+                        style="background: rgba(28, 200, 138, 0.1);
+                               color: #1cc88a;
+                               border: 1px solid rgba(28, 200, 138, 0.2);
+                               border-radius: 0.75rem;
+                               padding: 0.5rem 1.5rem;">
+                  <i class="fas fa-plus me-2"></i>Add Event
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips Column -->
+    <div class="col-xl-4 col-lg-5">
+      <div class="card" style="border: 1px solid rgba(28, 200, 138, 0.2);
+                  border-radius: 1rem !important;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                  position: sticky;
+                  top: 1rem;">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
+             style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
+                    border-top-left-radius: 1rem !important;
+                    border-top-right-radius: 1rem !important;">
+          <h5 class="text-success m-0">Calendar Event Tips</h5>
+        </div>
+        <div class="card-body p-4">
+          <p class="text-muted small mb-3">Here are some helpful tips for creating effective calendar events:</p>
+          
+          <div class="mb-3">
+            <h6 class="text-dark"><i class="fas fa-clock text-success me-2"></i>Time Management</h6>
+            <p class="small text-muted">Use the all-day option for events that don't have specific start and end times. For timed events, be precise with your scheduling.</p>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-dark"><i class="fas fa-sync-alt text-success me-2"></i>Recurring Events</h6>
+            <p class="small text-muted">Set up recurring events for regular activities like watering, fertilizing, or harvesting. This saves time and ensures consistency.</p>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-dark"><i class="fas fa-leaf text-success me-2"></i>Garden & Zone Selection</h6>
+            <p class="small text-muted">Link events to specific gardens, zones, and plants to keep your garden management organized and track plant-specific activities.</p>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-dark"><i class="fas fa-bell text-success me-2"></i>Alerts</h6>
+            <p class="small text-muted">Set alerts to remind you of important garden tasks. Choose an appropriate time before the event based on the task's urgency.</p>
+          </div>
+          
+          <div class="mb-3">
+            <h6 class="text-dark"><i class="fas fa-users text-success me-2"></i>Invitees</h6>
+            <p class="small text-muted">Add email addresses of people you want to invite to your garden events. This is great for community gardens or collaborative projects.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add styles -->
+<style>
+  .form-group label {
+    color: #5a5c69;
+    font-weight: 500;
+  }
+
+  .input-group-text {
+    background-color: transparent;
+    border-right: none;
+  }
+
+  .input-group .form-control {
+    border-left: none;
+  }
+
+  .form-control:focus {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+  }
+
+  .form-select:focus {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+
+  .form-label {
+    color: #5a5c69;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+</style>
+
+<!-- Add this JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Set default dates to today
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    document.getElementById("startDate").value = todayStr;
+    document.getElementById("endDate").value = todayStr;
+    
+    // Set default times
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('startTime').value = `${hours}:${minutes}`;
+    
+    // Set end time to 1 hour later
+    const endHour = (now.getHours() + 1) % 24;
+    document.getElementById('endTime').value = `${String(endHour).padStart(2, '0')}:${minutes}`;
+
+    // Handle all-day event toggle
+    const allDayCheckbox = document.getElementById("allDayEvent");
+    const startTimeContainer = document.getElementById("startTimeContainer");
+    const endTimeContainer = document.getElementById("endTimeContainer");
+
+    allDayCheckbox.addEventListener("change", function () {
+      startTimeContainer.style.display = this.checked ? "none" : "block";
+      endTimeContainer.style.display = this.checked ? "none" : "block";
+    });
+
+    // Handle repeat option changes
+    const repeatOption = document.getElementById("repeatOption");
+    const endRepeatContainer = document.getElementById("endRepeatContainer");
+    const endRepeatSelect = document.getElementById("endRepeat");
+    const endRepeatDate = document.getElementById("endRepeatDate");
+
+    repeatOption.addEventListener("change", function () {
+      endRepeatContainer.style.display =
+        this.value === "none" ? "none" : "flex";
+    });
+
+    endRepeatSelect.addEventListener("change", function() {
+      endRepeatDate.style.display = this.value === "on" ? "block" : "none";
+    });
+    
+    // Form validation
+    const form = document.getElementById('addEventForm');
+    
+    form.addEventListener('submit', function(e) {
+      // Validate that end date is not before start date
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(document.getElementById('endDate').value);
+      
+      if (endDate < startDate) {
+        e.preventDefault();
+        alert('End date cannot be before start date');
+        return;
+      }
+      
+      // If dates are the same, check times (if not all-day)
+      if (startDate.getTime() === endDate.getTime() && !allDayCheckbox.checked) {
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        
+        if (endTime < startTime) {
+          e.preventDefault();
+          alert('End time cannot be before start time on the same day');
+          return;
+        }
+      }
+    });
+  });
+
+  // Function to update zones based on selected garden
+  function updateZones() {
+    const gardenId = document.getElementById('garden_id').value;
+    const zoneSelect = document.getElementById('zone_id');
+
+    // Clear current options
+    zoneSelect.innerHTML = '<option value="">None</option>';
+
+    if (!gardenId) {
+      return;
+    }
+
+    // Fetch zones for the selected garden
+    fetch(`/api/gardens/${gardenId}/zones`)
+      .then(response => response.json())
+      .then(zones => {
+        zones.forEach(zone => {
+          const option = document.createElement('option');
+          option.value = zone.id;
+          option.textContent = zone.name;
+          zoneSelect.appendChild(option);
+        });
+      })
+      .catch(error => console.error('Error fetching zones:', error));
+  }
+
+  // Function to update plants based on selected zone
+  function updatePlants() {
+    const zoneId = document.getElementById('zone_id').value;
+    const plantSelect = document.getElementById('plant_id');
+
+    // Hide all plant options first
+    Array.from(plantSelect.options).forEach(option => {
+      if (option.value === '') {
+        // Keep the 'None' option visible
+        option.style.display = '';
+      } else {
+        // Hide all other options initially
+        option.style.display = 'none';
+      }
+    });
+
+    if (!zoneId) {
+      return;
+    }
+
+    // Show only plants from the selected zone
+    Array.from(plantSelect.options).forEach(option => {
+      if (option.dataset.zone === zoneId) {
+        option.style.display = '';
+      }
+    });
+  }
+</script>
+{% endblock content %}
