@@ -256,7 +256,8 @@ def calendar(date_str=None):
                     'multi_day': is_multi_day,
                     'duration': event_duration,
                     'day_number': day_number,
-                    'total_days': event_duration if not is_multi_day else (event_end_date - event_start_date).days + 1
+                    'total_days': event_duration if not is_multi_day else (event_end_date - event_start_date).days + 1,
+                    'completed': event.completed
                 }
 
                 # Add the event to the appropriate day

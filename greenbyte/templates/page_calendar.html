@@ -64,12 +64,13 @@
                        data-event-id="{{ event.id }}"
                        onclick="openViewEventModal({{ event.id }})"
                        style="background-color: #f8f9fc;
-                              border-left: 3px solid {% if event.type == 'work' %}#1cc88a{% elif event.type == 'community' %}#4e73df{% elif event.type == 'school' %}#f6c23e{% elif event.type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};
+                              border-left: 3px solid {% if event.type == 'work' %}#1cc88a{% elif event.type == 'community' %}#4e73df{% elif event.type == 'school' %}#f6c23e{% elif event.type == 'personal' %}#e74a3b{% elif event.type == 'todo' %}#36b9cc{% else %}#1cc88a{% endif %};
                               margin-bottom: 8px;
                               padding: 8px;
                               border-radius: 4px;
-                              box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <div class="event-title" style="font-weight: bold;">
+                              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                              {% if event.type == 'todo' and event.completed %}opacity: 0.7;{% endif %}">
+                    <div class="event-title" style="font-weight: bold;{% if event.type == 'todo' and event.completed %}text-decoration: line-through;{% endif %}">
                       {{ event.title }}
                       {% if event.multi_day %}
                       <span class="badge bg-secondary" style="font-size: 0.7rem; margin-left: 5px;">Day {{ event.day_number }}/{{ event.total_days }}</span>
@@ -190,7 +191,7 @@
               <div class="h5 mb-0" style="color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
             </div>
             <div class="event-details">
-              <h6 class="mb-0">{{ event.title }}</h6>
+              <h6 class="mb-0" {% if event.calendar_type == 'todo' and event.completed %}style="text-decoration: line-through; opacity: 0.7;"{% endif %}>{{ event.title }}</h6>
               <small class="text-gray-600">
                 <i class="fas fa-clock fa-sm me-1"></i>{{ event.start_datetime.strftime('%I:%M %p') if not event.all_day else 'All Day' }}
               </small>
@@ -389,10 +390,11 @@
         // Build HTML for event details
         let html = `
           <div class="event-header mb-3 pb-2" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)">
-            <h4>${event.title}</h4>
+            <h4 ${event.calendar_type === 'todo' && event.completed ? 'style="text-decoration: line-through; opacity: 0.7;"' : ''}>${event.title}</h4>
             <div class="d-flex align-items-center">
               <span class="badge me-2" style="background-color: ${calendarColor}">${event.calendar_type}</span>
               <i class="fas fa-clock fa-sm me-1"></i> ${timeDisplay}
+              ${event.calendar_type === 'todo' ? `<span class="ms-2 badge ${event.completed ? 'bg-success' : 'bg-warning'}"><i class="fas ${event.completed ? 'fa-check' : 'fa-hourglass-half'}"></i> ${event.completed ? 'Completed' : 'Pending'}</span>` : ''}
             </div>
           </div>
         `;
