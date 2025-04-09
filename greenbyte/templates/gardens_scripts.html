@@ -1,4 +1,4 @@
-{% block scripts %}
+
 <script>
     // Function to update relative timestamps
     function updateRelativeTimestamps() {
@@ -45,7 +45,7 @@
         // Zone collapse functionality has been removed
 
         // Helper function to show toast notifications
-        function showToast(message, bgClass = 'bg-success') {
+        window.showToast = function(message, bgClass = 'bg-success') {
             const toast = document.createElement('div');
             toast.className = `toast align-items-center text-white ${bgClass} border-0`;
             toast.setAttribute('role', 'alert');
@@ -66,10 +66,12 @@
             `;
 
             // Add toast to the document
-            const toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            const toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                console.error('Toast container not found');
+                return;
+            }
             toastContainer.appendChild(toast);
-            document.body.appendChild(toastContainer);
 
             // Initialize and show the toast
             const bsToast = new bootstrap.Toast(toast, {
@@ -78,9 +80,9 @@
             });
             bsToast.show();
 
-            // Remove toast container after toast is hidden
+            // Remove toast after it's hidden
             toast.addEventListener('hidden.bs.toast', function() {
-                document.body.removeChild(toastContainer);
+                toast.remove();
             });
 
             return toast;
@@ -108,7 +110,6 @@
             statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
 
             // Show toast notification
-            showToast('Updating plant status...', 'bg-info');
 
             // Send AJAX request
             fetch(`/api/plant/${plantId}/status/${newStatus}`, {
@@ -255,11 +256,11 @@
             }
 
             // Check if the zone has table headers
-            const hasHeaders = newZonePlantsContainer.querySelector('.d-flex[style*="background-color: rgba(28, 200, 138, 0.05)"]');
+            const hasHeaders = newZonePlantsContainer.querySelector('.plant-table-header');
             if (!hasHeaders) {
                 // Add table headers
                 const headers = document.createElement('div');
-                headers.className = 'd-flex align-items-center py-2 px-4 border-bottom';
+                headers.className = 'd-flex align-items-center py-2 px-4 border-bottom plant-table-header';
                 headers.style.backgroundColor = 'rgba(28, 200, 138, 0.05)';
                 headers.style.fontWeight = '500';
                 headers.innerHTML = `
@@ -518,4 +519,4 @@
         });
     });
 </script>
-{% endblock %}
+

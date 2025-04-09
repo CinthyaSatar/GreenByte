@@ -5,9 +5,9 @@ from greenbyte import db
 from greenbyte.gardens.forms import GardenForm, ZoneForm, PlantForm
 from greenbyte.models import (
     User, Garden, Zone, Plant, PlantTracking,
-    Harvest, user_garden, PlantDetail, PlantVariety
+    Harvest, user_garden, PlantDetail, PlantVariety, CalendarEvent
 )
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask import current_app
 from greenbyte.utils.timezone import now_in_timezone, localize_datetime
 
@@ -50,7 +50,7 @@ def add_garden():
         flash('Your garden has been created!', 'success')
         return redirect(url_for('gardens.view_gardens'))
 
-    return render_template('add_garden.html',
+    return render_template('add_page_gardens.html',
                          title='New Garden',
                          form=form)
 
@@ -93,10 +93,72 @@ def view_gardens():
         'extra_style': ''
     }
 
-    return render_template('gardens.html',
+    # Get upcoming events for the next 7 days
+    today = date.today()
+    next_week = today + timedelta(days=7)
+
+    # Import event utilities
+    from greenbyte.utils.event_utils import batch_update_events_completion, is_event_overdue
+
+    # Get all events for the current user
+    user_events = CalendarEvent.query.filter_by(user_id=current_user.id).all()
+
+    # Update completion status for events
+    updated_count = batch_update_events_completion(user_events)
+
+    # Fetch all upcoming events for the user's gardens, zones, and plants
+    # Also include TODO tasks regardless of their associations
+    upcoming_events = CalendarEvent.query.filter(
+        CalendarEvent.user_id == current_user.id,
+        ((CalendarEvent.start_datetime >= today) |
+         ((CalendarEvent.calendar_type == 'todo') & (CalendarEvent.completed == False))),  # Include overdue TODO tasks
+        CalendarEvent.start_datetime <= next_week,
+        ((CalendarEvent.garden_id != None) | (CalendarEvent.zone_id != None) | (CalendarEvent.plant_id != None) | (CalendarEvent.calendar_type == 'todo'))
+    ).order_by(CalendarEvent.start_datetime).all()
+
+    # Create dictionaries to organize events by garden, zone, and plant
+    garden_events = {}
+    zone_events = {}
+    plant_events = {}
+    todo_events_list = []
+
+    for event in upcoming_events:
+        # Add TODO events to a separate list if they don't have garden, zone, or plant associations
+        # Only include non-completed TODO tasks
+        if event.calendar_type == 'todo' and not event.completed and not (event.garden_id or event.zone_id or event.plant_id):
+            todo_events_list.append(event)
+
+        # Add to garden events
+        if event.garden_id:
+            if event.garden_id not in garden_events:
+                garden_events[event.garden_id] = []
+            garden_events[event.garden_id].append(event)
+
+        # Add to zone events
+        if event.zone_id:
+            if event.zone_id not in zone_events:
+                zone_events[event.zone_id] = []
+            zone_events[event.zone_id].append(event)
+
+        # Add to plant events
+        if event.plant_id:
+            if event.plant_id not in plant_events:
+                plant_events[event.plant_id] = []
+            plant_events[event.plant_id].append(event)
+
+    # Get current time for checking overdue tasks
+    now = now_in_timezone()
+
+    return render_template('page_gardens.html',
                          gardens=gardens,
                          status_style_mapping=status_style_mapping,
-                         default_style=default_style)
+                         default_style=default_style,
+                         garden_events=garden_events,
+                         zone_events=zone_events,
+                         plant_events=plant_events,
+                         todo_events_list=todo_events_list,
+                         now=now,
+                         all_events=upcoming_events)
 
 
 @gardens.route('/garden/<int:garden_id>/add_zone', methods=['GET', 'POST'])
@@ -297,7 +359,6 @@ def move_plant_ajax(plant_id, zone_id):
         plant_row_template = '''
         <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom"
              style="border-color: rgba(28, 200, 138, 0.1) !important;
-                    background-color: rgba(28, 200, 138, 0.08);
                     transition: background-color 0.2s ease;">
             <!-- Plant Name & Variety -->
             <div class="col-3 d-flex align-items-center gap-2">
@@ -469,7 +530,7 @@ def edit_garden(garden_id):
         form.name.data = garden.name
         form.location.data = garden.location
 
-    return render_template('edit_garden.html', form=form, garden=garden)
+    return render_template('edit_page_gardens.html', form=form, garden=garden)
 
 
 @gardens.route("/api/users/search", methods=['GET'])
