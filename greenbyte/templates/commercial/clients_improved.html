@@ -70,7 +70,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" id="clientsTable" width="100%" cellspacing="0">
+                <table class="table" id="clientsTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>Client ID</th>
@@ -79,7 +79,6 @@
                             <th>Status</th>
                             <th>Last Order</th>
                             <th>Total Orders</th>
-                            <th>Total Revenue</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -87,105 +86,105 @@
                             <td>CL-001</td>
                             <td><a href="#" class="client-name-link">Farm Fresh Restaurant</a></td>
                             <td>
-                                <div>John Doe</div>
-                                <div class="small text-muted">john@farmfresh.com</div>
-                                <div class="small text-muted">(555) 123-4567</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">John Doe</div>
+                                    <div class="contact-details">john@farmfresh.com • (555) 123-4567</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-success">Active</span></td>
                             <td>Apr 15, 2023</td>
                             <td>24</td>
-                            <td>$5,245.00</td>
                         </tr>
                         <tr class="client-row" data-client-id="2">
                             <td>CL-002</td>
                             <td><a href="#" class="client-name-link">Green Leaf Cafe</a></td>
                             <td>
-                                <div>Jane Smith</div>
-                                <div class="small text-muted">jane@greenleaf.com</div>
-                                <div class="small text-muted">(555) 234-5678</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">Jane Smith</div>
+                                    <div class="contact-details">jane@greenleaf.com • (555) 234-5678</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-success">Active</span></td>
                             <td>Apr 14, 2023</td>
                             <td>18</td>
-                            <td>$3,780.00</td>
                         </tr>
                         <tr class="client-row" data-client-id="3">
                             <td>CL-003</td>
                             <td><a href="#" class="client-name-link">Harvest Market</a></td>
                             <td>
-                                <div>Robert Johnson</div>
-                                <div class="small text-muted">robert@harvestmarket.com</div>
-                                <div class="small text-muted">(555) 345-6789</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">Robert Johnson</div>
+                                    <div class="contact-details">robert@harvestmarket.com • (555) 345-6789</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-success">Active</span></td>
                             <td>Apr 13, 2023</td>
                             <td>12</td>
-                            <td>$2,950.00</td>
                         </tr>
                         <tr class="client-row" data-client-id="4">
                             <td>CL-004</td>
                             <td><a href="#" class="client-name-link">John Smith</a></td>
                             <td>
-                                <div>John Smith</div>
-                                <div class="small text-muted">john.smith@email.com</div>
-                                <div class="small text-muted">(555) 456-7890</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">John Smith</div>
+                                    <div class="contact-details">john.smith@email.com • (555) 456-7890</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-info">New</span></td>
                             <td>Apr 12, 2023</td>
                             <td>1</td>
-                            <td>$87.25</td>
                         </tr>
                         <tr class="client-row" data-client-id="5">
                             <td>CL-005</td>
                             <td><a href="#" class="client-name-link">Organic Delights</a></td>
                             <td>
-                                <div>Sarah Williams</div>
-                                <div class="small text-muted">sarah@organicdelights.com</div>
-                                <div class="small text-muted">(555) 567-8901</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">Sarah Williams</div>
+                                    <div class="contact-details">sarah@organicdelights.com • (555) 567-8901</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-warning">Inactive</span></td>
                             <td>Mar 28, 2023</td>
                             <td>8</td>
-                            <td>$1,450.00</td>
                         </tr>
                         <tr class="client-row" data-client-id="6">
                             <td>CL-006</td>
                             <td><a href="#" class="client-name-link">Fresh & Local Co-op</a></td>
                             <td>
-                                <div>Michael Brown</div>
-                                <div class="small text-muted">michael@freshandlocal.org</div>
-                                <div class="small text-muted">(555) 678-9012</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">Michael Brown</div>
+                                    <div class="contact-details">michael@freshandlocal.org • (555) 678-9012</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-success">Active</span></td>
                             <td>Apr 10, 2023</td>
                             <td>15</td>
-                            <td>$3,125.00</td>
                         </tr>
                         <tr class="client-row" data-client-id="7">
                             <td>CL-007</td>
                             <td><a href="#" class="client-name-link">Garden Bistro</a></td>
                             <td>
-                                <div>Emily Davis</div>
-                                <div class="small text-muted">emily@gardenbistro.com</div>
-                                <div class="small text-muted">(555) 789-0123</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">Emily Davis</div>
+                                    <div class="contact-details">emily@gardenbistro.com • (555) 789-0123</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-success">Active</span></td>
                             <td>Apr 9, 2023</td>
                             <td>10</td>
-                            <td>$2,175.00</td>
                         </tr>
                         <tr class="client-row" data-client-id="8">
                             <td>CL-008</td>
                             <td><a href="#" class="client-name-link">Sunshine Grocers</a></td>
                             <td>
-                                <div>David Wilson</div>
-                                <div class="small text-muted">david@sunshinegrocers.com</div>
-                                <div class="small text-muted">(555) 890-1234</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">David Wilson</div>
+                                    <div class="contact-details">david@sunshinegrocers.com • (555) 890-1234</div>
+                                </div>
                             </td>
                             <td><span class="badge badge-warning">Inactive</span></td>
                             <td>Feb 15, 2023</td>
                             <td>5</td>
-                            <td>$875.00</td>
                         </tr>
                     </tbody>
                 </table>
@@ -299,31 +298,26 @@
     
     /* Modern table styles */
     #clientsTable {
-        border-collapse: separate;
-        border-spacing: 0;
         width: 100%;
         border: none;
-        border-radius: 8px;
-        overflow: hidden;
+        font-size: 0.9rem;
     }
     
     #clientsTable th {
         background-color: #f8f9fc;
         color: #5a5c69;
         font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        letter-spacing: 0.05em;
+        font-size: 0.85rem;
         border-top: none;
         border-bottom: 1px solid #e3e6f0;
-        padding: 1rem;
+        padding: 0.75rem 1rem;
     }
     
     #clientsTable td {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
         vertical-align: middle;
         border-top: none;
-        border-bottom: 1px solid #e3e6f0;
+        border-bottom: 1px solid #f1f1f5;
     }
     
     #clientsTable tbody tr:last-child td {
@@ -332,25 +326,32 @@
     
     .client-row {
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.15s;
     }
     
     .client-row:hover {
-        background-color: rgba(28, 200, 138, 0.05);
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        background-color: rgba(28, 200, 138, 0.03);
     }
     
     .badge {
-        padding: 0.5em 0.75em;
+        padding: 0.4em 0.65em;
         font-weight: 500;
-        border-radius: 30px;
+        border-radius: 3px;
         font-size: 0.75rem;
     }
     
-    .table-responsive {
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.02);
+    /* Contact info styling */
+    .contact-info {
+        line-height: 1.5;
+    }
+    
+    .contact-name {
+        font-weight: 500;
+    }
+    
+    .contact-details {
+        color: #6e707e;
+        margin-top: 2px;
     }
     
     /* Client name link styling */
@@ -364,6 +365,21 @@
     .client-name-link:hover {
         color: #169b6b;
         text-decoration: none;
+    }
+    
+    /* Remove table borders */
+    .table {
+        border: none;
+    }
+    
+    .table td, .table th {
+        border-left: none;
+        border-right: none;
+    }
+    
+    /* Adjust table header */
+    .table thead th {
+        border-bottom: 1px solid #e3e6f0;
     }
 </style>
 

@@ -1,0 +1,661 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Product Management</h1>
+    <a
+      href="#"
+      class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm"
+      data-toggle="modal"
+      data-target="#addProductModal"
+    >
+      <i class="fas fa-plus fa-sm text-white-50 mr-1"></i> Add New Product
+    </a>
+  </div>
+
+  <!-- Search and Filter Card -->
+  <div class="card shadow mb-4">
+    <div
+      class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+    >
+      <h6 class="m-0 font-weight-bold text-success">Search Products</h6>
+      <div class="dropdown no-arrow">
+        <a
+          class="dropdown-toggle"
+          href="#"
+          role="button"
+          id="filterDropdown"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          <i class="fas fa-filter fa-sm fa-fw text-gray-400"></i>
+        </a>
+        <div
+          class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+          aria-labelledby="filterDropdown"
+        >
+          <div class="dropdown-header">Filter By:</div>
+          <a class="dropdown-item" href="#">Active Products</a>
+          <a class="dropdown-item" href="#">Low Stock</a>
+          <a class="dropdown-item" href="#">Out of Stock</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#">Vegetables</a>
+          <a class="dropdown-item" href="#">Fruits</a>
+          <a class="dropdown-item" href="#">Herbs</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#">Clear Filters</a>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search products by name or description..."
+              id="productSearch"
+            />
+            <div class="input-group-append">
+              <button class="btn btn-success" type="button">
+                <i class="fas fa-search fa-sm"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select class="form-control" id="productCategory">
+            <option value="all">All Categories</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="fruits">Fruits</option>
+            <option value="herbs">Herbs</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select class="form-control" id="productSort">
+            <option value="name">Sort by Name</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="stock">Sort by Stock</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-success">Product List</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table" id="productsTable" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="product-row" data-product-id="1">
+              <td>PRD-001</td>
+              <td><a href="#" class="product-name-link">Tomatoes (Roma)</a></td>
+              <td>Vegetables</td>
+              <td>$3.99/lb</td>
+              <td>125 lbs</td>
+              <td>
+                <span
+                  class="badge badge-success status-badge"
+                  onclick="cycleStatus(this, 1)"
+                  style="cursor: pointer"
+                  >Active</span
+                >
+              </td>
+            </tr>
+            <tr class="product-row" data-product-id="2">
+              <td>PRD-002</td>
+              <td>
+                <a href="#" class="product-name-link">Lettuce (Romaine)</a>
+              </td>
+              <td>Vegetables</td>
+              <td>$2.49/head</td>
+              <td>78 heads</td>
+              <td>
+                <span
+                  class="badge badge-success status-badge"
+                  onclick="cycleStatus(this, 2)"
+                  style="cursor: pointer"
+                  >Active</span
+                >
+              </td>
+            </tr>
+            <tr class="product-row" data-product-id="3">
+              <td>PRD-003</td>
+              <td><a href="#" class="product-name-link">Basil (Sweet)</a></td>
+              <td>Herbs</td>
+              <td>$2.99/bunch</td>
+              <td>45 bunches</td>
+              <td>
+                <span
+                  class="badge badge-success status-badge"
+                  onclick="cycleStatus(this, 3)"
+                  style="cursor: pointer"
+                  >Active</span
+                >
+              </td>
+            </tr>
+            <tr class="product-row" data-product-id="4">
+              <td>PRD-004</td>
+              <td>
+                <a href="#" class="product-name-link">Carrots (Nantes)</a>
+              </td>
+              <td>Vegetables</td>
+              <td>$1.99/lb</td>
+              <td>15 lbs</td>
+              <td>
+                <span
+                  class="badge badge-warning status-badge"
+                  onclick="cycleStatus(this, 4)"
+                  style="cursor: pointer"
+                  >Low Stock</span
+                >
+              </td>
+            </tr>
+            <tr class="product-row" data-product-id="5">
+              <td>PRD-005</td>
+              <td>
+                <a href="#" class="product-name-link">Bell Peppers (Red)</a>
+              </td>
+              <td>Vegetables</td>
+              <td>$3.49/lb</td>
+              <td>0 lbs</td>
+              <td>
+                <span
+                  class="badge badge-danger status-badge"
+                  onclick="cycleStatus(this, 5)"
+                  style="cursor: pointer"
+                  >Out of Stock</span
+                >
+              </td>
+            </tr>
+            <tr class="product-row" data-product-id="6">
+              <td>PRD-006</td>
+              <td>
+                <a href="#" class="product-name-link">Strawberries (Organic)</a>
+              </td>
+              <td>Fruits</td>
+              <td>$4.99/pint</td>
+              <td>32 pints</td>
+              <td>
+                <span
+                  class="badge badge-success status-badge"
+                  onclick="cycleStatus(this, 6)"
+                  style="cursor: pointer"
+                  >Active</span
+                >
+              </td>
+            </tr>
+            <tr class="product-row" data-product-id="7">
+              <td>PRD-007</td>
+              <td><a href="#" class="product-name-link">Cilantro</a></td>
+              <td>Herbs</td>
+              <td>$1.49/bunch</td>
+              <td>8 bunches</td>
+              <td>
+                <span
+                  class="badge badge-warning status-badge"
+                  onclick="cycleStatus(this, 7)"
+                  style="cursor: pointer"
+                  >Low Stock</span
+                >
+              </td>
+            </tr>
+            <tr class="product-row" data-product-id="8">
+              <td>PRD-008</td>
+              <td>
+                <a href="#" class="product-name-link">Apples (Honeycrisp)</a>
+              </td>
+              <td>Fruits</td>
+              <td>$2.99/lb</td>
+              <td>65 lbs</td>
+              <td>
+                <span
+                  class="badge badge-success status-badge"
+                  onclick="cycleStatus(this, 8)"
+                  style="cursor: pointer"
+                  >Active</span
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Product Modal -->
+<div
+  class="modal fade"
+  id="addProductModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="addProductModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-row">
+            <div class="form-group col-md-8">
+              <label for="productName">Product Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="productName"
+                placeholder="Product Name"
+              />
+            </div>
+            <div class="form-group col-md-4">
+              <label for="productCategory">Category</label>
+              <select class="form-control" id="productCategorySelect">
+                <option value="vegetables">Vegetables</option>
+                <option value="fruits">Fruits</option>
+                <option value="herbs">Herbs</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="productDescription">Description</label>
+            <textarea
+              class="form-control"
+              id="productDescription"
+              rows="3"
+              placeholder="Product description..."
+            ></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="productPrice">Price</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">$</span>
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  id="productPrice"
+                  placeholder="0.00"
+                />
+                <div class="input-group-append">
+                  <select class="form-control" id="productUnit">
+                    <option value="lb">per lb</option>
+                    <option value="each">each</option>
+                    <option value="bunch">per bunch</option>
+                    <option value="pint">per pint</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="productStock">Stock Quantity</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="productStock"
+                  placeholder="0"
+                />
+                <div class="input-group-append">
+                  <select class="form-control" id="productStockUnit">
+                    <option value="lb">lbs</option>
+                    <option value="each">units</option>
+                    <option value="bunch">bunches</option>
+                    <option value="pint">pints</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="productStatus">Status</label>
+              <select class="form-control" id="productStatus">
+                <option value="active" selected>Active</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-success">Add Product</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Change Modal -->
+<div
+  class="modal fade"
+  id="changeStatusModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="changeStatusModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="changeStatusModalLabel">
+          Change Product Status
+        </h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="statusProductId" value="" />
+        <input type="hidden" id="statusCurrentStatus" value="" />
+        <div class="form-group">
+          <label for="newStatus">Select New Status</label>
+          <select class="form-control" id="newStatus">
+            <option value="active">Active</option>
+            <option value="low">Low Stock</option>
+            <option value="out">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-success" id="saveStatusBtn">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CSS for badges and modern table -->
+<style>
+  /* Badge styles */
+  .badge-success {
+    background-color: #1cc88a;
+    color: white;
+  }
+  .badge-warning {
+    background-color: #f6c23e;
+    color: white;
+  }
+  .badge-info {
+    background-color: #36b9cc;
+    color: white;
+  }
+  .badge-danger {
+    background-color: #e74a3b;
+    color: white;
+  }
+
+  /* Modern table styles */
+  #productsTable {
+    width: 100%;
+    border: none;
+    font-size: 0.9rem;
+  }
+
+  #productsTable th {
+    background-color: #f8f9fc;
+    color: #5a5c69;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-top: none;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 0.75rem 1rem;
+  }
+
+  #productsTable td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    border-top: none;
+    border-bottom: 1px solid #f1f1f5;
+  }
+
+  #productsTable tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .product-row {
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .product-row:hover {
+    background-color: rgba(28, 200, 138, 0.03);
+  }
+
+  .badge {
+    padding: 0.4em 0.65em;
+    font-weight: 500;
+    border-radius: 3px;
+    font-size: 0.75rem;
+  }
+
+  /* Status badge styling */
+  .status-container {
+    cursor: pointer;
+  }
+
+  .status-badge {
+    display: inline-block;
+    transition: all 0.2s;
+  }
+
+  .status-container:hover .status-badge {
+    opacity: 0.8;
+  }
+
+  /* Product name link styling */
+  .product-name-link {
+    color: #1cc88a;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .product-name-link:hover {
+    color: #169b6b;
+    text-decoration: none;
+  }
+
+  /* Remove table borders */
+  .table {
+    border: none;
+  }
+
+  .table td,
+  .table th {
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Adjust table header */
+  .table thead th {
+    border-bottom: 1px solid #e3e6f0;
+  }
+</style>
+
+{% endblock content %} {% block scripts %}
+<script>
+  // Function to cycle through statuses when clicking on a badge
+  function cycleStatus(badge, productId) {
+    // Get the current text
+    var currentText = badge.innerText.trim();
+    var newClass, newText;
+
+    // Determine the next status in the cycle
+    if (currentText === "Active") {
+      newClass = "badge-warning";
+      newText = "Low Stock";
+    } else if (currentText === "Low Stock") {
+      newClass = "badge-danger";
+      newText = "Out of Stock";
+    } else {
+      newClass = "badge-success";
+      newText = "Active";
+    }
+
+    // Remove all badge classes
+    badge.classList.remove("badge-success", "badge-warning", "badge-danger");
+
+    // Add the new class and text
+    badge.classList.add(newClass);
+    badge.innerText = newText;
+
+    // In a real application, you would send an AJAX request to update the status in the database
+    console.log(
+      "Status changed to: " + newText + " for product ID: " + productId
+    );
+  }
+  $(document).ready(function () {
+    // Initialize DataTable
+    $("#productsTable").DataTable({
+      pageLength: 10,
+      ordering: true,
+      info: true,
+      searching: true,
+    });
+
+    // Product search functionality
+    $("#productSearch").on("keyup", function () {
+      var value = $(this).val().toLowerCase();
+      $("#productsTable tbody tr").filter(function () {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+      });
+    });
+
+    // Product category filter
+    $("#productCategory").change(function () {
+      var category = $(this).val().toLowerCase();
+      if (category === "all") {
+        $("#productsTable tbody tr").show();
+      } else {
+        $("#productsTable tbody tr").each(function () {
+          var rowCategory = $(this)
+            .find("td:nth-child(3)")
+            .text()
+            .toLowerCase();
+          $(this).toggle(rowCategory === category);
+        });
+      }
+    });
+
+    // Product sort functionality
+    $("#productSort").change(function () {
+      var sortBy = $(this).val();
+      var table = $("#productsTable").DataTable();
+
+      switch (sortBy) {
+        case "name":
+          table.order([1, "asc"]).draw();
+          break;
+        case "price-asc":
+          table.order([3, "asc"]).draw();
+          break;
+        case "price-desc":
+          table.order([3, "desc"]).draw();
+          break;
+        case "stock":
+          table.order([4, "desc"]).draw();
+          break;
+        default:
+          table.order([1, "asc"]).draw();
+      }
+    });
+
+    // Status badge click handler - cycle through statuses
+    $(".status-container").click(function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      var statusContainer = $(this);
+      var badgeElement = statusContainer.find(".status-badge");
+      var currentStatus = statusContainer.data("status");
+      var productId = statusContainer.data("product-id");
+      var newStatus;
+
+      // Determine the next status in the cycle
+      if (currentStatus === "active") {
+        newStatus = "low";
+      } else if (currentStatus === "low") {
+        newStatus = "out";
+      } else {
+        newStatus = "active";
+      }
+
+      // Remove all badge classes
+      badgeElement.removeClass("badge-success badge-warning badge-danger");
+
+      // Update badge text and class based on the new status
+      if (newStatus === "active") {
+        badgeElement.addClass("badge-success").text("Active");
+      } else if (newStatus === "low") {
+        badgeElement.addClass("badge-warning").text("Low Stock");
+      } else if (newStatus === "out") {
+        badgeElement.addClass("badge-danger").text("Out of Stock");
+      }
+
+      // Update the data-status attribute
+      statusContainer.attr("data-status", newStatus);
+
+      // In a real application, you would send an AJAX request to update the status in the database
+      console.log(
+        "Status changed to: " + newStatus + " for product ID: " + productId
+      );
+    });
+
+    // Product row click handler
+    $(".product-row").click(function (e) {
+      // Only navigate if the click wasn't on a button, link, or status badge
+      if (
+        !$(e.target).is("button, a, input") &&
+        !$(e.target).closest(".status-container").length
+      ) {
+        var productId = $(this).data("product-id");
+        // This would navigate to the product detail page
+        // window.location.href = '/commercial/products/' + productId;
+        alert("Navigate to product details for ID: " + productId);
+      }
+    });
+  });
+</script>
+{% endblock scripts %}

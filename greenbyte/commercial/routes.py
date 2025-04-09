@@ -16,13 +16,19 @@ def dashboard():
 @login_required
 def clients():
     """Client Management page."""
-    return render_template('commercial/clients_updated.html', title='Client Management')
+    return render_template('commercial/clients_improved.html', title='Client Management')
 
 @commercial.route("/commercial/products")
 @login_required
 def products():
     """Product Management page."""
     return render_template('commercial/products.html', title='Product Management')
+
+@commercial.route("/commercial/test")
+@login_required
+def test():
+    """Test page for jQuery."""
+    return render_template('commercial/test.html', title='jQuery Test')
 
 @commercial.route("/commercial/orders")
 @login_required
