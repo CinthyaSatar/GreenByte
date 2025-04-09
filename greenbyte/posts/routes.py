@@ -37,7 +37,7 @@ posts = Blueprint('posts', __name__)
 @posts.route("/post/<int:postId>" )
 def post(postId):
     post = Post.query.get_or_404(postId)
-    return render_template("post.html", post=post)
+    return render_template("page_post.html", post=post)
 
 @posts.route("/post/<int:postId>/update", methods=['GET', 'POST'] )
 @login_required
@@ -111,7 +111,7 @@ def updatePost(postId):
         if post.tags:
             form.tags.data = ', '.join([tag.name for tag in post.tags])
 
-    return render_template("add_post.html", form=form, legend="Update Post")
+    return render_template("edit_post.html", form=form, legend="Update Post", post=post)
 
 
 
@@ -174,10 +174,10 @@ def newPost():
         flash("Your post has been created!", "success")
         return redirect(url_for('main.index'))
 
-    return render_template("add_post.html", form=form, legend="Create Post")
+    return render_template("add_page_post.html", form=form, legend="Create Post")
 
 
-@posts.route("/post/<int:postId>/delete", methods=['POST'] )
+@posts.route("/post/<int:postId>/delete", methods=['GET', 'POST'] )
 @login_required
 def deletePost(postId):
     post = Post.query.get_or_404(postId)
@@ -188,5 +188,34 @@ def deletePost(postId):
     flash("Your post has been deleted!", "success")
 
     return redirect(url_for('main.index'))
+
+
+@posts.route("/post/image/<int:image_id>/delete", methods=['GET', 'POST'])
+@login_required
+def delete_image(image_id):
+    # Get the image
+    image = PostImage.query.get_or_404(image_id)
+    post_id = request.args.get('post_id', 0, type=int)
+
+    # Check if the post exists and belongs to the current user
+    post = Post.query.get_or_404(post_id)
+    if post.author != current_user:
+        abort(403)
+
+    # Delete the image file from the filesystem
+    try:
+        image_path = os.path.join(current_app.root_path, 'static/post_pics', image.image_file)
+        if os.path.exists(image_path):
+            os.remove(image_path)
+    except Exception as e:
+        # Log the error but continue (we still want to remove the database record)
+        print(f"Error deleting image file: {e}")
+
+    # Delete the image record from the database
+    db.session.delete(image)
+    db.session.commit()
+
+    flash("Image has been removed from your post!", "success")
+    return redirect(url_for('posts.updatePost', postId=post_id))
 
 

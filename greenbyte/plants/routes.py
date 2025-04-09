@@ -12,7 +12,7 @@ posts = Blueprint('posts', __name__)
 @posts.route("/post/<int:postId>" )
 def post(postId):
     post = Post.query.get_or_404(postId)
-    return render_template("post.html", post=post)
+    return render_template("page_post.html", post=post)
 
 @posts.route("/post/<int:postId>/update", methods=['GET', 'POST'] )
 @login_required
@@ -31,7 +31,7 @@ def updatePost(postId):
         form.title.data = post.title
         form.content.data = post.content
 
-    return render_template("add_post.html", form=form, legend="Update Post")
+    return render_template("add_page_post.html", form=form, legend="Update Post")
 
 
 
@@ -45,7 +45,7 @@ def newPost():
         db.session.commit()
         flash("Your post has been created!", "success")
         return redirect(url_for('main.index'))
-    return render_template("add_post.html", form=form, legend="Create Post")
+    return render_template("add_page_post.html", form=form, legend="Create Post")
 
 
 @posts.route("/post/<int:postId>/delete", methods=['POST'] )

@@ -999,6 +999,79 @@
   </script>
   <!-- Toast container for notifications -->
   <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Function to handle sharing a post
+    function sharePost(button) {
+      const postUrl = button.getAttribute('data-post-url');
+      const shareLink = document.getElementById('shareLink');
+      shareLink.value = postUrl;
+
+      // Configure and show the toast
+      const shareToastEl = document.getElementById('shareToast');
+      const shareToast = new bootstrap.Toast(shareToastEl, {
+        animation: true,
+        autohide: true,
+        delay: 5000
+      });
+
+      // Add a subtle entrance animation
+      shareToastEl.style.opacity = '0';
+      shareToastEl.style.transform = 'translateY(-20px)';
+      shareToastEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+      shareToast.show();
+
+      // Animate in after a tiny delay
+      setTimeout(() => {
+        shareToastEl.style.opacity = '1';
+        shareToastEl.style.transform = 'translateY(0)';
+      }, 50);
+
+      // Select the text for easy copying
+      shareLink.select();
+    }
+
+    // Function to copy the share link
+    function copyShareLink() {
+      const shareLink = document.getElementById('shareLink');
+      shareLink.select();
+      document.execCommand('copy');
+
+      // Change the button text temporarily with a subtle animation
+      const copyButton = document.querySelector('#shareLink + button');
+      const originalHTML = copyButton.innerHTML;
+      const originalBg = copyButton.style.backgroundColor;
+
+      // Prepare for animation
+      copyButton.style.transition = 'all 0.3s ease';
+
+      // Animate to success state
+      copyButton.innerHTML = '<i class="fas fa-check"></i>';
+      copyButton.style.backgroundColor = 'rgba(19, 141, 97, 0.2)';
+      copyButton.style.borderColor = 'rgba(19, 141, 97, 0.5)';
+      copyButton.style.color = '#138d61';
+
+      // Add a subtle feedback message
+      const feedbackMsg = document.querySelector('.toast-body small');
+      const originalMsg = feedbackMsg.innerHTML;
+      feedbackMsg.innerHTML = 'Link copied to clipboard!';
+      feedbackMsg.style.color = '#138d61';
+      feedbackMsg.style.transition = 'color 0.3s ease';
+
+      // Reset after 2 seconds with animation
+      setTimeout(() => {
+        copyButton.innerHTML = originalHTML;
+        copyButton.style.backgroundColor = originalBg;
+        copyButton.style.borderColor = 'rgba(28, 200, 138, 0.2)';
+
+        // Reset feedback message
+        feedbackMsg.innerHTML = originalMsg;
+        feedbackMsg.style.color = '';
+      }, 2000);
+    }
+  </script>
 </body>
 
 </html>
@@ -1123,3 +1196,23 @@
     }
   }
 </style>
+
+  <!-- Toast container for notifications -->
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div id="shareToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px);">
+      <div class="toast-header" style="background-color: rgba(19, 141, 97, 0.95); color: white;">
+        <i class="fas fa-link me-2"></i>
+        <strong class="me-auto">Share Link</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" style="background-color: rgba(255, 255, 255, 0.7);">
+        <div class="input-group">
+          <input type="text" id="shareLink" class="form-control" style="background-color: rgba(255, 255, 255, 0.8);" readonly>
+          <button class="btn btn-outline-success" type="button" onclick="copyShareLink()" style="background-color: rgba(255, 255, 255, 0.8);">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <small class="text-muted mt-2 d-block">Click the button to copy the link</small>
+      </div>
+    </div>
+  </div>

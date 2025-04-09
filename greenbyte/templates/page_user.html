@@ -76,9 +76,11 @@
                   <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
                     <i class="fas fa-seedling"></i> {{ post.garden.plants|length }} Plants
                   </span>
+                  {% if post.garden.last_updated %}
                   <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
-                    <i class="fas fa-clock"></i> Started {{ post.garden.created_at.strftime('%B %Y') }}
+                    <i class="fas fa-clock"></i> Updated {{ post.garden.last_updated.strftime('%B %Y') }}
                   </span>
+                  {% endif %}
                 </div>
                 {% endif %}
 
