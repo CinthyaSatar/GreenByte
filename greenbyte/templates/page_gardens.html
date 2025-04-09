@@ -965,8 +965,9 @@
 </div> <!-- Closing div for row -->
 {% endblock content%}
 
-{% include 'gardens_scripts.html' %}
 {% block scripts %}
+{{ super() }}
+{% include 'gardens_scripts.html' %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Load more events functionality
