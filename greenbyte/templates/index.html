@@ -207,20 +207,16 @@
                             {% endif %}
                         </div>
                         <div class="d-flex gap-3">
-                            <button class="btn btn-sm"
+                            <button class="btn btn-sm like-btn"
+                                    data-post-id="{{ post.id }}"
+                                    onclick="toggleLike(this)"
                                     style="background-color: rgba(28, 200, 138, 0.1);
                                            color: #1cc88a;
                                            border-radius: 0.5rem;
                                            border: 1px solid rgba(28, 200, 138, 0.2);">
-                                <i class="far fa-heart me-1"></i> Like
+                                <i class="far fa-heart me-1"></i> <span class="like-text">Like</span> <span class="like-count"></span>
                             </button>
-                            <button class="btn btn-sm"
-                                    style="background-color: rgba(28, 200, 138, 0.1);
-                                           color: #1cc88a;
-                                           border-radius: 0.5rem;
-                                           border: 1px solid rgba(28, 200, 138, 0.2);">
-                                <i class="far fa-comment me-1"></i> Comment
-                            </button>
+
                             <button class="btn btn-sm share-btn"
                                     data-post-url="{{ url_for('posts.post', postId=post.id, _external=True) }}"
                                     onclick="sharePost(this)"

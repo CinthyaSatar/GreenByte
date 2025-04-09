@@ -645,6 +645,13 @@ post_tag = db.Table('post_tag',
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
 )
 
+# Many-to-Many Relationship for Post Likes
+post_like = db.Table('post_like',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=now_in_timezone)
+)
+
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -684,9 +691,50 @@ class Post(db.Model):
     plants = db.relationship('PostPlant', backref='post', lazy=True, cascade='all, delete-orphan')
     garden = db.relationship('Garden', backref='posts', lazy=True)
     tags = db.relationship('Tag', secondary=post_tag, back_populates='posts', lazy=True)
+    likes = db.relationship('User', secondary=post_like, backref=db.backref('liked_posts', lazy='dynamic'), lazy='dynamic')
+    comments = db.relationship('Comment', backref='post', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"Post({self.title}, {self.date_posted})"
+
+    def like(self, user):
+        """Add a like to the post"""
+        if not self.is_liked_by(user):
+            self.likes.append(user)
+            return True
+        return False
+
+    def unlike(self, user):
+        """Remove a like from the post"""
+        if self.is_liked_by(user):
+            self.likes.remove(user)
+            return True
+        return False
+
+    def is_liked_by(self, user):
+        """Check if the post is liked by a user"""
+        return self.likes.filter(post_like.c.user_id == user.id).count() > 0
+
+    @property
+    def like_count(self):
+        """Get the number of likes for the post"""
+        return self.likes.count()
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    date_posted = db.Column(db.DateTime, default=now_in_timezone)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
+
+    # Relationships
+    author = db.relationship('User', backref='comments')
+    replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy='dynamic')
+
+    def __repr__(self):
+        return f"Comment('{self.content[:20]}...', {self.date_posted})"
+
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)

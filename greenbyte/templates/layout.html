@@ -1071,6 +1071,88 @@
         feedbackMsg.style.color = '';
       }, 2000);
     }
+
+    // Function to handle liking/unliking posts
+    function toggleLike(button) {
+      const postId = button.getAttribute('data-post-id');
+      const likeIcon = button.querySelector('i');
+      const likeText = button.querySelector('.like-text');
+      const likeCount = button.querySelector('.like-count');
+      const isLiked = likeIcon.classList.contains('fas');
+
+      // Determine the action based on current state
+      const action = isLiked ? 'unlike' : 'like';
+
+      // Send the request to the server
+      fetch(`/post/${postId}/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update the button appearance
+          if (action === 'like') {
+            likeIcon.classList.remove('far');
+            likeIcon.classList.add('fas');
+            likeText.textContent = 'Liked';
+            button.style.backgroundColor = 'rgba(19, 141, 97, 0.2)';
+          } else {
+            likeIcon.classList.remove('fas');
+            likeIcon.classList.add('far');
+            likeText.textContent = 'Like';
+            button.style.backgroundColor = 'rgba(28, 200, 138, 0.1)';
+          }
+
+          // Update the like count
+          if (data.count > 0) {
+            likeCount.textContent = `(${data.count})`;
+          } else {
+            likeCount.textContent = '';
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    }
+
+    // Initialize like buttons when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      const likeButtons = document.querySelectorAll('.like-btn');
+
+      likeButtons.forEach(button => {
+        const postId = button.getAttribute('data-post-id');
+
+        // Get the initial like status
+        fetch(`/post/${postId}/like_status`)
+          .then(response => response.json())
+          .then(data => {
+            const likeIcon = button.querySelector('i');
+            const likeText = button.querySelector('.like-text');
+            const likeCount = button.querySelector('.like-count');
+
+            // Update button appearance based on like status
+            if (data.is_liked) {
+              likeIcon.classList.remove('far');
+              likeIcon.classList.add('fas');
+              likeText.textContent = 'Liked';
+              button.style.backgroundColor = 'rgba(19, 141, 97, 0.2)';
+            }
+
+            // Update like count
+            if (data.count > 0) {
+              likeCount.textContent = `(${data.count})`;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+    });
   </script>
 </body>
 

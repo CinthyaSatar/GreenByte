@@ -158,14 +158,16 @@
                 {% endif %}
               </div>
               <div class="d-flex gap-3">
-                <button class="btn btn-sm"
+                <button class="btn btn-sm like-btn"
+                        data-post-id="{{ post.id }}"
+                        onclick="toggleLike(this)"
                         style="background-color: rgba(28, 200, 138, 0.1);
                                color: #1cc88a;
                                border-radius: 0.5rem;
                                border: 1px solid rgba(28, 200, 138, 0.2);">
-                  <i class="far fa-heart me-1"></i> Like
+                  <i class="far fa-heart me-1"></i> <span class="like-text">Like</span> <span class="like-count"></span>
                 </button>
-                <button class="btn btn-sm"
+                <button class="btn btn-sm" id="comment-button" onclick="scrollToCommentForm()"
                         style="background-color: rgba(28, 200, 138, 0.1);
                                color: #1cc88a;
                                border-radius: 0.5rem;
@@ -186,9 +188,194 @@
           </div>
         </div>
       </div>
+
+      <!-- Comments Section -->
+      <div class="card shadow-sm mt-4 mb-4" style="background: white;
+                  border-radius: 1.5rem !important;
+                  box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;">
+        <div class="card-body p-4">
+          <h4 class="mb-4">Comments</h4>
+
+          <!-- Comment Form -->
+          {% if current_user.is_authenticated %}
+          <div class="mb-4" id="comment-form-container">
+            <form method="POST" action="{{ url_for('posts.post', postId=post.id) }}" id="comment-form">
+              {{ form.hidden_tag() }}
+              <div class="d-flex">
+                <img src="{{ url_for('static', filename='profilePics/' + current_user.image_file) }}"
+                    class="rounded-circle me-3 align-self-start"
+                    alt="{{ current_user.firstName }} {{ current_user.lastName }}"
+                    style="width: 40px; height: 40px; object-fit: cover;">
+                <div class="flex-grow-1">
+                  <div class="form-group mb-2">
+                    {{ form.content(class="form-control", rows=3, placeholder="Write a comment...") }}
+                  </div>
+                  {{ form.parent_id }}
+                  <div class="text-end">
+                    {{ form.submit(class="btn btn-success") }}
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          {% else %}
+          <div class="alert alert-info mb-4">
+            <a href="{{ url_for('users.login') }}">Log in</a> to leave a comment.
+          </div>
+          {% endif %}
+
+          <!-- Comments List -->
+          <div id="comments-container">
+            {% if comments %}
+              {% for comment in comments %}
+                <div class="comment mb-4" id="comment-{{ comment.id }}">
+                  <div class="d-flex">
+                    <img src="{{ url_for('static', filename='profilePics/' + comment.author.image_file) }}"
+                        class="rounded-circle me-3 align-self-start"
+                        alt="{{ comment.author.firstName }} {{ comment.author.lastName }}"
+                        style="width: 40px; height: 40px; object-fit: cover;">
+                    <div class="flex-grow-1">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h6 class="mb-0 fw-bold">{{ comment.author.firstName }} {{ comment.author.lastName }}</h6>
+                        <small class="text-muted">{{ comment.date_posted.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                      </div>
+                      <p class="mb-2">{{ comment.content }}</p>
+                      <div class="d-flex">
+                        <button class="btn btn-sm text-muted reply-btn" data-comment-id="{{ comment.id }}">
+                          <i class="fas fa-reply me-1"></i> Reply
+                        </button>
+                        {% if current_user == comment.author %}
+                        <form action="{{ url_for('posts.delete_comment', comment_id=comment.id) }}" method="POST" class="ms-2">
+                          <button type="submit" class="btn btn-sm text-danger" onclick="return confirm('Are you sure you want to delete this comment?')">
+                            <i class="fas fa-trash-alt me-1"></i> Delete
+                          </button>
+                        </form>
+                        {% endif %}
+                      </div>
+
+                      <!-- Reply Form (initially hidden) -->
+                      <div class="reply-form mt-3" id="reply-form-{{ comment.id }}" style="display: none;">
+                        <form method="POST" action="{{ url_for('posts.reply_comment', comment_id=comment.id) }}">
+                          {{ form.hidden_tag() }}
+                          <div class="form-group mb-2">
+                            {{ form.content(class="form-control", rows=2, placeholder="Write a reply...") }}
+                          </div>
+                          <div class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-secondary cancel-reply me-2">Cancel</button>
+                            {{ form.submit(class="btn btn-sm btn-success") }}
+                          </div>
+                        </form>
+                      </div>
+
+                      <!-- Replies -->
+                      {% if comment.replies.count() > 0 %}
+                      <div class="replies mt-3 ms-4 ps-2 border-start border-2" style="border-color: rgba(28, 200, 138, 0.3) !important;">
+                        {% for reply in comment.replies %}
+                        <div class="reply mb-3" id="comment-{{ reply.id }}">
+                          <div class="d-flex">
+                            <img src="{{ url_for('static', filename='profilePics/' + reply.author.image_file) }}"
+                                class="rounded-circle me-2 align-self-start"
+                                alt="{{ reply.author.firstName }} {{ reply.author.lastName }}"
+                                style="width: 30px; height: 30px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                              <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0 fw-bold small">{{ reply.author.firstName }} {{ reply.author.lastName }}</h6>
+                                <small class="text-muted">{{ reply.date_posted.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                              </div>
+                              <p class="mb-1 small">{{ reply.content }}</p>
+                              {% if current_user == reply.author %}
+                              <div>
+                                <form action="{{ url_for('posts.delete_comment', comment_id=reply.id) }}" method="POST" class="d-inline">
+                                  <button type="submit" class="btn btn-sm text-danger p-0" onclick="return confirm('Are you sure you want to delete this reply?')">
+                                    <small><i class="fas fa-trash-alt me-1"></i> Delete</small>
+                                  </button>
+                                </form>
+                              </div>
+                              {% endif %}
+                            </div>
+                          </div>
+                        </div>
+                        {% endfor %}
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="text-center text-muted py-4">
+                <p>No comments yet. Be the first to comment!</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+<script>
+  // Function to scroll to comment form and focus on the textarea
+  function scrollToCommentForm() {
+    const commentForm = document.getElementById('comment-form-container');
+    const textarea = document.querySelector('#comment-form textarea');
+
+    if (commentForm) {
+      // Scroll to the form with smooth animation
+      commentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Focus on the textarea after scrolling completes
+      setTimeout(() => {
+        if (textarea) {
+          textarea.focus();
+
+          // Add a subtle highlight effect
+          textarea.style.transition = 'box-shadow 0.3s ease';
+          textarea.style.boxShadow = '0 0 0 3px rgba(28, 200, 138, 0.3)';
+
+          // Remove highlight after 1 second
+          setTimeout(() => {
+            textarea.style.boxShadow = '';
+          }, 1000);
+        }
+      }, 500);
+    } else {
+      // If user is not logged in, scroll to the login message
+      const loginMessage = document.querySelector('.alert-info');
+      if (loginMessage) {
+        loginMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Reply button functionality
+    const replyButtons = document.querySelectorAll('.reply-btn');
+    const cancelButtons = document.querySelectorAll('.cancel-reply');
+
+    replyButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const commentId = this.getAttribute('data-comment-id');
+        const replyForm = document.getElementById(`reply-form-${commentId}`);
+        replyForm.style.display = 'block';
+
+        // Focus on the textarea
+        const textarea = replyForm.querySelector('textarea');
+        if (textarea) {
+          setTimeout(() => {
+            textarea.focus();
+          }, 100);
+        }
+      });
+    });
+
+    cancelButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const replyForm = this.closest('.reply-form');
+        replyForm.style.display = 'none';
+      });
+    });
+  });
+</script>
 
 {% endblock content %}

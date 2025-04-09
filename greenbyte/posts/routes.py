@@ -1,9 +1,9 @@
 import os
 import secrets
 from PIL import Image
-from flask import Blueprint, abort, render_template, flash, redirect, url_for, request, current_app
-from greenbyte.models import Post, PostImage, Tag
-from greenbyte.posts.forms import PostForm
+from flask import Blueprint, abort, render_template, flash, redirect, url_for, request, current_app, jsonify
+from greenbyte.models import Post, PostImage, Tag, Comment
+from greenbyte.posts.forms import PostForm, CommentForm
 from greenbyte import db
 from flask_login import current_user, login_required
 
@@ -34,10 +34,101 @@ def save_picture(form_picture):
 
 posts = Blueprint('posts', __name__)
 
-@posts.route("/post/<int:postId>" )
+@posts.route("/post/<int:postId>", methods=['GET', 'POST'])
 def post(postId):
     post = Post.query.get_or_404(postId)
-    return render_template("page_post.html", post=post)
+    form = CommentForm()
+
+    # Get all top-level comments (no parent_id)
+    comments = Comment.query.filter_by(post_id=postId, parent_id=None).order_by(Comment.date_posted.desc()).all()
+
+    print(f"Request method: {request.method}")
+    if request.method == 'POST':
+        print(f"Form data: {request.form}")
+        print(f"Form validation: {form.validate()}")
+        if form.errors:
+            print(f"Form errors: {form.errors}")
+
+    if form.validate_on_submit() and current_user.is_authenticated:
+        print("Form validated successfully, creating comment")
+        comment = Comment(
+            content=form.content.data,
+            post_id=postId,
+            user_id=current_user.id,
+            parent_id=form.parent_id.data if form.parent_id.data else None
+        )
+        db.session.add(comment)
+        db.session.commit()
+        flash('Your comment has been posted!', 'success')
+        return redirect(url_for('posts.post', postId=postId))
+    else:
+        print("Form validation failed or user not authenticated")
+
+    return render_template("page_post.html", post=post, form=form, comments=comments)
+
+@posts.route("/post/<int:post_id>/like", methods=['POST'])
+@login_required
+def like_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.like(current_user):
+        db.session.commit()
+        return jsonify({'success': True, 'count': post.like_count})
+    return jsonify({'success': False, 'message': 'Post already liked'}), 400
+
+@posts.route("/post/<int:post_id>/unlike", methods=['POST'])
+@login_required
+def unlike_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.unlike(current_user):
+        db.session.commit()
+        return jsonify({'success': True, 'count': post.like_count})
+    return jsonify({'success': False, 'message': 'Post not liked'}), 400
+
+@posts.route("/post/<int:post_id>/like_status", methods=['GET'])
+@login_required
+def post_like_status(post_id):
+    post = Post.query.get_or_404(post_id)
+    return jsonify({
+        'is_liked': post.is_liked_by(current_user),
+        'count': post.like_count
+    })
+
+@posts.route("/comment/<int:comment_id>/reply", methods=['POST'])
+@login_required
+def reply_comment(comment_id):
+    parent_comment = Comment.query.get_or_404(comment_id)
+    post_id = parent_comment.post_id
+    form = CommentForm()
+
+    if form.validate_on_submit():
+        reply = Comment(
+            content=form.content.data,
+            post_id=post_id,
+            user_id=current_user.id,
+            parent_id=comment_id
+        )
+        db.session.add(reply)
+        db.session.commit()
+        flash('Your reply has been posted!', 'success')
+
+    return redirect(url_for('posts.post', postId=post_id))
+
+@posts.route("/comment/<int:comment_id>/delete", methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    post_id = comment.post_id
+
+    if comment.author != current_user:
+        abort(403)
+
+    db.session.delete(comment)
+    db.session.commit()
+    flash('Your comment has been deleted!', 'success')
+
+    return redirect(url_for('posts.post', postId=post_id))
+
+
 
 @posts.route("/post/<int:postId>/update", methods=['GET', 'POST'] )
 @login_required

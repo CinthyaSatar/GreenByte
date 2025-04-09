@@ -1,10 +1,16 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField, TextAreaField, SelectField, IntegerField, BooleanField
+from wtforms import StringField, SubmitField, TextAreaField, SelectField, IntegerField, BooleanField, HiddenField
 from wtforms.validators import DataRequired, Length, Optional
-from greenbyte.models import Garden, Tag
+from greenbyte.models import Garden, Tag, Comment
 from flask_login import current_user
 from greenbyte import db
+
+class CommentForm(FlaskForm):
+    content = TextAreaField('Comment', validators=[DataRequired(), Length(min=1, max=1000)])
+    parent_id = HiddenField('Parent Comment ID')
+    submit = SubmitField('Post Comment')
+
 
 class PostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(min=3, max=100)])
