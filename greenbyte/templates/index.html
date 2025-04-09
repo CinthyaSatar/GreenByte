@@ -63,13 +63,21 @@
                   border-radius: 1.5rem !important;
                   box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;">
             <div class="position-relative">
-                <div class="position-absolute top-0 end-0 m-3">
-                    <span class="badge rounded-pill bg-success px-3 py-2">{{ post.garden_type }}</span>
-                </div>
 
                 {% if post.images %}
                 <!-- Image Carousel -->
                 <div id="carousel{{ post.id }}" class="carousel slide" data-bs-ride="carousel">
+                    {% if post.garden %}
+                    <div class="position-absolute top-0 end-0 m-3" style="z-index: 15;">
+                        <a href="#" class="text-decoration-none">
+                            <span class="badge bg-success px-3 py-2"
+                                  style="border-radius: 0.75rem;
+                                         box-shadow: 0 3px 8px rgba(28, 200, 138, 0.3);">
+                                <i class="fas fa-leaf me-1"></i> {{ post.garden.name }}
+                            </span>
+                        </a>
+                    </div>
+                    {% endif %}
                     <div class="carousel-inner">
                         {% for image in post.images %}
                         <div class="carousel-item {% if loop.first %}active{% endif %}">
@@ -120,7 +128,18 @@
                 {% endif %}
             </div>
 
-            <div class="card-body p-4">
+            <div class="card-body p-4 position-relative">
+                {% if post.garden and not post.images %}
+                <div class="position-absolute top-0 end-0 mt-4 me-4" style="z-index: 15;">
+                    <a href="#" class="text-decoration-none">
+                        <span class="badge bg-success px-3 py-2"
+                              style="border-radius: 0.75rem;
+                                     box-shadow: 0 3px 8px rgba(28, 200, 138, 0.3);">
+                            <i class="fas fa-leaf me-1"></i> {{ post.garden.name }}
+                        </span>
+                    </a>
+                </div>
+                {% endif %}
                 <div class="d-flex align-items-center mb-2">
                     <img src="{{ url_for('static', filename='profilePics/' + post.author.image_file) }}"
                         class="rounded-circle me-2" alt="{{ post.author.firstName }} {{ post.author.lastName }}"
@@ -135,7 +154,11 @@
                         <small class="text-muted">{{ post.formatted_date }} · {{ post.formatted_read }}</small>
                     </div>
                 </div>
-                <h4 class="font-weight-bold text-success mb-2">{{ post.title }}</h4>
+                <h4 class="font-weight-bold mb-2">
+                    <a href="{{ url_for('posts.post', postId=post.id) }}" class="text-success text-decoration-none" style="transition: all 0.2s ease; display: inline-block; border-bottom: 2px solid transparent;" onmouseover="this.style.transform='translateY(-2px)';this.style.color='#15a76c';this.style.borderBottomColor='#15a76c';" onmouseout="this.style.transform='translateY(0)';this.style.color='';this.style.borderBottomColor='transparent';" >
+                        {{ post.title }}
+                    </a>
+                </h4>
 
                 <!-- Post Tags -->
                 {% if post.tags %}
@@ -176,49 +199,34 @@
 
                 <p class="mb-3">{{ post.content }}</p>
 
-                <!-- Plant/Garden Data Section -->
-                <div class="border-top pt-3">
-                    <!-- Growing Conditions -->
-                    <div class="d-flex gap-2 mb-3">
-                        <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
-                            <i class="fas fa-sun text-warning"></i> {{ post.sunlight }}
-                        </span>
-                        <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
-                            <i class="fas fa-tint text-primary"></i> {{ post.watering }}
-                        </span>
-                        <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
-                            <i class="fas fa-thermometer-half text-danger"></i> {{ post.zone }}
-                        </span>
-                    </div>
-
-                    <!-- Plants List -->
-                    <div class="d-flex flex-wrap gap-2">
-                        {% for plant in post.plants %}
-                        <div class="bg-light p-2 rounded" style="border: 1px dashed #1cc88a;">
-                            <small class="text-success">
-                                <i class="fas fa-leaf"></i> {{ plant.name }}
-                                <span class="badge bg-warning ms-1">{{ plant.status }}</span>
-                            </small>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
 
                 <!-- Post Category and Engagement -->
                 <div class="border-top mt-3 pt-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="badge bg-light text-success p-2">
-                            <i class="fas fa-tag"></i> {{ post.category }}
+                        <span class="badge p-2" style="background-color: rgba(28, 200, 138, 0.1); color: #1cc88a; border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
+                            <i class="fas fa-folder-open me-1"></i> {{ post.category }}
                         </span>
                         <div class="d-flex gap-3">
-                            <button class="btn btn-sm btn-light">
-                                <i class="far fa-heart text-success"></i> Like
+                            <button class="btn btn-sm"
+                                    style="background-color: rgba(28, 200, 138, 0.1);
+                                           color: #1cc88a;
+                                           border-radius: 0.5rem;
+                                           border: 1px solid rgba(28, 200, 138, 0.2);">
+                                <i class="far fa-heart me-1"></i> Like
                             </button>
-                            <button class="btn btn-sm btn-light">
-                                <i class="far fa-comment text-success"></i> Comment
+                            <button class="btn btn-sm"
+                                    style="background-color: rgba(28, 200, 138, 0.1);
+                                           color: #1cc88a;
+                                           border-radius: 0.5rem;
+                                           border: 1px solid rgba(28, 200, 138, 0.2);">
+                                <i class="far fa-comment me-1"></i> Comment
                             </button>
-                            <button class="btn btn-sm btn-light">
-                                <i class="far fa-share-square text-success"></i> Share
+                            <button class="btn btn-sm"
+                                    style="background-color: rgba(28, 200, 138, 0.1);
+                                           color: #1cc88a;
+                                           border-radius: 0.5rem;
+                                           border: 1px solid rgba(28, 200, 138, 0.2);">
+                                <i class="far fa-share-square me-1"></i> Share
                             </button>
                         </div>
                     </div>
