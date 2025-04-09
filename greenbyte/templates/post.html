@@ -15,6 +15,18 @@
         {% endif %}
       </div>
       <h2 class="article-title">{{ post.title }}</h2>
+
+      <!-- Display tags if available -->
+      {% if post.tags %}
+      <div class="mb-3">
+        {% for tag in post.tags %}
+          <span class="badge bg-success text-white me-1" style="border-radius: 0.5rem;">
+            <i class="fas fa-tag me-1"></i> {{ tag.name }}
+          </span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
       <p class="article-content">{{ post.content }}</p>
     </div>
   </article>

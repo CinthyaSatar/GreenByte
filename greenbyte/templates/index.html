@@ -57,15 +57,16 @@
         </div>
 
 
+
         {% for post in posts.items %}
-        <div class="card shadow-sm mb-4" style="background: white; 
-                  border-radius: 1.5rem !important; 
+        <div class="card shadow-sm mb-4" style="background: white;
+                  border-radius: 1.5rem !important;
                   box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;">
             <div class="position-relative">
                 <div class="position-absolute top-0 end-0 m-3">
                     <span class="badge rounded-pill bg-success px-3 py-2">{{ post.garden_type }}</span>
                 </div>
-                
+
                 {% if post.images %}
                 <!-- Image Carousel -->
                 <div id="carousel{{ post.id }}" class="carousel slide" data-bs-ride="carousel">
@@ -82,35 +83,35 @@
 
                 <!-- Custom Carousel Controls -->
                 {% if post.images|length > 1 %}
-                <div class="d-flex justify-content-between align-items-center px-4 py-2" 
+                <div class="d-flex justify-content-between align-items-center px-4 py-2"
                      style="background-color: #f8f9fc; border-bottom: 1px solid #e3e6f0;">
                     <!-- Left Control -->
-                    <button type="button" 
-                            data-bs-target="#carousel{{ post.id }}" 
+                    <button type="button"
+                            data-bs-target="#carousel{{ post.id }}"
                             data-bs-slide="prev"
-                            class="btn btn-sm btn-light rounded-circle" 
+                            class="btn btn-sm btn-light rounded-circle"
                             style="width: 32px; height: 32px; padding: 0; border: 1px solid #e3e6f0;">
                         <i class="fas fa-chevron-left text-success"></i>
                     </button>
-                    
+
                     <!-- Indicators -->
                     <div class="carousel-indicators position-relative bottom-0 m-0" style="z-index: 0;">
                         {% for image in post.images %}
-                        <button type="button" 
-                                data-bs-target="#carousel{{ post.id }}" 
-                                data-bs-slide-to="{{ loop.index0 }}" 
+                        <button type="button"
+                                data-bs-target="#carousel{{ post.id }}"
+                                data-bs-slide-to="{{ loop.index0 }}"
                                 class="{% if loop.first %}active{% endif %}"
                                 style="width: 8px; height: 8px; border-radius: 50%; background-color: #1cc88a;"
-                                {% if loop.first %}aria-current="true"{% endif %} 
+                                {% if loop.first %}aria-current="true"{% endif %}
                                 aria-label="Slide {{ loop.index }}"></button>
                         {% endfor %}
                     </div>
 
                     <!-- Right Control -->
-                    <button type="button" 
-                            data-bs-target="#carousel{{ post.id }}" 
+                    <button type="button"
+                            data-bs-target="#carousel{{ post.id }}"
                             data-bs-slide="next"
-                            class="btn btn-sm btn-light rounded-circle" 
+                            class="btn btn-sm btn-light rounded-circle"
                             style="width: 32px; height: 32px; padding: 0; border: 1px solid #e3e6f0;">
                         <i class="fas fa-chevron-right text-success"></i>
                     </button>
@@ -118,7 +119,7 @@
                 {% endif %}
                 {% endif %}
             </div>
-            
+
             <div class="card-body p-4">
                 <div class="d-flex align-items-center mb-2">
                     <img src="{{ url_for('static', filename='profilePics/' + post.author.image_file) }}"
@@ -126,7 +127,7 @@
                         style="width: 40px; height: 40px;">
                     <div>
                         <h6 class="mb-0 fw-bold">
-                            <a href="{{ url_for('users.page_user', username=post.author.username) }}" 
+                            <a href="{{ url_for('users.page_user', username=post.author.username) }}"
                                class="text-decoration-none text-dark hover-success">
                                 {{ post.author.firstName }} {{ post.author.lastName }}
                             </a>
@@ -136,21 +137,42 @@
                 </div>
                 <h4 class="font-weight-bold text-success mb-2">{{ post.title }}</h4>
 
-                <!-- Garden Details Tags -->
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
-                        <i class="fas fa-map-marker-alt"></i> {{ post.garden.name }}
+                <!-- Post Tags -->
+                {% if post.tags %}
+                <div class="mb-3">
+                    {% for tag in post.tags %}
+                    <span class="badge bg-success text-white me-1" style="border-radius: 0.5rem;">
+                        <i class="fas fa-tag me-1"></i> {{ tag.name }}
                     </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Garden Details Tags -->
+                {% if post.garden_id or post.garden_type or post.garden_size or post.plant_count or post.start_date_formatted %}
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    {% if post.garden_type %}
+                    <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
+                        <i class="fas fa-map-marker-alt"></i> {{ post.garden_type }}
+                    </span>
+                    {% endif %}
+                    {% if post.garden_size %}
                     <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
                         <i class="fas fa-ruler-combined"></i> {{ post.garden_size }} sq ft
                     </span>
+                    {% endif %}
+                    {% if post.plant_count %}
                     <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
                         <i class="fas fa-seedling"></i> {{ post.plant_count }} Plants
                     </span>
+                    {% endif %}
+                    {% if post.start_date_formatted %}
                     <span class="badge bg-light text-success p-2" style="border-radius: 0.35rem !important;">
                         <i class="fas fa-clock"></i> Started {{ post.start_date_formatted }}
                     </span>
+                    {% endif %}
                 </div>
+                {% endif %}
 
                 <p class="mb-3">{{ post.content }}</p>
 
@@ -209,12 +231,12 @@
         {% if posts.pages > 1 %}
         <div class="d-flex justify-content-center gap-2 mb-4">
             {% if posts.page > 1 %}
-            <a class="btn btn-outline-success" 
+            <a class="btn btn-outline-success"
                href="{{ url_for('main.index', page=1) }}"
                style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
                 <i class="fas fa-angle-double-left"></i>
             </a>
-            <a class="btn btn-outline-success" 
+            <a class="btn btn-outline-success"
                href="{{ url_for('main.index', page=posts.page - 1) }}"
                style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
                 <i class="fas fa-angle-left"></i>
@@ -223,13 +245,13 @@
 
             {% for num in range(max(1, posts.page - 2), min(posts.pages + 1, posts.page + 3)) %}
                 {% if num == posts.page %}
-                <a class="btn btn-success" 
+                <a class="btn btn-success"
                    href="{{ url_for('main.index', page=num) }}"
                    style="border-radius: 0.5rem; min-width: 40px;">
                     {{ num }}
                 </a>
                 {% else %}
-                <a class="btn btn-outline-success" 
+                <a class="btn btn-outline-success"
                    href="{{ url_for('main.index', page=num) }}"
                    style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2); min-width: 40px;">
                     {{ num }}
@@ -238,12 +260,12 @@
             {% endfor %}
 
             {% if posts.page < posts.pages %}
-            <a class="btn btn-outline-success" 
+            <a class="btn btn-outline-success"
                href="{{ url_for('main.index', page=posts.page + 1) }}"
                style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
                 <i class="fas fa-angle-right"></i>
             </a>
-            <a class="btn btn-outline-success" 
+            <a class="btn btn-outline-success"
                href="{{ url_for('main.index', page=posts.pages) }}"
                style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);">
                 <i class="fas fa-angle-double-right"></i>
@@ -255,6 +277,39 @@
 
     <!-- Right Column - Garden Events -->
     <div class="col-xl-4 col-lg-5">
+        <!-- Community Card -->
+        <div class="card shadow-sm mb-4" style="background: white;
+                      border: 1px solid rgba(28, 200, 138, 0.2);
+                      border-radius: 1rem !important;
+                      border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+                      box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-success mb-0">Be Part of Our Community</h4>
+                    <a href="{{ url_for('posts.newPost') }}" class="btn btn-success"
+                       style="border-radius: 0.75rem; padding: 0.5rem 1rem; font-weight: 500; white-space: nowrap;">
+                        <i class="fas fa-plus me-1"></i> Create a Post
+                    </a>
+                </div>
+                <p class="text-muted mb-3">Share your gardening journey, tips, and experiences with fellow gardeners. Your knowledge could help someone grow their perfect garden!</p>
+
+                <div class="mt-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-leaf text-success me-2"></i>
+                        <span>Share gardening tips and tricks</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-camera text-success me-2"></i>
+                        <span>Post photos of your garden</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-users text-success me-2"></i>
+                        <span>Connect with other gardeners</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Events Card -->
         <div class="card shadow-sm mb-4" style="position: sticky;
                       top: 1rem;
@@ -267,9 +322,9 @@
                       box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
             <div class="card-body p-4">
                 <h4 class="text-success mb-3">Upcoming Garden Events</h4>
-    
+
                 <!-- Event Items remain the same -->
-    
+
                 <!-- Event Item 1 -->
                 <div class="d-flex align-items-start mb-3 pb-3" style="border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
                     <div class="text-center me-3" style="min-width: 45px;">
@@ -285,7 +340,7 @@
                         </div>
                     </div>
                 </div>
-    
+
                 <!-- Event Item 2 -->
                 <div class="d-flex align-items-start mb-3 pb-3" style="border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
                     <div class="text-center me-3" style="min-width: 45px;">
@@ -301,7 +356,7 @@
                         </div>
                     </div>
                 </div>
-    
+
                 <!-- Event Item 3 -->
                 <div class="d-flex align-items-start mb-3">
                     <div class="text-center me-3" style="min-width: 45px;">
@@ -317,10 +372,10 @@
                         </div>
                     </div>
                 </div>
-    
+
                 <!-- View All Button -->
-                <button class="btn w-100 mt-2" style="background: rgba(28, 200, 138, 0.1); 
-                             color: #1cc88a; 
+                <button class="btn w-100 mt-2" style="background: rgba(28, 200, 138, 0.1);
+                             color: #1cc88a;
                              border: 1px solid rgba(28, 200, 138, 0.2);
                              transition: all 0.2s ease;">
                     <i class="fas fa-calendar-alt me-2"></i>

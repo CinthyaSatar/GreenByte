@@ -638,6 +638,24 @@ class Harvest(db.Model):
     def __repr__(self):
         return f"Harvest(Date: {self.date}, Amount: {self.amount_collected})"
 
+
+# Many-to-Many Relationship for Posts and Tags
+post_tag = db.Table('post_tag',
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    # Relationship with posts
+    posts = db.relationship('Post', secondary=post_tag, back_populates='tags')
+
+    def __repr__(self):
+        return f"Tag('{self.name}')"
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -664,6 +682,8 @@ class Post(db.Model):
     # Relationships
     images = db.relationship('PostImage', backref='post', lazy=True, cascade='all, delete-orphan')
     plants = db.relationship('PostPlant', backref='post', lazy=True, cascade='all, delete-orphan')
+    garden = db.relationship('Garden', backref='posts', lazy=True)
+    tags = db.relationship('Tag', secondary=post_tag, back_populates='posts', lazy=True)
 
     def __repr__(self):
         return f"Post({self.title}, {self.date_posted})"
@@ -833,6 +853,8 @@ class Payment(db.Model):
 
     def __repr__(self):
         return f"Payment(Order ID: {self.order_id}, Amount: {self.amount}, Status: {self.status})"
+
+
 
 class PostImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)

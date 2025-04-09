@@ -31,7 +31,7 @@ def updatePost(postId):
         form.title.data = post.title
         form.content.data = post.content
 
-    return render_template("createPost.html", form=form, legend="Update Post")
+    return render_template("add_post.html", form=form, legend="Update Post")
 
 
 
@@ -45,7 +45,7 @@ def newPost():
         db.session.commit()
         flash("Your post has been created!", "success")
         return redirect(url_for('main.index'))
-    return render_template("createPost.html", form=form, legend="Create Post")
+    return render_template("add_post.html", form=form, legend="Create Post")
 
 
 @posts.route("/post/<int:postId>/delete", methods=['POST'] )
