@@ -62,7 +62,11 @@
                     <small class="text-muted">{{ post.date_posted.strftime('%B %d, %Y') }}</small>
                   </div>
                 </div>
-                <h4 class="font-weight-bold text-success mb-2">{{ post.title }}</h4>
+                <h4 class="font-weight-bold mb-2">
+                  <a href="{{ url_for('posts.post', postId=post.id) }}" class="text-success text-decoration-none" style="transition: all 0.2s ease; display: inline-block; border-bottom: 2px solid transparent;" onmouseover="this.style.transform='translateY(-2px)';this.style.color='#15a76c';this.style.borderBottomColor='#15a76c';" onmouseout="this.style.transform='translateY(0)';this.style.color='';this.style.borderBottomColor='transparent';" >
+                    {{ post.title }}
+                  </a>
+                </h4>
 
                 <!-- Garden Stats -->
                 {% if post.garden %}
