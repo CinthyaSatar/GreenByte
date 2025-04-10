@@ -1040,46 +1040,20 @@
         });
       }
 
-      // Todo checkbox functionality
-      const todoCheckboxes = document.querySelectorAll('.todo-checkbox');
-      todoCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-          const eventId = this.getAttribute('data-event-id');
-          const isChecked = this.checked;
-
-          // Send request to update the todo status
-          fetch(`/event/${eventId}/toggle_complete`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ completed: isChecked })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              // Update the label text
-              const label = this.nextElementSibling;
-              if (label) {
-                label.textContent = isChecked ? 'Completed' : 'Mark complete';
-              }
-
-              // Show success toast
-              showToast('Task Updated', `Task marked as ${isChecked ? 'completed' : 'incomplete'}`, 'success');
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            showToast('Error', 'Failed to update task status', 'danger');
-          });
-        });
-      });
+      // Todo checkbox functionality is handled in page_gardens.html
     });
 
     // Function to show toast notifications
     function showToast(title, message, type = 'success') {
-      const toastContainer = document.getElementById('toast-container');
+      // Get or create toast container
+      let toastContainer = document.getElementById('toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1050';
+        document.body.appendChild(toastContainer);
+      }
 
       // Create toast element
       const toast = document.createElement('div');
