@@ -3,9 +3,7 @@
 <div class="container py-4">
   <div class="row justify-content-center">
     <div class="col-xl-8 col-lg-10">
-      <div class="card shadow-sm mb-4" style="background: white;
-                  border-radius: 1.5rem !important;
-                  box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;">
+      <div class="card custom-card shadow-sm mb-4">
         <div class="position-relative">
           {% if post.images %}
           <!-- Image Carousel -->
@@ -61,7 +59,7 @@
           {% endif %}
         </div>
 
-        <div class="card-body p-4 position-relative">
+        <div class=" p-4 position-relative">
           {% if post.author == current_user %}
           <div class="position-absolute top-0 end-0 {% if post.garden and not post.images %}mt-5 pt-2 me-3{% else %}m-3{% endif %}" style="z-index: 10;">
             <a class="btn btn-sm"
@@ -190,10 +188,8 @@
       </div>
 
       <!-- Comments Section -->
-      <div class="card shadow-sm mt-4 mb-4" style="background: white;
-                  border-radius: 1.5rem !important;
-                  box-shadow: 0 15px 30px rgba(28, 200, 138, 0.15) !important;">
-        <div class="card-body p-4">
+      <div class="card custom-card shadow-sm mt-4 mb-4">
+        <div class=" p-4">
           <h4 class="mb-4">Comments</h4>
 
           <!-- Comment Form -->
