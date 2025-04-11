@@ -164,18 +164,18 @@
                 <label class="col-2 col-form-label">Calendar</label>
                 <div class="col-10">
                   <select class="form-select" id="calendar" name="calendar" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
-                    <option value="work" style="color: #1cc88a" selected>Work</option>
-                    <option value="community" style="color: #4e73df">
+                    <option value="work" style="color: #1cc88a" {% if not calendar_type or calendar_type == 'work' %}selected{% endif %}>Work</option>
+                    <option value="community" style="color: #4e73df" {% if calendar_type == 'community' %}selected{% endif %}>
                       Community
                     </option>
-                    <option value="school" style="color: #f6c23e">School</option>
-                    <option value="personal" style="color: #e74a3b">
+                    <option value="school" style="color: #f6c23e" {% if calendar_type == 'school' %}selected{% endif %}>School</option>
+                    <option value="personal" style="color: #e74a3b" {% if calendar_type == 'personal' %}selected{% endif %}>
                       Personal
                     </option>
-                    <option value="todo" style="color: #36b9cc">
+                    <option value="todo" style="color: #36b9cc" {% if calendar_type == 'todo' %}selected{% endif %}>
                       TODO Task
                     </option>
-                    <option value="custom" style="color: #858796">
+                    <option value="custom" style="color: #858796" {% if calendar_type == 'custom' %}selected{% endif %}>
                       Custom Event Type
                     </option>
                   </select>
@@ -222,7 +222,7 @@
                   <select class="form-select" id="garden_id" name="garden_id" onchange="updateZones()" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
                     <option value="">None</option>
                     {% for garden in gardens %}
-                    <option value="{{ garden.id }}">{{ garden.name }}</option>
+                    <option value="{{ garden.id }}" {% if selected_garden_id and selected_garden_id == garden.id %}selected{% endif %}>{{ garden.name }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -231,9 +231,14 @@
               <div class="row mb-2">
                 <label class="col-2 col-form-label">Zone</label>
                 <div class="col-10">
-                  <select class="form-select" id="zone_id" name="zone_id" onchange="updatePlants()" style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
+                  <select class="form-select" id="zone_id" name="zone_id" onchange="updatePlants()" {% if selected_zone_id %}data-selected-zone-id="{{ selected_zone_id }}"{% endif %} style="border: 1px solid rgba(28, 200, 138, 0.2); border-radius: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.9);">
                     <option value="">None</option>
-                    <!-- Zones will be populated dynamically based on selected garden -->
+                    {% if zones %}
+                      {% for zone in zones %}
+                      <option value="{{ zone.id }}" {% if selected_zone_id and selected_zone_id == zone.id %}selected{% endif %}>{{ zone.name }}</option>
+                      {% endfor %}
+                    {% endif %}
+                    <!-- Additional zones will be populated dynamically based on selected garden -->
                   </select>
                 </div>
               </div>
@@ -480,17 +485,57 @@
     const endHour = (now.getHours() + 1) % 24;
     document.getElementById('endTime').value = `${String(endHour).padStart(2, '0')}:${minutes}`;
 
-    // Check URL parameters for calendar type
-    const urlParams = new URLSearchParams(window.location.search);
-    const calendarType = urlParams.get('calendar');
-    if (calendarType === 'todo') {
-      const calendarSelect = document.getElementById('calendar');
-      for (let i = 0; i < calendarSelect.options.length; i++) {
-        if (calendarSelect.options[i].value === 'todo') {
-          calendarSelect.selectedIndex = i;
-          break;
+    // Initialize zones and plants if garden is pre-selected
+    const gardenSelect = document.getElementById('garden_id');
+    console.log('Garden select value on load:', gardenSelect.value);
+
+    if (gardenSelect.value) {
+      // If garden is pre-selected, make sure zones are loaded
+      updateZones();
+
+      // After a short delay to ensure zones are loaded, update plants
+      setTimeout(() => {
+        const zoneSelect = document.getElementById('zone_id');
+        console.log('Zone select value after delay:', zoneSelect.value);
+        if (zoneSelect.value) {
+          updatePlants();
         }
+      }, 500); // Increased delay to ensure zones are loaded
+    }
+
+    // Add event listener to garden select to update zones when changed
+    gardenSelect.addEventListener('change', function() {
+      console.log('Garden changed to:', this.value);
+      // Clear plant selection when garden changes
+      document.getElementById('plant_id').value = '';
+      // Reload the page with the new garden_id to get the correct plants
+      if (this.value) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('garden_id', this.value);
+        // Preserve other parameters
+        const calendarType = currentUrl.searchParams.get('calendar_type');
+        if (calendarType) {
+          currentUrl.searchParams.set('calendar_type', calendarType);
+        }
+        window.location.href = currentUrl.toString();
+      } else {
+        // If no garden is selected, just update the zones
+        updateZones();
       }
+    });
+
+    // Add event listener to zone select to update plants when changed
+    const zoneSelect = document.getElementById('zone_id');
+    zoneSelect.addEventListener('change', function() {
+      console.log('Zone changed to:', this.value);
+      updatePlants();
+    });
+
+    // Initialize custom event type container if 'custom' is selected
+    const calendarSelect = document.getElementById('calendar');
+    if (calendarSelect.value === 'custom') {
+      document.getElementById('customEventTypeContainer').style.display = 'block';
+      loadCustomEventTypes();
     }
 
     // Handle all-day event toggle
@@ -550,6 +595,8 @@
   function updateZones() {
     const gardenId = document.getElementById('garden_id').value;
     const zoneSelect = document.getElementById('zone_id');
+    // Get the selected zone ID from a data attribute on the select element
+    const selectedZoneId = zoneSelect.getAttribute('data-selected-zone-id');
 
     // Clear current options
     zoneSelect.innerHTML = '<option value="">None</option>';
@@ -558,24 +605,57 @@
       return;
     }
 
+    console.log(`Fetching zones for garden ID: ${gardenId}`);
+
     // Fetch zones for the selected garden
     fetch(`/api/gardens/${gardenId}/zones`)
-      .then(response => response.json())
-      .then(zones => {
-        zones.forEach(zone => {
-          const option = document.createElement('option');
-          option.value = zone.id;
-          option.textContent = zone.name;
-          zoneSelect.appendChild(option);
-        });
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
       })
-      .catch(error => console.error('Error fetching zones:', error));
+      .then(zones => {
+        console.log('Zones received:', zones);
+        if (Array.isArray(zones)) {
+          zones.forEach(zone => {
+            const option = document.createElement('option');
+            option.value = zone.id;
+            option.textContent = zone.name;
+
+            // If this zone matches the selected zone ID, select it
+            if (selectedZoneId && parseInt(zone.id) === parseInt(selectedZoneId)) {
+              option.selected = true;
+            }
+
+            zoneSelect.appendChild(option);
+          });
+
+          // After populating zones, update plants if a zone is selected
+          if (zoneSelect.value) {
+            updatePlants();
+          }
+        } else {
+          console.error('Received invalid zones data:', zones);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching zones:', error);
+        // Add a message to the UI
+        const option = document.createElement('option');
+        option.value = "";
+        option.textContent = "Error loading zones";
+        option.disabled = true;
+        zoneSelect.appendChild(option);
+      });
   }
 
   // Function to update plants based on selected zone
   function updatePlants() {
     const zoneId = document.getElementById('zone_id').value;
     const plantSelect = document.getElementById('plant_id');
+
+    console.log(`Updating plants for zone ID: ${zoneId}`);
 
     // Hide all plant options first
     Array.from(plantSelect.options).forEach(option => {
@@ -593,11 +673,18 @@
     }
 
     // Show only plants from the selected zone
+    let plantsFound = false;
     Array.from(plantSelect.options).forEach(option => {
       if (option.dataset.zone === zoneId) {
         option.style.display = '';
+        plantsFound = true;
+        console.log(`Showing plant: ${option.textContent} (ID: ${option.value})`);
       }
     });
+
+    if (!plantsFound) {
+      console.log(`No plants found for zone ID: ${zoneId}`);
+    }
   }
 
   // Handle custom event type selection

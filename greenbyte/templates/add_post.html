@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card custom-card shadow-sm mb-4">
+                <div class=" p-4">
+                    <h3 class="text-success mb-4">{{ legend }}</h3>
+
+                    <form method="POST" action="" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Title Field -->
+                        <div class="form-group mb-3">
+                            <label for="title" class="form-label fw-bold">Post Title</label>
+                            {% if form.title.errors %}
+                                {{ form.title(class="form-control is-invalid", placeholder="Enter a catchy title for your post") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.title.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.title(class="form-control", placeholder="Enter a catchy title for your post", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Keep it concise and descriptive (3-100 characters)</div>
+                        </div>
+
+                        <!-- Category Field -->
+                        <div class="form-group mb-3">
+                            <label for="category" class="form-label fw-bold">Category</label>
+                            {% if form.category.errors %}
+                                {{ form.category(class="form-select is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.category(class="form-select", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Select the category that best fits your post</div>
+                        </div>
+
+                        <!-- Garden Link Field -->
+                        <div class="form-group mb-3">
+                            <label for="garden_id" class="form-label fw-bold">Link to Garden (Optional)</label>
+                            {% if form.garden_id.errors %}
+                                {{ form.garden_id(class="form-select is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.garden_id.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.garden_id(class="form-select", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Connect this post to one of your gardens</div>
+                        </div>
+
+                        <!-- Tags Field -->
+                        <div class="form-group mb-3">
+                            <label for="tags" class="form-label fw-bold">Tags (Optional)</label>
+                            {% if form.tags.errors %}
+                                {{ form.tags(class="form-control is-invalid", placeholder="tomatoes, organic, beginner") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.tags.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.tags(class="form-control", placeholder="tomatoes, organic, beginner", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Add comma-separated tags to help others find your post</div>
+                        </div>
+
+                        <!-- Content Field -->
+                        <div class="form-group mb-3">
+                            <label for="content" class="form-label fw-bold">Post Content</label>
+                            {% if form.content.errors %}
+                                {{ form.content(class="form-control is-invalid", placeholder="Share your gardening experience, tips, or questions", rows=10) }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.content.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.content(class="form-control", placeholder="Share your gardening experience, tips, or questions", rows=10, style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Share your gardening journey, tips, or ask questions (minimum 10 characters)</div>
+                        </div>
+
+                        <!-- Image Upload Field -->
+                        <div class="form-group mb-3">
+                            <label for="images" class="form-label fw-bold">Add Photos (Optional)</label>
+                            <div class="input-group">
+                                {% if form.images.errors %}
+                                    {{ form.images(class="form-control is-invalid", style="border-radius: 0.5rem 0 0 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.images.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.images(class="form-control", style="border-radius: 0.5rem 0 0 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                                {% endif %}
+                                <span class="input-group-text" style="border-radius: 0 0.5rem 0.5rem 0; border: 1px solid rgba(28, 200, 138, 0.2); border-left: none;">
+                                    <i class="fas fa-camera text-success"></i>
+                                </span>
+                            </div>
+                            <div class="form-text text-muted">Upload images of your garden or plants (JPG, JPEG, PNG only)</div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary me-md-2" style="border-radius: 0.5rem;">
+                                Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-success", style="border-radius: 0.5rem;") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Tips -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card custom-card shadow-sm mb-4">
+                <div class=" p-4">
+                    <h4 class="text-success mb-3">Post Writing Tips</h4>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-lightbulb text-success me-2"></i>
+                            <span class="fw-bold">Be Specific</span>
+                        </div>
+                        <p class="text-muted small ms-4">Include details about plant varieties, growing conditions, and techniques you've used.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-camera text-success me-2"></i>
+                            <span class="fw-bold">Add Photos</span>
+                        </div>
+                        <p class="text-muted small ms-4">Visual content helps others understand your garden better.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-question-circle text-success me-2"></i>
+                            <span class="fw-bold">Ask Questions</span>
+                        </div>
+                        <p class="text-muted small ms-4">End with questions to encourage community engagement.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-tags text-success me-2"></i>
+                            <span class="fw-bold">Use Categories & Tags</span>
+                        </div>
+                        <p class="text-muted small ms-4">Categorize your post and add relevant tags to help others find it more easily.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-tag text-success me-2"></i>
+                            <span class="fw-bold">Popular Tags</span>
+                        </div>
+                        <p class="text-muted small ms-4">Consider using tags like: tomatoes, organic, beginner, indoor, pest-control, harvest, seeds, composting</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

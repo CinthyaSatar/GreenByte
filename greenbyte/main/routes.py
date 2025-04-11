@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
+from greenbyte.utils.timezone import now_in_timezone
 from greenbyte.models import Post, CalendarEvent, CalendarEventInvitee, User, Garden, Plant, Zone
 
 main = Blueprint('main', __name__)
@@ -26,11 +27,76 @@ def index():
         'accent': '#4e73df'
     }
 
+    # Get upcoming events for the next 30 days
+    upcoming_events = []
+    garden_events = {}
+    zone_events = {}
+    plant_events = {}
+    todo_events_list = []
+
+    if current_user.is_authenticated:
+        today = datetime.now()
+        next_month = today + timedelta(days=30)
+        now = datetime.now()
+
+        # Import event utilities
+        from greenbyte.utils.event_utils import batch_update_events_completion
+
+        # Get all events for the current user
+        user_events = CalendarEvent.query.filter_by(user_id=current_user.id).all()
+        print(f'Total events for user {current_user.id}: {len(user_events)}')
+
+        # Update completion status for events
+        batch_update_events_completion(user_events)
+
+        # Fetch all upcoming events (excluding TODO events)
+        upcoming_events = CalendarEvent.query.filter(
+            CalendarEvent.user_id == current_user.id,
+            CalendarEvent.start_datetime >= today,
+            CalendarEvent.calendar_type != 'todo'
+            # Removed the next_month filter to see all events
+        ).order_by(CalendarEvent.start_datetime).all()
+
+        print(f'Upcoming events count: {len(upcoming_events)}')
+        for event in upcoming_events[:5]:
+            print(f'- {event.title} ({event.start_datetime})')
+
+        # Organize events by garden, zone, and plant
+        for event in upcoming_events:
+            # Add TODO events to a separate list
+            if event.calendar_type == 'todo' and not event.completed and not (event.garden_id or event.zone_id or event.plant_id):
+                todo_events_list.append(event)
+
+            # Add to garden events
+            if event.garden_id:
+                if event.garden_id not in garden_events:
+                    garden_events[event.garden_id] = []
+                garden_events[event.garden_id].append(event)
+
+            # Add to zone events
+            if event.zone_id:
+                if event.zone_id not in zone_events:
+                    zone_events[event.zone_id] = []
+                zone_events[event.zone_id].append(event)
+
+            # Add to plant events
+            if event.plant_id:
+                if event.plant_id not in plant_events:
+                    plant_events[event.plant_id] = []
+                plant_events[event.plant_id].append(event)
+
     return render_template('index.html',
                          posts=posts,
                          max=max,
                          min=min,
-                         default_style=default_style)  # Add default_style here
+                         default_style=default_style,
+                         upcoming_events=upcoming_events,
+                         garden_events=garden_events,
+                         zone_events=zone_events,
+                         plant_events=plant_events,
+                         todo_events_list=todo_events_list,
+                         now=datetime.now(),
+                         timedelta=timedelta)
 
 
 @main.route("/calendar")
@@ -312,16 +378,37 @@ def calendar(date_str=None):
 @main.route("/calendar/add", methods=['GET'])
 @login_required
 def add_calendar_event():
+    # Get query parameters for pre-selecting garden and zone
+    garden_id = request.args.get('garden_id', type=int)
+    zone_id = request.args.get('zone_id', type=int)
+    calendar_type = request.args.get('calendar_type')
+
     # Get all gardens for the user to associate with events
     gardens = Garden.query.join(Garden.members).filter(User.id == current_user.id).all()
 
-    # Get all plants for the user to associate with events
-    plants = Plant.query.join(Zone, Plant.zone_id == Zone.id).join(Garden, Zone.garden_id == Garden.id).join(Garden.members).filter(User.id == current_user.id).all()
+    # Get plants for the user to associate with events
+    # If a garden is selected, only get plants for that garden
+    if garden_id:
+        plants = Plant.query.join(Zone, Plant.zone_id == Zone.id).filter(Zone.garden_id == garden_id).all()
+    else:
+        # Get all plants for the user across all gardens
+        plants = Plant.query.join(Zone, Plant.zone_id == Zone.id).join(Garden, Zone.garden_id == Garden.id).join(Garden.members).filter(User.id == current_user.id).all()
+
+    # Get zones for the selected garden if garden_id is provided
+    zones = []
+    if garden_id:
+        garden = Garden.query.get(garden_id)
+        if garden and current_user in garden.members:
+            zones = Zone.query.filter_by(garden_id=garden_id).all()
 
     return render_template('add_calendar_event.html',
                          title='Add Event',
                          gardens=gardens,
-                         plants=plants)
+                         plants=plants,
+                         selected_garden_id=garden_id,
+                         selected_zone_id=zone_id,
+                         zones=zones,
+                         calendar_type=calendar_type)
 
 @main.route("/calendar/events", methods=['POST'])
 @login_required
@@ -736,7 +823,6 @@ def complete_todo(event_id):
 
     # Update the completion status
     from greenbyte import db
-    from datetime import datetime
     from greenbyte.utils.timezone import now_in_timezone
 
     event.completed = True
@@ -745,25 +831,37 @@ def complete_todo(event_id):
 
     return jsonify({'success': True, 'message': 'Task marked as completed.'})
 
-@main.route("/calendar/events/<int:event_id>/uncomplete", methods=['POST'])
+@main.route("/event/<int:event_id>/toggle_complete", methods=['POST'])
 @login_required
-def uncomplete_todo(event_id):
+def toggle_complete(event_id):
     event = CalendarEvent.query.get_or_404(event_id)
 
     # Ensure the user owns the event
     if event.user_id != current_user.id:
         return jsonify({'success': False, 'message': 'You do not have permission to update this event.'}), 403
 
-    # Only allow uncompleting TODO tasks
+    # Only allow toggling TODO tasks
     if event.calendar_type.lower() != 'todo':
-        return jsonify({'success': False, 'message': 'Only TODO tasks can be unmarked as completed.'}), 400
+        return jsonify({'success': False, 'message': 'Only TODO tasks can be toggled as completed.'}), 400
+
+    # Get the desired completion status from the request
+    data = request.json
+    completed = data.get('completed', False)
 
     # Update the completion status
     from greenbyte import db
+    from greenbyte.utils.timezone import now_in_timezone
 
-    event.completed = False
-    event.completed_at = None
+    event.completed = completed
+    if completed:
+        event.completed_at = now_in_timezone()
+    else:
+        event.completed_at = None
+
     db.session.commit()
 
-    return jsonify({'success': True, 'message': 'Task unmarked as completed.'})
+    return jsonify({
+        'success': True,
+        'message': f'Task marked as {"completed" if completed else "incomplete"}.'
+    })
 

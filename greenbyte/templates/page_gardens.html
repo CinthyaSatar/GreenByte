@@ -96,7 +96,7 @@
             <!-- Garden Content -->
             <div id="garden-content-{{ garden.id }}">
                 <!-- Garden Zones -->
-                <div class="card-body p-4" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                <div class=" p-4" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
                 <div class="row">
                     {% for zone in garden.zones %}
                     <div class="col-12">
@@ -141,7 +141,10 @@
                                        onclick="event.stopPropagation();">
                                         <i class="fas fa-seedling me-1"></i>Add Plant
                                     </a>
-                                    <a href="{{ url_for('main.add_calendar_event') }}?zone_id={{ zone.id }}&garden_id={{ garden.id }}&calendar=todo"
+
+
+                                    {% endif %}
+                                    <a href="{{ url_for('main.add_calendar_event') }}?zone_id={{ zone.id }}&garden_id={{ garden.id }}&calendar_type=todo"
                                        class="btn btn-sm"
                                        style="background: rgba(54, 185, 204, 0.1);
                                               color: #36b9cc;
@@ -150,8 +153,6 @@
                                        onclick="event.stopPropagation();">
                                         <i class="fas fa-tasks me-1"></i>Add TODO
                                     </a>
-
-                                    {% endif %}
                                 </div>
                             </div>
 
@@ -373,7 +374,7 @@
                     </div>
                     {% endif %}
                 </div>
-                </div> <!-- End of card-body -->
+                </div> <!-- End of  -->
             </div> <!-- End of garden-content -->
         </div>
         {% endfor %}
@@ -393,7 +394,7 @@
                     border-radius: 1rem !important;
                     border-bottom: 4px solid rgba(28, 200, 138, 0.2);
                      ">
-            <div class="card-body p-4">
+            <div class=" p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="text-success">Garden Overview</h4>
                     <a href="{{ url_for('gardens.add_garden') }}" class="btn" style="background: rgba(28, 200, 138, 0.1);
@@ -534,10 +535,10 @@
                     border-radius: 1rem !important;
                     border-bottom: 4px solid rgba(54, 185, 204, 0.3);
                     ">
-            <div class="card-body p-4">
+            <div class=" p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 style="color: #36b9cc;">TODO Tasks</h4>
-                    <a href="{{ url_for('main.add_calendar_event') }}?calendar=todo" class="btn" style="background: rgba(54, 185, 204, 0.1);
+                    <a href="{{ url_for('main.add_calendar_event') }}?calendar_type=todo" class="btn" style="background: rgba(54, 185, 204, 0.1);
                                 color: #36b9cc;
                                 border: 1px solid rgba(54, 185, 204, 0.2);
                                 border-radius: 0.5rem;
@@ -583,63 +584,35 @@
                     </div>
 
                     {% set todo_events = [] %}
+                    {% set processed_event_ids = [] %}
 
                     <!-- Add standalone TODO tasks -->
                     {% if todo_events_list %}
                         {% for event in todo_events_list %}
-                            {% set todo_data = {
-                                'id': event.id,
-                                'title': event.title,
-                                'start_datetime': event.start_datetime,
-                                'type': 'standalone',
-                                'garden_name': None,
-                                'zone_name': None,
-                                'plant_name': None
-                            } %}
-                            {% set _ = todo_events.append(todo_data) %}
+                            {% if event.id not in processed_event_ids %}
+                                {% set todo_data = {
+                                    'id': event.id,
+                                    'title': event.title,
+                                    'start_datetime': event.start_datetime,
+                                    'type': 'standalone',
+                                    'garden_name': None,
+                                    'zone_name': None,
+                                    'plant_name': None
+                                } %}
+                                {% set _ = todo_events.append(todo_data) %}
+                                {% set _ = processed_event_ids.append(event.id) %}
+                            {% endif %}
                         {% endfor %}
                     {% endif %}
 
+                    <!-- Process garden, zone, and plant events in order of specificity -->
+                    <!-- First, add plant-specific events -->
                     {% for garden in gardens %}
-                        {% if garden_events and garden.id in garden_events %}
-                            {% for event in garden_events[garden.id] %}
-                                {% if event.calendar_type|lower == 'todo' and not event.completed %}
-                                    {% set todo_data = {
-                                        'id': event.id,
-                                        'title': event.title,
-                                        'start_datetime': event.start_datetime,
-                                        'type': 'garden',
-                                        'garden_name': garden.name,
-                                        'zone_name': None,
-                                        'plant_name': None
-                                    } %}
-                                    {% set _ = todo_events.append(todo_data) %}
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
-
                         {% for zone in garden.zones %}
-                            {% if zone_events and zone.id in zone_events %}
-                                {% for event in zone_events[zone.id] %}
-                                    {% if event.calendar_type|lower == 'todo' and not event.completed %}
-                                        {% set todo_data = {
-                                            'id': event.id,
-                                            'title': event.title,
-                                            'start_datetime': event.start_datetime,
-                                            'type': 'zone',
-                                            'garden_name': garden.name,
-                                            'zone_name': zone.name,
-                                            'plant_name': None
-                                        } %}
-                                        {% set _ = todo_events.append(todo_data) %}
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-
                             {% for plant in zone.plants %}
                                 {% if plant_events and plant.id in plant_events %}
                                     {% for event in plant_events[plant.id] %}
-                                        {% if event.calendar_type|lower == 'todo' and not event.completed %}
+                                        {% if event.calendar_type|lower == 'todo' and not event.completed and event.id not in processed_event_ids %}
                                             {% set todo_data = {
                                                 'id': event.id,
                                                 'title': event.title,
@@ -650,11 +623,56 @@
                                                 'plant_name': plant.plant_detail.name
                                             } %}
                                             {% set _ = todo_events.append(todo_data) %}
+                                            {% set _ = processed_event_ids.append(event.id) %}
                                         {% endif %}
                                     {% endfor %}
                                 {% endif %}
                             {% endfor %}
                         {% endfor %}
+                    {% endfor %}
+
+                    <!-- Then, add zone-specific events -->
+                    {% for garden in gardens %}
+                        {% for zone in garden.zones %}
+                            {% if zone_events and zone.id in zone_events %}
+                                {% for event in zone_events[zone.id] %}
+                                    {% if event.calendar_type|lower == 'todo' and not event.completed and event.id not in processed_event_ids %}
+                                        {% set todo_data = {
+                                            'id': event.id,
+                                            'title': event.title,
+                                            'start_datetime': event.start_datetime,
+                                            'type': 'zone',
+                                            'garden_name': garden.name,
+                                            'zone_name': zone.name,
+                                            'plant_name': None
+                                        } %}
+                                        {% set _ = todo_events.append(todo_data) %}
+                                        {% set _ = processed_event_ids.append(event.id) %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    <!-- Finally, add garden-specific events -->
+                    {% for garden in gardens %}
+                        {% if garden_events and garden.id in garden_events %}
+                            {% for event in garden_events[garden.id] %}
+                                {% if event.calendar_type|lower == 'todo' and not event.completed and event.id not in processed_event_ids %}
+                                    {% set todo_data = {
+                                        'id': event.id,
+                                        'title': event.title,
+                                        'start_datetime': event.start_datetime,
+                                        'type': 'garden',
+                                        'garden_name': garden.name,
+                                        'zone_name': None,
+                                        'plant_name': None
+                                    } %}
+                                    {% set _ = todo_events.append(todo_data) %}
+                                    {% set _ = processed_event_ids.append(event.id) %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
                     {% endfor %}
 
                     <!-- Sort TODO tasks by date -->
@@ -669,30 +687,37 @@
                                     <div class="me-2" style="min-width: 30px">
                                         <div class="form-check">
                                             <input class="form-check-input todo-checkbox" type="checkbox"
+                                                   data-event-id="{{ todo.id }}"
                                                    data-todo-id="{{ todo.id }}"
                                                    style="cursor: pointer; width: 20px; height: 20px;">
                                         </div>
                                     </div>
                                     <div class="todo-details ms-2 flex-grow-1">
-                                        <div class="todo-title fw-bold">{{ todo.title }}</div>
-                                        <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
-                                            {% if todo.type == 'garden' %}
-                                                <i class="fas fa-leaf me-1 text-success"></i>{{ todo.garden_name }}
-                                            {% elif todo.type == 'zone' %}
-                                                <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ todo.garden_name }} - {{ todo.zone_name }}
-                                            {% elif todo.type == 'plant' %}
-                                                <i class="fas fa-seedling me-1 text-success"></i>{{ todo.plant_name }}
-                                            {% elif todo.type == 'standalone' %}
-                                                <i class="fas fa-tasks me-1 text-info"></i>General Task
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="todo-title fw-bold">{{ todo.title }}</div>
+                                            <small class="text-muted" style="font-size: 0.7rem;">
+                                                <i class="far fa-calendar me-1"></i>{{ todo.start_datetime.strftime('%b %d') }}
+                                            </small>
+                                        </div>
+                                        <div class="d-flex flex-column" style="font-size: 0.7rem;">
+                                            {% if todo.garden_name %}
+                                                <small class="text-muted mb-1"><i class="fas fa-leaf me-1 text-success"></i>{{ todo.garden_name }}</small>
                                             {% endif %}
-                                            <span class="ms-2"><i class="far fa-calendar me-1"></i>{{ todo.start_datetime.strftime('%b %d') }}</span>
-                                        </small>
+
+                                            {% if todo.zone_name %}
+                                                <small class="text-muted mb-1"><i class="fas fa-map-marked-alt me-1 text-success"></i>{{ todo.zone_name }}</small>
+                                            {% endif %}
+
+                                            {% if todo.plant_name %}
+                                                <small class="text-muted"><i class="fas fa-seedling me-1 text-success"></i>{{ todo.plant_name }}</small>
+                                            {% endif %}
+
+                                            {% if not todo.garden_name and not todo.zone_name and not todo.plant_name %}
+                                                <small class="text-muted"><i class="fas fa-tasks me-1 text-info"></i>General Task</small>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                    <div class="ms-auto">
-                                        <a href="{{ url_for('main.edit_event', event_id=todo.id) }}" class="btn btn-sm btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </div>
+
                                 </div>
                             {% endfor %}
 
@@ -705,30 +730,37 @@
                                         <div class="me-2" style="min-width: 30px">
                                             <div class="form-check">
                                                 <input class="form-check-input todo-checkbox" type="checkbox"
+                                                       data-event-id="{{ todo.id }}"
                                                        data-todo-id="{{ todo.id }}"
                                                        style="cursor: pointer; width: 20px; height: 20px;">
                                             </div>
                                         </div>
                                         <div class="todo-details ms-2 flex-grow-1">
-                                            <div class="todo-title fw-bold">{{ todo.title }}</div>
-                                            <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
-                                                {% if todo.type == 'garden' %}
-                                                    <i class="fas fa-leaf me-1 text-success"></i>{{ todo.garden_name }}
-                                                {% elif todo.type == 'zone' %}
-                                                    <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ todo.garden_name }} - {{ todo.zone_name }}
-                                                {% elif todo.type == 'plant' %}
-                                                    <i class="fas fa-seedling me-1 text-success"></i>{{ todo.plant_name }}
-                                                {% elif todo.type == 'standalone' %}
-                                                    <i class="fas fa-tasks me-1 text-info"></i>General Task
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="todo-title fw-bold">{{ todo.title }}</div>
+                                                <small class="text-muted" style="font-size: 0.7rem;">
+                                                    <i class="far fa-calendar me-1"></i>{{ todo.start_datetime.strftime('%b %d') }}
+                                                </small>
+                                            </div>
+                                            <div class="d-flex flex-column" style="font-size: 0.7rem;">
+                                                {% if todo.garden_name %}
+                                                    <small class="text-muted mb-1"><i class="fas fa-leaf me-1 text-success"></i>{{ todo.garden_name }}</small>
                                                 {% endif %}
-                                                <span class="ms-2"><i class="far fa-calendar me-1"></i>{{ todo.start_datetime.strftime('%b %d') }}</span>
-                                            </small>
+
+                                                {% if todo.zone_name %}
+                                                    <small class="text-muted mb-1"><i class="fas fa-map-marked-alt me-1 text-success"></i>{{ todo.zone_name }}</small>
+                                                {% endif %}
+
+                                                {% if todo.plant_name %}
+                                                    <small class="text-muted"><i class="fas fa-seedling me-1 text-success"></i>{{ todo.plant_name }}</small>
+                                                {% endif %}
+
+                                                {% if not todo.garden_name and not todo.zone_name and not todo.plant_name %}
+                                                    <small class="text-muted"><i class="fas fa-tasks me-1 text-info"></i>General Task</small>
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                        <div class="ms-auto">
-                                            <a href="{{ url_for('main.edit_event', event_id=todo.id) }}" class="btn btn-sm btn-light">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        </div>
+
                                     </div>
                                 {% endfor %}
                             </div>
@@ -754,212 +786,6 @@
             </div>
         </div>
 
-        <!-- Upcoming Events Card -->
-        {% if garden_events or zone_events or plant_events %}
-        <div id="events-card" class="card shadow-sm mb-4" style="
-                    background: white;
-                    border: 1px solid rgba(255, 193, 7, 0.3);
-                    border-radius: 1rem !important;
-                    border-bottom: 4px solid rgba(255, 193, 7, 0.3);
-                    ">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 style="color: #ffc107;">Upcoming Events</h4>
-                    <a href="{{ url_for('main.add_calendar_event') }}" class="btn" style="background: rgba(255, 193, 7, 0.1);
-                                color: #ffc107;
-                                border: 1px solid rgba(255, 193, 7, 0.2);
-                                border-radius: 0.5rem;
-                                transition: all 0.2s ease;">
-                        <i class="fas fa-calendar-plus"></i> Add Event
-                    </a>
-                </div>
-
-                <div class="upcoming-events-container">
-                    {% set displayed_events = [] %}
-                    {% set all_events = [] %}
-
-                    <!-- Collect all events first -->
-                    {% for garden in gardens %}
-                        {% if garden_events and garden.id in garden_events %}
-                            {% for event in garden_events[garden.id] %}
-                                {% if event.id not in displayed_events %}
-                                    {% set _ = displayed_events.append(event.id) %}
-                                    {% set event_data = {
-                                        'id': event.id,
-                                        'title': event.title,
-                                        'start_datetime': event.start_datetime,
-                                        'calendar_type': event.calendar_type,
-                                        'type': 'garden',
-                                        'garden_name': garden.name,
-                                        'zone_name': None,
-                                        'plant_name': None
-                                    } %}
-                                    {% set _ = all_events.append(event_data) %}
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
-
-                        {% for zone in garden.zones %}
-                            {% if zone_events and zone.id in zone_events %}
-                                {% for event in zone_events[zone.id] %}
-                                    {% if event.id not in displayed_events %}
-                                        {% set _ = displayed_events.append(event.id) %}
-                                        {% set event_data = {
-                                            'id': event.id,
-                                            'title': event.title,
-                                            'start_datetime': event.start_datetime,
-                                            'calendar_type': event.calendar_type,
-                                            'type': 'zone',
-                                            'garden_name': garden.name,
-                                            'zone_name': zone.name,
-                                            'plant_name': None
-                                        } %}
-                                        {% set _ = all_events.append(event_data) %}
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-
-                            {% for plant in zone.plants %}
-                                {% if plant_events and plant.id in plant_events %}
-                                    {% for event in plant_events[plant.id] %}
-                                        {% if event.id not in displayed_events %}
-                                            {% set _ = displayed_events.append(event.id) %}
-                                            {% set event_data = {
-                                                'id': event.id,
-                                                'title': event.title,
-                                                'start_datetime': event.start_datetime,
-                                                'calendar_type': event.calendar_type,
-                                                'type': 'plant',
-                                                'garden_name': garden.name,
-                                                'zone_name': zone.name,
-                                                'plant_name': plant.plant_detail.name
-                                            } %}
-                                            {% set _ = all_events.append(event_data) %}
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                            {% endfor %}
-                        {% endfor %}
-                    {% endfor %}
-
-                    <!-- Sort events by date -->
-                    {% set all_events = all_events|sort(attribute='start_datetime') %}
-
-                    <!-- Display events -->
-                    <div id="events-list">
-                        {% if all_events|length > 0 %}
-                            {% for event in all_events[:5] %}
-                                <div class="upcoming-event d-flex align-items-center p-2 mb-2 rounded event-item"
-                                     data-event-id="{{ event.id }}"
-                                     style="background-color: rgba(255, 193, 7, 0.05);
-                                            border-left: 3px solid {% if event.calendar_type|lower == 'todo' %}#36b9cc{% elif event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};
-                                            {% if event.completed %}opacity: 0.7;{% endif %}
-                                            {% if event.calendar_type|lower == 'todo' and not event.completed and event.start_datetime < now %}border: 1px solid #e74a3b; border-left-width: 3px;{% endif %}">
-                                    {% if event.calendar_type|lower == 'todo' %}
-                                    <div class="me-2" style="min-width: 30px">
-                                        <div class="form-check">
-                                            <input class="form-check-input todo-checkbox" type="checkbox"
-                                                   data-event-id="{{ event.id }}"
-                                                   style="cursor: pointer; width: 20px; height: 20px;"
-                                                   {% if event.completed %}checked{% endif %}>
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <div class="event-date text-center me-2" style="min-width: 40px">
-                                        <small class="text-gray-500 d-block" style="font-size: 0.7rem;">{{ event.start_datetime.strftime('%b').upper() }}</small>
-                                        <div style="font-size: 1rem; font-weight: bold; color: {% if event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
-                                    </div>
-                                    {% endif %}
-                                    <div class="event-details ms-2">
-                                        <div class="small fw-bold {% if event.calendar_type|lower == 'todo' %}todo-title{% endif %}">{{ event.title }}</div>
-                                        <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
-                                            {% if event.calendar_type|lower == 'todo' %}
-                                                <i class="fas fa-tasks me-1" style="color: #36b9cc;"></i>TODO
-                                            {% elif event.type == 'garden' %}
-                                                <i class="fas fa-leaf me-1 text-success"></i>{{ event.garden_name }}
-                                            {% elif event.type == 'zone' %}
-                                                <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ event.garden_name }} - {{ event.zone_name }}
-                                            {% elif event.type == 'plant' %}
-                                                <i class="fas fa-seedling me-1 text-success"></i>{{ event.plant_name }}
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                    <div class="ms-auto">
-                                        <a href="{{ url_for('main.edit_event', event_id=event.id) }}" class="btn btn-sm btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-
-                    <!-- Hidden events template for JavaScript to use -->
-                    <div id="hidden-events" style="display: none;" data-total-events="{{ all_events|length }}">
-                        {% for event in all_events[5:] %}
-                            <div class="upcoming-event d-flex align-items-center p-2 mb-2 rounded event-item"
-                                 data-event-index="{{ loop.index + 5 }}"
-                                 data-event-id="{{ event.id }}"
-                                 style="background-color: rgba(255, 193, 7, 0.05);
-                                        border-left: 3px solid {% if event.calendar_type|lower == 'todo' %}#36b9cc{% elif event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %}">
-                                {% if event.calendar_type|lower == 'todo' %}
-                                <div class="me-2" style="min-width: 30px">
-                                    <div class="form-check">
-                                        <input class="form-check-input todo-checkbox" type="checkbox"
-                                               data-event-id="{{ event.id }}"
-                                               style="cursor: pointer; width: 20px; height: 20px;">
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="event-date text-center me-2" style="min-width: 40px">
-                                    <small class="text-gray-500 d-block" style="font-size: 0.7rem;">{{ event.start_datetime.strftime('%b').upper() }}</small>
-                                    <div style="font-size: 1rem; font-weight: bold; color: {% if event.calendar_type|lower == 'work' %}#1cc88a{% elif event.calendar_type|lower == 'community' %}#4e73df{% elif event.calendar_type|lower == 'school' %}#f6c23e{% elif event.calendar_type|lower == 'personal' %}#e74a3b{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
-                                </div>
-                                {% endif %}
-                                <div class="event-details ms-2">
-                                    <div class="small fw-bold {% if event.calendar_type|lower == 'todo' %}todo-title{% endif %}">{{ event.title }}</div>
-                                    <small class="text-muted d-flex align-items-center" style="font-size: 0.7rem;">
-                                        {% if event.calendar_type|lower == 'todo' %}
-                                            <i class="fas fa-tasks me-1" style="color: #36b9cc;"></i>TODO
-                                        {% elif event.type == 'garden' %}
-                                            <i class="fas fa-leaf me-1 text-success"></i>{{ event.garden_name }}
-                                        {% elif event.type == 'zone' %}
-                                            <i class="fas fa-map-marked-alt me-1 text-success"></i>{{ event.garden_name }} - {{ event.zone_name }}
-                                        {% elif event.type == 'plant' %}
-                                            <i class="fas fa-seedling me-1 text-success"></i>{{ event.plant_name }}
-                                        {% endif %}
-                                    </small>
-                                </div>
-                                <div class="ms-auto">
-                                    <a href="{{ url_for('main.edit_event', event_id=event.id) }}" class="btn btn-sm btn-light">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-
-                    {% if all_events|length > 5 %}
-                    <div class="text-center mt-3">
-                        <button id="load-more-events" class="btn" style="background: rgba(255, 193, 7, 0.1);
-                                    color: #ffc107;
-                                    border: 1px solid rgba(255, 193, 7, 0.2);
-                                    border-radius: 0.5rem;
-                                    transition: all 0.2s ease;">
-                            <i class="fas fa-plus-circle me-1"></i> Load More Events
-                        </button>
-                    </div>
-                    {% endif %}
-
-                    {% if all_events|length == 0 %}
-                    <div class="text-center py-3">
-                        <p class="text-muted">No upcoming events</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
         </div> <!-- Closing div for right-column-container -->
     </div>
 </div> <!-- Closing div for row -->
@@ -1064,12 +890,13 @@
                     todoItem.style.opacity = '0.7';
 
                     // Send AJAX request to mark the event as completed
-                    fetch(`/calendar/events/${todoId}/complete`, {
+                    fetch(`/event/${todoId}/toggle_complete`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                         },
+                        body: JSON.stringify({ completed: true }),
                         credentials: 'same-origin'
                     })
                     .then(response => response.json())
@@ -1109,12 +936,13 @@
                     todoItem.style.opacity = '1';
 
                     // Send AJAX request to unmark the event as completed
-                    fetch(`/calendar/events/${todoId}/uncomplete`, {
+                    fetch(`/event/${todoId}/toggle_complete`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                         },
+                        body: JSON.stringify({ completed: false }),
                         credentials: 'same-origin'
                     })
                     .then(response => response.json())
