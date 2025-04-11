@@ -100,20 +100,21 @@
                 <div class="row">
                     {% for zone in garden.zones %}
                     <div class="col-12">
-                        <div id="zone-{{ zone.id }}" class="card shadow mb-4">
+                        <div id="zone-{{ zone.id }}" class="card shadow mb-4" data-statuses='{{ zone.get_plant_statuses()|tojson }}' data-zone-id="{{ zone.id }}">
                             <div class="card-header py-3 d-flex justify-content-between align-items-center"
                                  style="border-radius: 0.75rem !important;
                                         background-color: rgba(28, 200, 138, 0.05);
                                         border-bottom: 1px solid rgba(28, 200, 138, 0.1);">
                                 <div class="d-flex align-items-center">
-                                    <h6 class="m-0 d-flex align-items-center gap-2"
+                                    <h6 class="m-0 d-flex align-items-center gap-2 zone-header"
                                         style="color: #1cc88a;
                                                font-size: 1.1rem;
                                                font-weight: 600;
-                                               letter-spacing: 0.5px;">
+                                               letter-spacing: 0.5px;"
+                                        data-zone-id="{{ zone.id }}">
                                         <i class="fas fa-map-marked-alt"
                                            style="color: rgba(28, 200, 138, 0.6);"></i>
-                                        {{ zone.name }}
+                                        <span class="zone-name">{{ zone.name }}</span>
                                         {% if zone_events and zone.id in zone_events and zone_events[zone.id]|length > 0 %}
                                         <span class="badge rounded-pill bg-warning text-dark ms-2" style="font-size: 0.7rem;">
                                             <i class="fas fa-calendar-alt me-1"></i>{{ zone_events[zone.id]|length }} upcoming
@@ -900,6 +901,12 @@
                 // Update badge content
                 statusBadge.innerHTML = `<i class="fas ${iconClass}"></i> ${newStatus}`;
 
+                // Update the timestamp to 'just now'
+                const timestampElement = plantRow.querySelector('.col-2.text-muted small');
+                if (timestampElement) {
+                    timestampElement.innerHTML = '<i class="far fa-clock me-1"></i>just now';
+                }
+
                 // Update dropdown to show current status
                 const dropdown = plantRow.querySelector('.dropdown:first-child .dropdown-menu');
                 if (dropdown) {
@@ -964,8 +971,16 @@
             return;
         }
 
-        // Store original content
+        // Store original content and plant data
         const originalContent = plantRow.innerHTML;
+        const plantName = plantRow.querySelector('.col-3 span').textContent.trim();
+        const plantVariety = plantRow.querySelector('.col-3 small')?.textContent.trim() || '';
+        const plantQuantity = plantRow.querySelector('.col-2 .badge').textContent.trim().replace(/[^0-9]/g, '');
+        const plantStatus = plantRow.querySelector('.col-3 .badge').textContent.trim();
+        const plantStatusIcon = plantRow.querySelector('.col-3 .badge i').className.replace('fas fa-', '');
+        const plantStatusClass = Array.from(plantRow.querySelector('.col-3 .badge').classList)
+            .find(cls => cls.startsWith('bg-')) || 'bg-success';
+        const lastUpdated = plantRow.querySelector('.col-2.text-muted small').innerHTML;
 
         // Show loading state
         plantRow.style.opacity = '0.7';
@@ -1027,9 +1042,26 @@
 
                     // Check if target zone has the 'no plants' message
                     const noPlantMessage = targetZoneContainer.querySelector('.text-muted');
-                    if (noPlantMessage) {
+                    if (noPlantMessage && noPlantMessage.closest('.text-center')) {
                         // Clear the 'no plants' message
                         targetZoneContainer.innerHTML = '';
+                    }
+
+                    // Check if the target zone has the column headers
+                    if (!targetZoneContainer.querySelector('.plant-table-header')) {
+                        // Add column headers
+                        const headerRow = document.createElement('div');
+                        headerRow.className = 'd-flex align-items-center py-2 px-4 border-bottom plant-table-header';
+                        headerRow.style.backgroundColor = 'rgba(28, 200, 138, 0.05)';
+                        headerRow.style.fontWeight = '500';
+                        headerRow.innerHTML = `
+                            <div class="col-3">Plant</div>
+                            <div class="col-2">Quantity</div>
+                            <div class="col-3">Status</div>
+                            <div class="col-2">Last Updated</div>
+                            <div class="col-2">Actions</div>
+                        `;
+                        targetZoneContainer.appendChild(headerRow);
                     }
 
                     // Create a new plant row for the target zone
@@ -1041,8 +1073,144 @@
                     newPlantRow.style.opacity = '0';
                     newPlantRow.setAttribute('data-plant-id', plantId);
 
-                    // Set the content back to original (but will need to update zone references)
-                    newPlantRow.innerHTML = originalContent;
+                    // Get all zones except the current one
+                    const availableZones = [];
+                    // First try to get zones from existing move links
+                    const existingMoveLinks = document.querySelectorAll(`#zone-${zoneId} .move-plant-link`);
+
+                    if (existingMoveLinks.length > 0) {
+                        existingMoveLinks.forEach(link => {
+                            const zId = link.getAttribute('data-zone-id');
+                            const zName = link.getAttribute('data-zone-name');
+                            if (zId && zName) {
+                                availableZones.push({ id: zId, name: zName });
+                            }
+                        });
+                    } else {
+                        // If no existing move links (empty zone), get zones from all garden zones
+                        document.querySelectorAll('.zone-header').forEach(zoneHeader => {
+                            const zId = zoneHeader.getAttribute('data-zone-id');
+                            const zName = zoneHeader.querySelector('.zone-name').textContent.trim();
+                            if (zId && zId !== zoneId && zName) { // Exclude current zone
+                                availableZones.push({ id: zId, name: zName });
+                            }
+                        });
+                    }
+
+                    // Get the statuses for the target zone
+                    let zoneStatuses = [];
+                    const existingStatusLinks = document.querySelectorAll(`#zone-${zoneId} .status-update-link`);
+
+                    if (existingStatusLinks.length > 0) {
+                        existingStatusLinks.forEach(link => {
+                            const status = link.getAttribute('data-status');
+                            if (status && !zoneStatuses.includes(status)) {
+                                zoneStatuses.push(status);
+                            }
+                        });
+                    } else {
+                        // If no existing status links (empty zone), use common statuses or get from zone data
+                        const zoneElement = document.querySelector(`#zone-${zoneId}`);
+                        if (zoneElement && zoneElement.hasAttribute('data-statuses')) {
+                            try {
+                                zoneStatuses = JSON.parse(zoneElement.getAttribute('data-statuses'));
+                            } catch (e) {
+                                console.error('Error parsing zone statuses:', e);
+                                // Fallback to common statuses
+                                zoneStatuses = ['Seedling', 'Growing', 'Mature', 'Harvested'];
+                            }
+                        } else {
+                            // Fallback to common statuses
+                            zoneStatuses = ['Seedling', 'Growing', 'Mature', 'Harvested'];
+                        }
+                    }
+
+                    // Build the new plant row HTML
+                    newPlantRow.innerHTML = `
+                        <!-- Plant Name & Variety -->
+                        <div class="col-3 d-flex align-items-center gap-2">
+                            <span style="color: #1cc88a; font-weight: 500;">
+                                ${plantName}
+                            </span>
+                            ${plantVariety ? `<small class="text-muted">${plantVariety}</small>` : ''}
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="col-2">
+                            <span class="badge bg-light text-success">
+                                <i class="fas fa-seedling"></i> ${plantQuantity}
+                            </span>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-3 d-flex">
+                            <span class="badge ${plantStatusClass} d-inline-flex align-items-center gap-1"
+                                  style="font-size: 0.8rem;
+                                         padding: 0.35rem 0.75rem;
+                                         white-space: nowrap;
+                                         max-width: fit-content;">
+                                <i class="fas fa-${plantStatusIcon}"></i>
+                                ${plantStatus}
+                            </span>
+                        </div>
+
+                        <!-- Last Updated -->
+                        <div class="col-2 text-muted">
+                            <small><i class="far fa-clock me-1"></i>just now</small>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="col-2 d-flex gap-1">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light px-2 py-1" onclick="toggleStatusOptions('status-dropdown-${plantId}')">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <ul id="status-dropdown-${plantId}" class="dropdown-menu dropdown-menu-end" style="display: none;">
+                                    ${zoneStatuses.map(status => `
+                                        <li>
+                                            ${status === plantStatus ? `
+                                                <span class="dropdown-item py-1 text-muted d-flex align-items-center">
+                                                    <i class="fas fa-check me-2 text-success"></i>
+                                                    ${status}
+                                                </span>
+                                            ` : `
+                                                <a class="dropdown-item py-1 status-update-link"
+                                                   href="#"
+                                                   onclick="event.preventDefault(); updatePlantStatus('${plantId}', '${status}', '${csrfToken}');"
+                                                   data-plant-id="${plantId}"
+                                                   data-status="${status}"
+                                                   data-csrf-token="${csrfToken}">
+                                                    ${status}
+                                                </a>
+                                            `}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                            ${availableZones.length > 0 ? `
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light px-2 py-1" onclick="toggleMoveOptions('move-dropdown-${plantId}')">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                    <ul id="move-dropdown-${plantId}" class="dropdown-menu dropdown-menu-end" style="display: none;">
+                                        ${availableZones.map(zone => `
+                                            <li>
+                                                <a class="dropdown-item py-1 move-plant-link"
+                                                   href="#"
+                                                   onclick="event.preventDefault(); movePlant('${plantId}', '${zone.id}', '${zone.name}', '${csrfToken}');"
+                                                   data-plant-id="${plantId}"
+                                                   data-zone-id="${zone.id}"
+                                                   data-zone-name="${zone.name}"
+                                                   data-csrf-token="${csrfToken}">
+                                                    ${zone.name}
+                                                </a>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
 
                     // Add to target zone
                     targetZoneContainer.appendChild(newPlantRow);
