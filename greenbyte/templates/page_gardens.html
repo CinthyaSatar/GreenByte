@@ -253,10 +253,10 @@
                                         'icon': status_icons[plant.status] if plant.status in status_icons else 'circle',
                                         'extra_style': 'background-color: ' ~ color_sequence[color_index].color ~ ' !important;'
                                     } %}
-                                    <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom"
+                                    <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom" data-plant-id="{{ plant.id }}"
                                          style="border-color: rgba(28, 200, 138, 0.1) !important;
-
-                                                    transition: background-color 0.2s ease;">
+                                                min-width: 650px;
+                                                transition: background-color 0.2s ease;">
                                         <!-- Plant Name & Variety -->
                                         <div class="col-3 d-flex align-items-center gap-2">
                                             <span style="color: #1cc88a; font-weight: 500;">
@@ -303,10 +303,10 @@
                                         <!-- Actions -->
                                         <div class="col-2 d-flex gap-1">
                                             <div class="dropdown">
-                                                <button class="btn btn-sm btn-light px-2 py-1" data-bs-toggle="dropdown">
+                                                <button class="btn btn-sm btn-light px-2 py-1" onclick="toggleStatusOptions('status-dropdown-{{ plant.id }}')">
                                                     <i class="fas fa-sync-alt"></i>
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                <ul id="status-dropdown-{{ plant.id }}" class="dropdown-menu dropdown-menu-end" style="display: none;">
                                                     {% for status in zone.get_plant_statuses() %}
                                                     <li>
                                                         {% if status == plant.status %}
@@ -319,6 +319,7 @@
                                                         <!-- Other statuses - clickable -->
                                                         <a class="dropdown-item py-1 status-update-link"
                                                            href="#"
+                                                           onclick="event.preventDefault(); updatePlantStatus('{{ plant.id }}', '{{ status }}', '{{ csrf_token() }}');"
                                                            data-plant-id="{{ plant.id }}"
                                                            data-status="{{ status }}"
                                                            data-csrf-token="{{ csrf_token() }}">
@@ -331,15 +332,16 @@
                                             </div>
                                             {% if garden.zones|length > 1 %}
                                             <div class="dropdown">
-                                                <button class="btn btn-sm btn-light px-2 py-1" data-bs-toggle="dropdown">
+                                                <button class="btn btn-sm btn-light px-2 py-1" onclick="toggleMoveOptions('move-dropdown-{{ plant.id }}')">
                                                     <i class="fas fa-exchange-alt"></i>
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                <ul id="move-dropdown-{{ plant.id }}" class="dropdown-menu dropdown-menu-end" style="display: none;">
                                                     {% for available_zone in garden.zones %}
                                                         {% if available_zone.id != plant.zone_id %}
                                                         <li>
                                                             <a class="dropdown-item py-1 move-plant-link"
                                                                href="#"
+                                                               onclick="event.preventDefault(); movePlant('{{ plant.id }}', '{{ available_zone.id }}', '{{ available_zone.name }}', '{{ csrf_token() }}');"
                                                                data-plant-id="{{ plant.id }}"
                                                                data-zone-id="{{ available_zone.id }}"
                                                                data-zone-name="{{ available_zone.name }}"
@@ -795,6 +797,302 @@
 {{ super() }}
 {% include 'gardens_scripts.html' %}
 <script>
+    // Toggle status dropdown visibility
+    function toggleStatusOptions(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            // Hide all other dropdown menus first
+            document.querySelectorAll('.dropdown-menu').forEach(el => {
+                if (el.id !== id) el.style.display = 'none';
+            });
+
+            // Toggle this menu
+            element.style.display = element.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    // Toggle move dropdown visibility
+    function toggleMoveOptions(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            // Hide all other dropdown menus first
+            document.querySelectorAll('.dropdown-menu').forEach(el => {
+                if (el.id !== id) el.style.display = 'none';
+            });
+
+            // Toggle this menu
+            element.style.display = element.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    // Update plant status
+    function updatePlantStatus(plantId, newStatus, csrfToken) {
+        console.log('Updating plant status:', plantId, 'to', newStatus);
+
+        // Find the plant row
+        const plantRow = document.querySelector(`.plant-row[data-plant-id="${plantId}"]`);
+        if (!plantRow) {
+            console.error('Plant row not found for ID:', plantId);
+            return;
+        }
+
+        // Find the status badge
+        const statusBadge = plantRow.querySelector('.col-3 .badge');
+        if (!statusBadge) {
+            console.error('Status badge not found for plant ID:', plantId);
+            return;
+        }
+
+        // Show loading state
+        const originalBadgeHTML = statusBadge.innerHTML;
+        statusBadge.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Updating...`;
+
+        // Send AJAX request
+        fetch(`/api/plant/${plantId}/status/${newStatus}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the status badge with new status
+                let iconClass = 'fa-seedling'; // Default icon
+                let badgeClass = 'bg-success'; // Default color
+
+                // Determine icon and color based on status
+                switch(newStatus.toLowerCase()) {
+                    case 'seedling':
+                        iconClass = 'fa-seedling';
+                        badgeClass = 'bg-success';
+                        break;
+                    case 'growing':
+                        iconClass = 'fa-leaf';
+                        badgeClass = 'bg-info';
+                        break;
+                    case 'mature':
+                        iconClass = 'fa-tree';
+                        badgeClass = 'bg-primary';
+                        break;
+                    case 'harvested':
+                        iconClass = 'fa-check';
+                        badgeClass = 'bg-warning';
+                        break;
+                    case 'dormant':
+                        iconClass = 'fa-moon';
+                        badgeClass = 'bg-secondary';
+                        break;
+                    case 'diseased':
+                        iconClass = 'fa-biohazard';
+                        badgeClass = 'bg-danger';
+                        break;
+                    case 'dead':
+                        iconClass = 'fa-skull';
+                        badgeClass = 'bg-dark';
+                        break;
+                }
+
+                // Update badge class
+                statusBadge.className = statusBadge.className.replace(/bg-\w+/g, badgeClass);
+
+                // Update badge content
+                statusBadge.innerHTML = `<i class="fas ${iconClass}"></i> ${newStatus}`;
+
+                // Update dropdown to show current status
+                const dropdown = plantRow.querySelector('.dropdown:first-child .dropdown-menu');
+                if (dropdown) {
+                    const items = dropdown.querySelectorAll('li');
+                    items.forEach(item => {
+                        const link = item.querySelector('a');
+                        const span = item.querySelector('span');
+
+                        if (link && link.textContent.trim() === newStatus) {
+                            // Convert link to current status indicator
+                            item.innerHTML = `
+                                <span class="dropdown-item py-1 text-muted d-flex align-items-center">
+                                    <i class="fas fa-check me-2 text-success"></i>
+                                    ${newStatus}
+                                </span>
+                            `;
+                        } else if (span && span.textContent.trim().includes(newStatus)) {
+                            // Already the current status
+                        } else if (span && span.querySelector('.fa-check')) {
+                            // Convert current status indicator back to link
+                            const statusText = span.textContent.trim();
+                            item.innerHTML = `
+                                <a class="dropdown-item py-1 status-update-link"
+                                   href="#"
+                                   onclick="event.preventDefault(); updatePlantStatus('${plantId}', '${statusText}', '${csrfToken}');">
+                                    ${statusText}
+                                </a>
+                            `;
+                        }
+                    });
+                }
+
+                // Don't show a toast here - it's already shown by the original function
+            } else {
+                // Restore original badge on error
+                statusBadge.innerHTML = originalBadgeHTML;
+                // Don't show a toast here - it's already shown by the original function
+            }
+
+            // Hide the dropdown
+            const dropdown = plantRow.querySelector('.dropdown:first-child .dropdown-menu');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Restore original badge on error
+            statusBadge.innerHTML = originalBadgeHTML;
+            // Don't show a toast here - it's already shown by the original function
+        });
+    }
+
+    // Move plant to another zone
+    function movePlant(plantId, zoneId, zoneName, csrfToken) {
+        console.log('Moving plant:', plantId, 'to zone:', zoneId, zoneName);
+
+        // Find the plant row
+        const plantRow = document.querySelector(`.plant-row[data-plant-id="${plantId}"]`);
+        if (!plantRow) {
+            console.error('Plant row not found for ID:', plantId);
+            return;
+        }
+
+        // Store original content
+        const originalContent = plantRow.innerHTML;
+
+        // Show loading state
+        plantRow.style.opacity = '0.7';
+        plantRow.style.transition = 'opacity 0.3s';
+        plantRow.innerHTML = `
+            <div class="col-12 text-center py-3">
+                <i class="fas fa-spinner fa-spin me-2"></i> Moving plant to ${zoneName}...
+            </div>
+        `;
+
+        // Send AJAX request
+        fetch(`/api/plant/${plantId}/move/${zoneId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Get the current zone ID
+                const currentZoneId = data.old_zone_id || plantRow.closest('.zone-content').getAttribute('data-zone-id');
+
+                // Get the current zone container
+                const currentZoneContainer = document.querySelector(`#zone-${currentZoneId} .plants-container`);
+
+                // Get the target zone container
+                const targetZoneContainer = document.querySelector(`#zone-${zoneId} .plants-container`);
+
+                if (!currentZoneContainer || !targetZoneContainer) {
+                    console.error('Zone containers not found');
+                    // Fallback to page reload
+                    window.location.reload();
+                    return;
+                }
+
+                // Animate the removal
+                plantRow.style.opacity = '0';
+                plantRow.style.height = '0';
+                plantRow.style.overflow = 'hidden';
+                plantRow.style.transition = 'opacity 0.5s, height 0.5s';
+
+                // After animation, remove from current zone and add to target zone
+                setTimeout(() => {
+                    // Remove from current zone
+                    if (plantRow.parentNode) {
+                        plantRow.parentNode.removeChild(plantRow);
+                    }
+
+                    // Check if current zone is now empty
+                    if (currentZoneContainer.querySelectorAll('.plant-row').length === 0) {
+                        currentZoneContainer.innerHTML = `
+                            <div class="text-center py-3">
+                                <small class="text-muted">No plants in this zone yet</small>
+                            </div>
+                        `;
+                    }
+
+                    // Check if target zone has the 'no plants' message
+                    const noPlantMessage = targetZoneContainer.querySelector('.text-muted');
+                    if (noPlantMessage) {
+                        // Clear the 'no plants' message
+                        targetZoneContainer.innerHTML = '';
+                    }
+
+                    // Create a new plant row for the target zone
+                    const newPlantRow = document.createElement('div');
+                    newPlantRow.className = 'plant-row d-flex align-items-center py-2 px-4 border-bottom';
+                    newPlantRow.style.borderColor = 'rgba(28, 200, 138, 0.1) !important';
+                    newPlantRow.style.minWidth = '650px';
+                    newPlantRow.style.transition = 'background-color 0.2s ease';
+                    newPlantRow.style.opacity = '0';
+                    newPlantRow.setAttribute('data-plant-id', plantId);
+
+                    // Set the content back to original (but will need to update zone references)
+                    newPlantRow.innerHTML = originalContent;
+
+                    // Add to target zone
+                    targetZoneContainer.appendChild(newPlantRow);
+
+                    // Fade in the new row
+                    setTimeout(() => {
+                        newPlantRow.style.opacity = '1';
+                        newPlantRow.style.transition = 'opacity 0.5s';
+                    }, 50);
+
+                    // Show success toast
+                    window.showToast(`Plant moved to "${zoneName}"`, 'bg-success');
+                }, 500);
+            } else {
+                // Restore original content on error
+                plantRow.innerHTML = originalContent;
+                plantRow.style.opacity = '1';
+
+                // Show error toast
+                window.showToast('Error: ' + (data.error || 'Failed to move plant'), 'bg-danger');
+            }
+
+            // Hide the dropdown
+            const dropdown = document.querySelector(`.dropdown-menu[id^="move-dropdown-${plantId}"]`);
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            // Restore original content on error
+            plantRow.innerHTML = originalContent;
+            plantRow.style.opacity = '1';
+
+            // Show error toast
+            window.showToast('An error occurred while moving the plant', 'bg-danger');
+        });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        // Check if the click was outside any dropdown
+        if (!event.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-menu').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         // Load more events functionality
         const loadMoreBtn = document.getElementById('load-more-events');
