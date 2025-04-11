@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>{{ title }}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='css/custom.css') }}"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8f9fc;
+        overflow-x: hidden;
+      }
+
+      /* Custom card styling */
+      .custom-card {
+        border: 1px solid rgba(28, 200, 138, 0.2) !important;
+        border-radius: 1.5rem !important;
+        border-bottom: 4px solid rgba(28, 200, 138, 0.2) !important;
+        background: white !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+      }
+
+      /* Navbar styling */
+      .navbar {
+        background-color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 15px 0;
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        color: #1cc88a !important;
+        font-size: 1.5rem;
+      }
+
+      .nav-link {
+        color: #555;
+        font-weight: 500;
+        margin: 0 10px;
+        transition: all 0.2s;
+      }
+
+      .nav-link:hover {
+        color: #1cc88a;
+      }
+
+      .btn-success {
+        background-color: #1cc88a;
+        border-color: #1cc88a;
+      }
+
+      .btn-outline-success {
+        color: #1cc88a;
+        border-color: #1cc88a;
+      }
+
+      .btn-outline-success:hover {
+        background-color: #1cc88a;
+        color: white;
+      }
+
+      /* Minimalist login/signup links */
+      .nav-link-login {
+        color: #1cc88a;
+        font-weight: 600;
+        position: relative;
+        padding: 0.5rem 1rem;
+        margin-right: 0.5rem;
+      }
+
+      .nav-link-login::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 1rem;
+        background-color: #1cc88a;
+        transition: width 0.3s ease;
+      }
+
+      .nav-link-login:hover::after {
+        width: calc(100% - 2rem);
+      }
+
+      .nav-link-signup {
+        color: white;
+        font-weight: 600;
+        background-color: #1cc88a;
+        border-radius: 50px;
+        padding: 0.5rem 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(28, 200, 138, 0.3);
+      }
+
+      .nav-link-signup:hover {
+        background-color: #15a76c;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(28, 200, 138, 0.4);
+      }
+
+      /* Pricing section styles */
+      #pricing .card {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #pricing .card-body {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #pricing ul {
+        flex-grow: 1;
+      }
+
+      #pricing .text-center.mt-4 {
+        margin-top: auto !important;
+      }
+
+      #pricing li {
+        margin-bottom: 0.5rem !important;
+      }
+
+      #pricing .text-center.mb-4 {
+        margin-bottom: 1rem !important;
+      }
+
+      #pricing .display-4 {
+        font-size: 2.5rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container-fluid px-4">
+        <a class="navbar-brand ms-2" href="#">
+          <i class="fas fa-leaf me-2"></i>GreenByte
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <!-- Left side navigation items -->
+          <ul class="navbar-nav me-auto ms-4">
+            <li class="nav-item">
+              <a class="nav-link" href="#features">Features</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#how-it-works">How It Works</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#pricing">Pricing</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#contact">Contact</a>
+            </li>
+          </ul>
+
+          <!-- Right side authentication items -->
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link nav-link-login" href="{{ url_for('users.login') }}">
+                Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link nav-link-signup" href="{{ url_for('users.register') }}">
+                Sign Up
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div style="padding-top: 80px">
+      <!-- Hero Section -->
+      <section
+        class="py-5 mb-5"
+        style="
+          background: linear-gradient(
+              135deg,
+              rgba(28, 200, 138, 0.8),
+              rgba(28, 200, 138, 0.4)
+            ),
+            url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80');
+          background-size: cover;
+          background-position: center;
+          color: white;
+          border-radius: 1.5rem;
+          position: relative;
+        "
+      >
+        <div
+          style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1.5rem;
+          "
+        ></div>
+        <div class="container position-relative" style="z-index: 10">
+          <div class="row align-items-center">
+            <div class="col-lg-6">
+              <h1 class="display-4 fw-bold mb-4">
+                Smart Garden Management for Modern Farmers
+              </h1>
+              <p class="lead mb-4">
+                Track plants, monitor growth, plan harvests, and manage your
+                commercial operations all in one place.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <a
+                  href="{{ url_for('users.register') }}"
+                  class="btn btn-light btn-lg px-4 me-md-2"
+                  >Get Started</a
+                >
+                <a href="#features" class="btn btn-outline-light btn-lg px-4"
+                  >Learn More</a
+                >
+              </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+              <img
+                src="{{ url_for('static', filename='img/landing/chard.jpg') }}"
+                alt="Garden Dashboard"
+                class="img-fluid rounded-4 shadow-lg"
+                style="
+                  transform: perspective(1000px) rotateY(-15deg) rotateX(5deg);
+                  border: 10px solid white;
+                  width: 450px;
+                  height: 300px;
+                  object-fit: cover;
+                  display: block;
+                  margin: 0 auto;
+                "
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section class="py-5" id="features">
+        <div class="container py-5">
+          <div class="text-center mb-5">
+            <h2 class="fw-bold" style="color: #1cc88a">
+              Powerful Features for Garden Management
+            </h2>
+            <p class="lead text-muted">
+              Everything you need to manage your garden efficiently
+            </p>
+          </div>
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="card custom-card p-4 h-100">
+                <div class="text-center">
+                  <i
+                    class="fas fa-seedling mb-4"
+                    style="font-size: 2.5rem; color: #1cc88a"
+                  ></i>
+                  <h4 class="fw-bold mb-3">Plant Tracking</h4>
+                  <p class="text-muted">
+                    Monitor growth stages, health status, and harvest readiness
+                    of all your plants.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card custom-card p-4 h-100">
+                <div class="text-center">
+                  <i
+                    class="fas fa-calendar-alt mb-4"
+                    style="font-size: 2.5rem; color: #1cc88a"
+                  ></i>
+                  <h4 class="fw-bold mb-3">Garden Planning</h4>
+                  <p class="text-muted">
+                    Organize your garden into zones, plan planting schedules,
+                    and set reminders.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card custom-card p-4 h-100">
+                <div class="text-center">
+                  <i
+                    class="fas fa-chart-line mb-4"
+                    style="font-size: 2.5rem; color: #1cc88a"
+                  ></i>
+                  <h4 class="fw-bold mb-3">Growth Analytics</h4>
+                  <p class="text-muted">
+                    Visualize plant growth data and optimize your gardening
+                    practices.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card custom-card p-4 h-100">
+                <div class="text-center">
+                  <i
+                    class="fas fa-users mb-4"
+                    style="font-size: 2.5rem; color: #1cc88a"
+                  ></i>
+                  <h4 class="fw-bold mb-3">Client Management</h4>
+                  <p class="text-muted">
+                    Manage your customers, track preferences, and build
+                    relationships.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card custom-card p-4 h-100">
+                <div class="text-center">
+                  <i
+                    class="fas fa-shopping-cart mb-4"
+                    style="font-size: 2.5rem; color: #1cc88a"
+                  ></i>
+                  <h4 class="fw-bold mb-3">Order Processing</h4>
+                  <p class="text-muted">
+                    Create and track orders, manage inventory, and streamline
+                    deliveries.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card custom-card p-4 h-100">
+                <div class="text-center">
+                  <i
+                    class="fas fa-mobile-alt mb-4"
+                    style="font-size: 2.5rem; color: #1cc88a"
+                  ></i>
+                  <h4 class="fw-bold mb-3">Mobile Friendly</h4>
+                  <p class="text-muted">
+                    Access your garden data from anywhere, on any device.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section
+        class="py-5 bg-light"
+        id="how-it-works"
+        style="border-radius: 1.5rem"
+      >
+        <div class="container py-5">
+          <div class="text-center mb-5">
+            <h2 class="fw-bold" style="color: #1cc88a">How GreenByte Works</h2>
+            <p class="lead text-muted">
+              Simple steps to transform your garden management
+            </p>
+          </div>
+          <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+              <img
+                src="https://images.unsplash.com/photo-1598901865264-4f1e098a5a38?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
+                alt="Garden Dashboard"
+                class="img-fluid rounded-4 shadow"
+                style="transition: all 0.3s"
+              />
+            </div>
+            <div class="col-lg-6">
+              <div class="d-flex mb-4">
+                <div class="me-4">
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-circle bg-success text-white"
+                    style="width: 50px; height: 50px"
+                  >
+                    <span class="fw-bold">1</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="fw-bold">Set Up Your Garden</h4>
+                  <p class="text-muted">
+                    Create your garden profile, define zones, and add your
+                    plants.
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex mb-4">
+                <div class="me-4">
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-circle bg-success text-white"
+                    style="width: 50px; height: 50px"
+                  >
+                    <span class="fw-bold">2</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="fw-bold">Track Growth & Health</h4>
+                  <p class="text-muted">
+                    Record plant progress, add notes, and upload photos as your
+                    garden grows.
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex mb-4">
+                <div class="me-4">
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-circle bg-success text-white"
+                    style="width: 50px; height: 50px"
+                  >
+                    <span class="fw-bold">3</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="fw-bold">Manage Commercial Operations</h4>
+                  <p class="text-muted">
+                    Process orders, manage clients, and track deliveries for
+                    your farm business.
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex">
+                <div class="me-4">
+                  <div
+                    class="d-flex align-items-center justify-content-center rounded-circle bg-success text-white"
+                    style="width: 50px; height: 50px"
+                  >
+                    <span class="fw-bold">4</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="fw-bold">Analyze & Optimize</h4>
+                  <p class="text-muted">
+                    Use analytics to improve yields, plan future plantings, and
+                    grow your business.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pricing Section -->
+      <section class="py-5" id="pricing">
+        <div class="container py-5">
+          <div class="text-center mb-5">
+            <h2 class="fw-bold" style="color: #1cc88a">Choose Your Plan</h2>
+            <p class="lead text-muted">
+              Select the plan that best fits your gardening needs
+            </p>
+          </div>
+          <div class="row g-4 justify-content-center">
+            <!-- Basic Plan -->
+            <div class="col-lg-4 col-md-6">
+              <div class="card custom-card h-100 position-relative overflow-hidden">
+                <div class="card-body p-4">
+                  <div class="text-center mb-4">
+                    <h3 class="fw-bold">Basic</h3>
+                    <div class="d-flex justify-content-center align-items-baseline my-3">
+                      <h2 class="display-4 fw-bold mb-0">$0</h2>
+                      <span class="text-muted ms-1">/month</span>
+                    </div>
+                    <p class="text-muted">Perfect for hobby gardeners</p>
+                  </div>
+                  <ul class="list-unstyled">
+                    <li class="mb-2">
+                      <i class="fas fa-check me-2 text-success"></i> Access to community
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Limited garden access (1 garden, 2 zones max)
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Access to calendar
+                    </li>
+                  </ul>
+                  <div class="text-center mt-4">
+                    <a href="{{ url_for('users.register') }}" class="btn btn-outline-success btn-lg w-100">Select Basic Plan</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Advanced Plan -->
+            <div class="col-lg-4 col-md-6">
+              <div class="card custom-card h-100 position-relative overflow-hidden" style="border-color: rgba(28, 200, 138, 0.5) !important; border-width: 2px !important;">
+                <div class="card-body p-4">
+                  <div class="text-center mb-4">
+                    <h3 class="fw-bold">Advanced</h3>
+                    <div class="d-flex justify-content-center align-items-baseline my-3">
+                      <h2 class="display-4 fw-bold mb-0">$20</h2>
+                      <span class="text-muted ms-1">/month</span>
+                    </div>
+                    <p class="text-muted">Or $200/year (save $40)</p>
+                  </div>
+                  <ul class="list-unstyled">
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Access to community
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> <strong>Unlimited</strong> garden access
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Access to calendar
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Access to analytics page
+                    </li>
+                  </ul>
+                  <div class="text-center mt-4">
+                    <a href="{{ url_for('users.register') }}" class="btn btn-success btn-lg w-100">Select Advanced Plan</a>
+                  </div>
+                </div>
+                <div class="position-absolute" style="top: 0; right: 0;">
+                  <div class="bg-success text-white py-1 px-3" style="transform: rotate(45deg) translateX(30px) translateY(-10px); width: 150px; text-align: center;">
+                    Popular
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="col-lg-4 col-md-6">
+              <div class="card custom-card h-100 position-relative overflow-hidden">
+                <div class="card-body p-4">
+                  <div class="text-center mb-4">
+                    <h3 class="fw-bold">Pro</h3>
+                    <div class="d-flex justify-content-center align-items-baseline my-3">
+                      <h2 class="display-4 fw-bold mb-0">$50</h2>
+                      <span class="text-muted ms-1">/month</span>
+                    </div>
+                    <p class="text-muted">Or $500/year (save $100)</p>
+                  </div>
+                  <ul class="list-unstyled">
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Access to community
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> <strong>Unlimited</strong> garden access
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Access to calendar
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Access to analytics page
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Commercial features
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Client management
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Order processing
+                    </li>
+                    <li class="mb-3">
+                      <i class="fas fa-check me-2 text-success"></i> Priority support
+                    </li>
+                  </ul>
+                  <div class="text-center mt-4">
+                    <a href="{{ url_for('users.register') }}" class="btn btn-outline-success btn-lg w-100">Select Pro Plan</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section class="py-5">
+        <div class="container py-4">
+          <div
+            class="p-5 text-center text-white"
+            style="
+              background: linear-gradient(135deg, #1cc88a, #13855c);
+              border-radius: 1.5rem;
+            "
+          >
+            <h2 class="fw-bold mb-3">
+              Ready to Transform Your Garden Management?
+            </h2>
+            <p class="lead mb-4">
+              Join thousands of gardeners and farmers who are growing better
+              with GreenByte.
+            </p>
+            <a
+              href="{{ url_for('users.register') }}"
+              class="btn btn-light btn-lg px-5"
+              >Get Started Today</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact & Social Section -->
+      <section class="py-4 bg-light" id="contact" style="border-radius: 1.5rem; margin-top: 2rem;">
+        <div class="container py-3">
+          <div class="row align-items-center">
+            <div class="col-md-6 mb-4 mb-md-0">
+              <h3 class="fw-bold" style="color: #1cc88a">Connect With Us</h3>
+              <p class="text-muted mb-4">Have questions or feedback? We'd love to hear from you!</p>
+
+              <div class="d-flex align-items-center mb-3">
+                <div class="me-3">
+                  <i class="fas fa-envelope" style="font-size: 1.2rem; color: #1cc88a;"></i>
+                </div>
+                <div>
+                  <p class="mb-0"><a href="mailto:greenbyte12@gmail.com" class="text-decoration-none text-muted">greenbyte12@gmail.com</a></p>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center">
+                <div class="me-3">
+                  <i class="fab fa-instagram" style="font-size: 1.2rem; color: #1cc88a;"></i>
+                </div>
+                <div>
+                  <p class="mb-0"><a href="https://instagram.com/GreenByteCA" target="_blank" class="text-decoration-none text-muted">@GreenByteCA</a></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card custom-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                  <h4 class="fw-bold mb-3" style="color: #1cc88a">Stay Updated</h4>
+                  <p class="text-muted mb-3">Subscribe to our newsletter for gardening tips and updates.</p>
+
+                  <div class="input-group mb-3">
+                    <input type="email" class="form-control" placeholder="Your email address" aria-label="Your email address">
+                    <button class="btn btn-success" type="button">Subscribe</button>
+                  </div>
+
+                  <div class="d-flex justify-content-center mt-3">
+                    <a href="https://instagram.com/GreenByteCA" target="_blank" class="text-decoration-none">
+                      <i class="fab fa-instagram" style="font-size: 1.8rem; color: #1cc88a;"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="py-4">
+        <div class="container">
+          <div class="row">
+            <div class="col-12 text-center">
+              <p class="text-muted mb-0">&copy; 2023 GreenByte. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+
+    // Add navbar background on scroll
+    window.addEventListener('scroll', function() {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.classList.add('shadow');
+      } else {
+        navbar.classList.remove('shadow');
+      }
+    });
+  </script>
+</body>
+</html>

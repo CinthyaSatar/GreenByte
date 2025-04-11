@@ -8,6 +8,11 @@ main = Blueprint('main', __name__)
 
 @main.route("/")
 def index():
+    # Show landing page for non-authenticated users
+    if not current_user.is_authenticated:
+        return render_template('landing_page.html', title='Welcome to GreenByte')
+
+    # For authenticated users, show the regular dashboard
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
 
