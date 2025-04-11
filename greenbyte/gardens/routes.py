@@ -913,7 +913,8 @@ def update_plant_status_ajax(plant_id, status):
         return jsonify({'success': False, 'error': 'Invalid status'}), 400
 
     try:
-        plant.update_status(status, notes=f"Status updated to {status}")
+        old_status = plant.status
+        plant.update_status(status, notes=f"Status updated from {old_status} to {status}")
         garden.last_updated = now_in_timezone()
         db.session.commit()
 
@@ -966,7 +967,7 @@ def update_plant_status_ajax(plant_id, status):
             'success': True,
             'status': status,
             'style': style,
-            'message': 'Plant status updated successfully!',
+            'message': f'Plant status updated from {old_status} to {status}',
             'timestamp': timestamp,
             'timestamp_display': timestamp_display,
             'valid_statuses': valid_statuses

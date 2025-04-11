@@ -14,7 +14,9 @@
   <style>
     body {
       background: #f8f9fc;
-      overflow-x: hidden;
+      overflow-x: hidden !important;
+      max-width: 100% !important;
+      width: 100% !important;
     }
 
     /* Custom card styling */
@@ -87,6 +89,7 @@
     #content-wrapper {
       margin-left: 96px;
       padding: 1rem;
+      transition: margin-left 0.3s ease;
     }
 
     /* Divider styles */
@@ -94,6 +97,191 @@
       border: none;
       border-top: 1px solid rgba(28, 200, 138, 0.1);
       margin: 0.5rem 1rem;
+    }
+
+    /* Hamburger menu button */
+    .hamburger-menu {
+      display: none; /* Hidden by default on desktop */
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 1040;
+      background-color: white;
+      border: 1px solid rgba(28, 200, 138, 0.2);
+      border-radius: 0.25rem;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      color: #1cc88a;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .hamburger-menu:hover {
+      color: #19a97c;
+      background-color: #f8f9fc;
+    }
+
+    /* Sidebar overlay */
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1025;
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      /* Ensure nav links have proper padding */
+      .sidebar .nav-link {
+        padding: 1rem !important;
+      }
+
+      /* Ensure logo and user sections have proper padding */
+      .logo-section {
+        padding: 1.5rem 0 !important;
+      }
+
+      .user-section {
+        padding: 1.5rem 0 !important;
+        margin-top: auto !important;
+      }
+
+      /* Custom scrollbar for sidebar */
+      .sidebar::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .sidebar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(28, 200, 138, 0.3);
+        border-radius: 10px;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(28, 200, 138, 0.5);
+      }
+      .hamburger-menu {
+        display: flex !important; /* Always show on mobile with !important to override */
+        align-items: center;
+        justify-content: center;
+        top: 0.75rem;
+        left: 0.75rem;
+      }
+
+      /* Make the sidebar overlay the content on mobile */
+      .sidebar {
+        position: fixed !important;
+        top: 1rem !important;
+        left: 1rem !important;
+        height: calc(100vh - 2rem) !important;
+        max-height: calc(100vh - 2rem) !important;
+        overflow-y: auto !important;
+        z-index: 1030 !important;
+        display: none !important; /* Hide by default on mobile */
+        transition: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+        border-radius: 1.5rem !important;
+        margin: 0 !important;
+        padding: 1rem 0 !important;
+        background-color: white !important;
+        border: 1px solid rgba(28, 200, 138, 0.2) !important;
+        border-bottom: 4px solid rgba(28, 200, 138, 0.2) !important;
+        flex-direction: column !important;
+      }
+
+      /* When sidebar is toggled */
+      body.sidebar-toggled .sidebar {
+        display: flex !important; /* Show as flex to maintain column layout */
+      }
+
+      body.sidebar-toggled .hamburger-menu {
+        display: none !important; /* Hide hamburger when sidebar is visible with !important to override */
+      }
+
+      body.sidebar-toggled #sidebar-overlay {
+        display: block;
+        opacity: 1;
+      }
+
+      /* Adjust main content for mobile */
+      #content-wrapper {
+        margin-left: 0 !important; /* Remove margin for sidebar */
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      #content {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      .container-fluid {
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      /* Center content in single column */
+      .row {
+        justify-content: flex-start !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      /* Expand cards to use more space */
+      .card {
+        margin-bottom: 1rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 1rem !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      /* Make content use more of the screen width */
+      .col-xl-8, .col-lg-7, .col-md-6, .col-sm-12 {
+        padding-left: 0.1rem !important;
+        padding-right: 0.1rem !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        overflow-x: hidden !important;
+      }
+
+      /* Adjust right column cards */
+      .col-xl-4, .col-lg-5, .col-md-6 {
+        padding-left: 0.1rem !important;
+        padding-right: 0.1rem !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        overflow-x: hidden !important;
+      }
     }
 
     /* Logo section styles */
@@ -117,6 +305,7 @@
     .user-section {
       padding: 1rem 0;
       text-align: center;
+      margin-top: auto;
     }
 
     .user-btn {
@@ -183,7 +372,15 @@
   <title>GreenByte Dashboard</title>
 </head>
 
-<body>
+<body class="">
+  <!-- Mobile Hamburger Menu Button -->
+  <button id="sidebarToggle" class="hamburger-menu">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Sidebar Overlay -->
+  <div id="sidebar-overlay"></div>
+
   <!-- Floating Sidebar -->
   <nav class="sidebar">
     <!-- Logo Section -->
@@ -333,10 +530,61 @@
 
   <!-- Sidebar Toggle Script -->
   <script>
-    document.getElementById('sidebarToggle').addEventListener('click', function () {
-      document.body.classList.toggle('sidebar-toggled');
-      // Remove icon changing logic - keep hamburger icon
+    document.addEventListener('DOMContentLoaded', function() {
+      // Ensure sidebar is hidden by default on mobile
+      if (window.innerWidth <= 768) {
+        document.body.classList.remove('sidebar-toggled');
+      }
+
+      // Sidebar toggle button
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      // Toggle sidebar when hamburger button is clicked
+      sidebarToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.body.classList.toggle('sidebar-toggled');
+
+        // Explicitly hide the hamburger button when sidebar is toggled
+        if (document.body.classList.contains('sidebar-toggled')) {
+          sidebarToggle.style.display = 'none';
+        } else {
+          sidebarToggle.style.display = '';
+        }
+      });
+
+      // Close sidebar when overlay is clicked
+      overlay.addEventListener('click', function() {
+        document.body.classList.remove('sidebar-toggled');
+        // Show hamburger button again
+        sidebarToggle.style.display = '';
+      });
+
+      // Close sidebar when a nav link is clicked on mobile
+      const navLinks = document.querySelectorAll('.sidebar .nav-link');
+      navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          if (window.innerWidth <= 768) {
+            document.body.classList.remove('sidebar-toggled');
+            // Show hamburger button again
+            sidebarToggle.style.display = '';
+          }
+        });
+      });
+
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768 && document.body.classList.contains('sidebar-toggled')) {
+          document.body.classList.remove('sidebar-toggled');
+        }
+      });
     });
+
+    // Also run this immediately to ensure sidebar is hidden on page load
+    if (window.innerWidth <= 768) {
+      document.body.classList.remove('sidebar-toggled');
+    }
   </script>
 
   <!-- Initialize Flash Message Toasts -->
