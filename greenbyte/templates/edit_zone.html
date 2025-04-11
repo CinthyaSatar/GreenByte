@@ -7,21 +7,26 @@
             <div class="card shadow-sm border-0" style="border-radius: 1rem; border: 1px solid rgba(28, 200, 138, 0.2) !important;">
                 <div class="card-body p-4">
                     <!-- Header -->
-                    <div class="d-flex align-items-center mb-4">
-                        <h2 class="mb-0 text-dark">Edit Zone</h2>
-                        <span class="ms-3 badge" style="background: rgba(28, 200, 138, 0.1); color: #1cc88a;">
-                            {{ zone.name }}
-                        </span>
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <h2 class="mb-0 text-dark">Edit Zone</h2>
+                            <span class="ms-3 badge" style="background: rgba(28, 200, 138, 0.1); color: #1cc88a;">
+                                {{ zone.name }}
+                            </span>
+                        </div>
+                        <a href="{{ url_for('main.add_calendar_event', garden_id=zone.garden_id, zone_id=zone.id, calendar_type='todo') }}" class="btn btn-success" style="border-radius: 0.75rem;">
+                            <i class="fas fa-tasks me-1"></i> Add TODO
+                        </a>
                     </div>
-                    
+
                     <form method="POST">
                         {{ form.hidden_tag() }}
-                        
+
                         <!-- Zone Name Field -->
                         <div class="mb-4">
                             {{ form.name.label(class="form-label fw-bold") }}
-                            {{ form.name(class="form-control", 
-                                        style="border: 1px solid rgba(28, 200, 138, 0.2); 
+                            {{ form.name(class="form-control",
+                                        style="border: 1px solid rgba(28, 200, 138, 0.2);
                                                border-radius: 0.75rem;
                                                padding: 0.75rem;
                                                background: rgba(255, 255, 255, 0.9);") }}
@@ -33,13 +38,13 @@
                             <div class="status-list">
                                 {% for status_field in form.plant_statuses %}
                                     <div class="input-group mb-2">
-                                        {{ status_field(class="form-control", 
+                                        {{ status_field(class="form-control",
                                                       style="border: 1px solid rgba(28, 200, 138, 0.2);
                                                              border-radius: 0.75rem;
                                                              padding: 0.75rem;
                                                              background: rgba(255, 255, 255, 0.9);") }}
                                         {% if not loop.first %}
-                                            <button type="button" class="btn btn-outline-danger remove-status ms-2" 
+                                            <button type="button" class="btn btn-outline-danger remove-status ms-2"
                                                     style="border-radius: 0.75rem;">
                                                 <i class="fas fa-times"></i>
                                             </button>
@@ -47,11 +52,11 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            
+
                             <!-- Add Status Button -->
                             <button type="button" class="btn btn-sm mt-3" id="add-status"
-                                    style="background: rgba(28, 200, 138, 0.1); 
-                                           color: #1cc88a; 
+                                    style="background: rgba(28, 200, 138, 0.1);
+                                           color: #1cc88a;
                                            border: 1px solid rgba(28, 200, 138, 0.2);
                                            border-radius: 0.75rem;
                                            padding: 0.5rem 1rem;">
@@ -72,17 +77,17 @@
                                 </a>
                             </div>
                             <div>
-                                {{ form.submit(class="btn", 
-                                             style="background: rgba(28, 200, 138, 0.1); 
-                                                    color: #1cc88a; 
+                                {{ form.submit(class="btn",
+                                             style="background: rgba(28, 200, 138, 0.1);
+                                                    color: #1cc88a;
                                                     border: 1px solid rgba(28, 200, 138, 0.2);
                                                     border-radius: 0.75rem;
                                                     padding: 0.5rem 1.5rem;") }}
-                                
+
                                 <!-- Delete Button -->
-                                <button type="button" 
-                                        class="btn ms-2" 
-                                        data-bs-toggle="modal" 
+                                <button type="button"
+                                        class="btn ms-2"
+                                        data-bs-toggle="modal"
                                         data-bs-target="#deleteConfirmModal"
                                         style="background: rgba(231, 74, 59, 0.1);
                                                color: #e74a3b;
@@ -113,7 +118,7 @@
                 </div>
                 <div class="card-body p-4">
                     <p class="text-muted small mb-3">Common plant status examples you can use in your zone:</p>
-                    
+
                     {% set color_sequence = [
                         {'bg': 'bg-success text-white', 'color': '#28a745'},
                         {'bg': 'bg-info text-white', 'color': '#17a2b8'},
@@ -138,7 +143,7 @@
                         'Diseased': 'biohazard',
                         'Completed': 'check-circle'
                     } %}
-                    
+
                     <div class="d-flex flex-column gap-2">
                         {% for status, icon in status_icons.items() %}
                             {% set color_index = loop.index0 % color_sequence|length %}
@@ -147,15 +152,15 @@
                                 'color': color_sequence[color_index].color
                             } %}
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge {{ style.bg }} d-inline-flex align-items-center gap-1" 
-                                      style="font-size: 0.8rem; 
+                                <span class="badge {{ style.bg }} d-inline-flex align-items-center gap-1"
+                                      style="font-size: 0.8rem;
                                              padding: 0.35rem 0.75rem;
                                              background-color: {{ style.color }} !important;
                                              white-space: nowrap;">
                                     <i class="fas fa-{{ icon }}"></i>
                                     {{ status }}
                                 </span>
-                                <button type="button" 
+                                <button type="button"
                                         class="btn btn-sm btn-light add-status-suggestion"
                                         data-status="{{ status }}"
                                         style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
@@ -220,8 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
         newField.className = 'input-group mb-2';
         const fieldCount = statusList.children.length;
         newField.innerHTML = `
-            <input class="form-control" 
-                   name="plant_statuses-${fieldCount}" 
+            <input class="form-control"
+                   name="plant_statuses-${fieldCount}"
                    style="border: 1px solid rgba(28, 200, 138, 0.2);
                           border-radius: 0.75rem;
                           padding: 0.75rem;
@@ -260,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 hasValue = true;
             }
         });
-        
+
         if (!hasValue) {
             e.preventDefault();
             alert('At least one plant status is required.');
@@ -273,12 +278,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const status = this.dataset.status;
             const statusList = document.querySelector('.status-list');
             const fieldCount = statusList.children.length;
-            
+
             const newField = document.createElement('div');
             newField.className = 'input-group mb-2';
             newField.innerHTML = `
-                <input class="form-control" 
-                       name="plant_statuses-${fieldCount}" 
+                <input class="form-control"
+                       name="plant_statuses-${fieldCount}"
                        value="${status}"
                        style="border: 1px solid rgba(28, 200, 138, 0.2);
                               border-radius: 0.75rem;

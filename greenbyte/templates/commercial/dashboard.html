@@ -1,619 +1,508 @@
 {% extends "layout.html" %} {% block content %}
+{% block styles %}
+<style>
+  /* Top Commercial Navbar Styles */
+  .custom-navbar {
+    padding: 0.5rem 1rem;
+    border-radius: 1.5rem !important;
+    overflow: hidden;
+    border: 1px solid rgba(28, 200, 138, 0.2) !important;
+    border-bottom: 4px solid rgba(28, 200, 138, 0.2) !important;
+    background: white !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+  }
+
+  .navbar-brand {
+    font-size: 1.1rem;
+    padding: 0;
+    color: #1cc88a;
+  }
+
+  .nav-item {
+    position: relative;
+  }
+
+  .nav-link {
+    padding: 0.5rem 1rem;
+    color: #5a5c69;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .nav-link:hover {
+    color: #1cc88a;
+  }
+
+  .nav-item.active .nav-link {
+    color: #1cc88a;
+    font-weight: 600;
+  }
+
+  /* Custom card styling */
+  .custom-card {
+    border: 1px solid rgba(28, 200, 138, 0.2) !important;
+    border-radius: 1.5rem !important;
+    border-bottom: 4px solid rgba(28, 200, 138, 0.2) !important;
+    background: white !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+    overflow: hidden;
+  }
+
+  /* Card styling */
+  .card {
+    border-radius: 1.5rem !important;
+    border: 1px solid rgba(28, 200, 138, 0.2) !important;
+    border-bottom: 4px solid rgba(28, 200, 138, 0.2) !important;
+    overflow: hidden;
+  }
+
+  .card-header {
+    background-color: rgba(28, 200, 138, 0.05) !important;
+    border-bottom: 1px solid rgba(28, 200, 138, 0.1) !important;
+  }
+
+  /* Custom rounded card styling */
+  .rounded-custom {
+    border-radius: 1.5rem !important;
+  }
+
+  .rounded-custom .card-header {
+    border-top-left-radius: 1.5rem !important;
+    border-top-right-radius: 1.5rem !important;
+  }
+
+  .rounded-custom .card-body:last-child {
+    border-bottom-left-radius: 1.5rem !important;
+    border-bottom-right-radius: 1.5rem !important;
+  }
+
+  /* Farm details styling */
+  .stat-item {
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-weight: 600;
+    color: #5a5c69;
+    margin-right: 0.5rem;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    color: #1cc88a;
+  }
+
+  /* Farm members styling */
+  .icon-circle {
+    height: 2.5rem;
+    width: 2.5rem;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .list-group-item {
+    border: 1px solid rgba(28, 200, 138, 0.1);
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem !important;
+    transition: all 0.2s;
+  }
+
+  .list-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    border-color: rgba(28, 200, 138, 0.2);
+  }
+
+  .badge-success {
+    background-color: #1cc88a;
+    color: white;
+  }
+
+  .badge-light {
+    background-color: #f8f9fc;
+    color: #5a5c69;
+    border: 1px solid rgba(28, 200, 138, 0.1);
+  }
+
+  /* Activity log styling */
+  .activity-icon {
+    height: 2rem;
+    width: 2rem;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .bg-info {
+    background-color: #36b9cc !important;
+  }
+
+  .bg-warning {
+    background-color: #f6c23e !important;
+  }
+
+  .bg-danger {
+    background-color: #e74a3b !important;
+  }
+
+  .badge {
+    padding: 0.4em 0.65em;
+    font-weight: 500;
+    border-radius: 0.25rem;
+  }
+
+  .badge-info {
+    background-color: #36b9cc;
+    color: white;
+  }
+
+  .badge-warning {
+    background-color: #f6c23e;
+    color: white;
+  }
+
+  .badge-danger {
+    background-color: #e74a3b;
+    color: white;
+  }
+
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table th {
+    border-top: none;
+    border-bottom: 1px solid rgba(28, 200, 138, 0.1);
+    color: #5a5c69;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+  }
+
+  .table td {
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(28, 200, 138, 0.05);
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(28, 200, 138, 0.03);
+  }
+</style>
+{% endblock %}
 <div class="container-fluid">
   <div class="row">
-    <!-- Main Content Column -->
+    <!-- Left Column - Main Content -->
     <div class="col-lg-8">
-      <!-- Revenue Section -->
-      <div class="card shadow mb-4">
-        <div
-          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-        >
-          <h6 class="m-0 font-weight-bold text-success">Revenue Overview</h6>
+      <!-- Top Commercial Navigation Bar -->
+      <div class="mb-4">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white custom-navbar custom-card shadow p-3">
+          <a class="navbar-brand text-success" href="{{ url_for('commercial.dashboard') }}">
+            <i class="fas fa-seedling mr-2"></i> Farm Hub
+          </a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#commercialNavbar" aria-controls="commercialNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="commercialNavbar">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('commercial.dashboard') }}">
+                  <i class="fas fa-tachometer-alt mr-1 text-success"></i> Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <i class="fas fa-shopping-cart mr-1 text-success"></i> Orders
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <i class="fas fa-boxes mr-1 text-success"></i> Inventory
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <i class="fas fa-chart-line mr-1 text-success"></i> Financials
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <i class="fas fa-users mr-1 text-success"></i> Clients
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div class="settings-container">
+            <a class="nav-link settings-link" href="#" title="Settings">
+              <i class="fas fa-cog text-success"></i>
+            </a>
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="card shadow mb-4 rounded-custom">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-success">Member Activities</h6>
           <div class="dropdown no-arrow">
-            <a
-              class="dropdown-toggle"
-              href="#"
-              role="button"
-              id="revenueDropdown"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
             </a>
-            <div
-              class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-              aria-labelledby="revenueDropdown"
-            >
-              <div class="dropdown-header">View Options:</div>
-              <a class="dropdown-item" href="#"
-                ><i
-                  class="fas fa-calendar-week fa-sm fa-fw mr-2 text-gray-400"
-                ></i
-                >Weekly</a
-              >
-              <a class="dropdown-item" href="#"
-                ><i
-                  class="fas fa-calendar-alt fa-sm fa-fw mr-2 text-gray-400"
-                ></i
-                >Monthly</a
-              >
-              <a class="dropdown-item" href="#"
-                ><i class="fas fa-calendar fa-sm fa-fw mr-2 text-gray-400"></i
-                >Yearly</a
-              >
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+              <div class="dropdown-header">Filter By:</div>
+              <a class="dropdown-item" href="#"><i class="fas fa-leaf fa-sm fa-fw mr-2 text-success"></i>Gardens</a>
+              <a class="dropdown-item" href="#"><i class="fas fa-map-marker-alt fa-sm fa-fw mr-2 text-success"></i>Zones</a>
+              <a class="dropdown-item" href="#"><i class="fas fa-seedling fa-sm fa-fw mr-2 text-success"></i>Plants</a>
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="#"
-                ><i
-                  class="fas fa-file-export fa-sm fa-fw mr-2 text-gray-400"
-                ></i
-                >Export Data</a
-              >
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <div class="h5 mb-0 font-weight-bold text-gray-800">
-                Total Revenue
-              </div>
-              <div class="h2 mb-0 font-weight-bold text-success">
-                $24,568.00
-              </div>
-              <div class="text-xs font-weight-bold text-success mt-1">
-                <i class="fas fa-arrow-up mr-1"></i> 8.3% from last month
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="text-right">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-success">
-                    <i class="fas fa-file-invoice-dollar mr-1"></i> New Invoice
-                  </button>
-                  <button type="button" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-chart-line mr-1"></i> View Reports
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Monthly Revenue Chart -->
-          <div class="chart-area">
-            <canvas id="monthlyRevenueChart"></canvas>
-          </div>
-          <hr />
-          <div class="row">
-            <div class="col-md-4">
-              <div
-                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
-              >
-                Current Month
-              </div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">
-                $4,235.00
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div
-                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
-              >
-                Previous Month
-              </div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">
-                $3,910.00
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div
-                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
-              >
-                Year to Date
-              </div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">
-                $24,568.00
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Products and Quick Actions Row -->
-      <div class="row">
-        <!-- Products Section -->
-        <div class="col-lg-7">
-          <div class="card shadow mb-4">
-            <div
-              class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-            >
-              <h6 class="m-0 font-weight-bold text-success">Top Products</h6>
-              <div class="dropdown no-arrow">
-                <a
-                  class="dropdown-toggle"
-                  href="#"
-                  role="button"
-                  id="productsDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                </a>
-                <div
-                  class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                  aria-labelledby="productsDropdown"
-                >
-                  <div class="dropdown-header">View Options:</div>
-                  <a class="dropdown-item" href="#"
-                    ><i
-                      class="fas fa-sort-amount-down fa-sm fa-fw mr-2 text-gray-400"
-                    ></i
-                    >By Revenue</a
-                  >
-                  <a class="dropdown-item" href="#"
-                    ><i
-                      class="fas fa-sort-numeric-down fa-sm fa-fw mr-2 text-gray-400"
-                    ></i
-                    >By Quantity</a
-                  >
-                  <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="#"
-                    ><i class="fas fa-plus fa-sm fa-fw mr-2 text-gray-400"></i
-                    >Add New Product</a
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <h6 class="font-weight-bold mb-3">Top Products by Revenue</h6>
-              <div class="progress mb-3" style="height: 25px">
-                <div
-                  class="progress-bar bg-success"
-                  role="progressbar"
-                  style="width: 100%"
-                  aria-valuenow="100"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
-                  <span class="font-weight-bold">Tomatoes (Roma) - $3,245</span>
-                </div>
-              </div>
-              <div class="progress mb-3" style="height: 25px">
-                <div
-                  class="progress-bar bg-info"
-                  role="progressbar"
-                  style="width: 85%"
-                  aria-valuenow="85"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
-                  <span class="font-weight-bold"
-                    >Lettuce (Romaine) - $2,758</span
-                  >
-                </div>
-              </div>
-              <div class="progress mb-3" style="height: 25px">
-                <div
-                  class="progress-bar bg-primary"
-                  role="progressbar"
-                  style="width: 70%"
-                  aria-valuenow="70"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
-                  <span class="font-weight-bold">Basil (Sweet) - $2,285</span>
-                </div>
-              </div>
-              <div class="progress mb-3" style="height: 25px">
-                <div
-                  class="progress-bar bg-warning"
-                  role="progressbar"
-                  style="width: 55%"
-                  aria-valuenow="55"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
-                  <span class="font-weight-bold"
-                    >Carrots (Nantes) - $1,785</span
-                  >
-                </div>
-              </div>
-              <div class="progress mb-3" style="height: 25px">
-                <div
-                  class="progress-bar bg-danger"
-                  role="progressbar"
-                  style="width: 40%"
-                  aria-valuenow="40"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
-                  <span class="font-weight-bold">Bell Peppers - $1,295</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Actions Card -->
-        <div class="col-lg-5">
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-success">Quick Actions</h6>
-            </div>
-            <div class="card-body">
-              <div class="list-group">
-                <a
-                  href="#"
-                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
-                >
-                  <div class="icon-circle bg-success">
-                    <i class="fas fa-user-plus text-white"></i>
-                  </div>
-                  <div>
-                    <div class="font-weight-bold">New Client</div>
-                    <div class="small text-muted">
-                      Add a new client to your network
-                    </div>
-                  </div>
-                </a>
-                <a
-                  href="#"
-                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
-                >
-                  <div class="icon-circle bg-primary mr-4">
-                    <i class="fas fa-shopping-cart text-white"></i>
-                  </div>
-                  <div>
-                    <div class="font-weight-bold">New Order</div>
-                    <div class="small text-muted">
-                      Create a new client order
-                    </div>
-                  </div>
-                </a>
-                <a
-                  href="#"
-                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
-                >
-                  <div class="icon-circle bg-info mr-4">
-                    <i class="fas fa-file-invoice-dollar text-white"></i>
-                  </div>
-                  <div>
-                    <div class="font-weight-bold">Generate Invoice</div>
-                    <div class="small text-muted">
-                      Create a new invoice for a client
-                    </div>
-                  </div>
-                </a>
-                <a
-                  href="#"
-                  class="list-group-item list-group-item-action d-flex align-items-center py-3"
-                >
-                  <div class="icon-circle bg-warning mr-4">
-                    <i class="fas fa-truck text-white"></i>
-                  </div>
-                  <div>
-                    <div class="font-weight-bold">Schedule Delivery</div>
-                    <div class="small text-muted">
-                      Arrange delivery for an order
-                    </div>
-                  </div>
-                </a>
-              </div>
-              <style>
-                .icon-circle {
-                  height: 2.5rem;
-                  width: 2.5rem;
-                  border-radius: 100%;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  flex-shrink: 0;
-                  margin-right: 1.5rem !important;
-                }
-                .list-group-item:hover {
-                  background-color: #f8f9fc;
-                }
-                .badge-success {
-                  background-color: #1cc88a;
-                  color: white;
-                }
-                .badge-warning {
-                  background-color: #f6c23e;
-                  color: white;
-                }
-                .badge-info {
-                  background-color: #36b9cc;
-                  color: white;
-                }
-                .badge-danger {
-                  background-color: #e74a3b;
-                  color: white;
-                }
-              </style>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Orders Section -->
-      <div class="card shadow mb-4">
-        <div
-          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-        >
-          <h6 class="m-0 font-weight-bold text-success">Latest Orders</h6>
-          <div class="dropdown no-arrow">
-            <a
-              class="dropdown-toggle"
-              href="#"
-              role="button"
-              id="ordersDropdown"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-            </a>
-            <div
-              class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-              aria-labelledby="ordersDropdown"
-            >
-              <div class="dropdown-header">Order Actions:</div>
-              <a class="dropdown-item" href="#"
-                ><i class="fas fa-plus fa-sm fa-fw mr-2 text-gray-400"></i>New
-                Order</a
-              >
-              <a class="dropdown-item" href="#"
-                ><i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>View
-                All Orders</a
-              >
+              <a class="dropdown-item" href="#"><i class="fas fa-sync-alt fa-sm fa-fw mr-2 text-gray-400"></i>View All</a>
             </div>
           </div>
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered" width="100%" cellspacing="0">
+            <table class="table table-hover">
               <thead>
                 <tr>
-                  <th>Order #</th>
-                  <th>Client</th>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Status</th>
+                  <th>Time</th>
+                  <th>Member</th>
+                  <th>Action</th>
+                  <th>Details</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>ORD-2023-042</td>
-                  <td>Farm Fresh Restaurant</td>
-                  <td>Apr 15, 2023</td>
-                  <td>$345.00</td>
-                  <td><span class="badge badge-success">Delivered</span></td>
+                  <td><span class="text-muted">Today, 10:23 AM</span></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="activity-icon bg-success mr-2">
+                        <i class="fas fa-user text-white"></i>
+                      </div>
+                      <span>John Doe</span>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-success">Added</span> Plant</td>
+                  <td>Added <a href="#">Tomato (Roma)</a> to <a href="#">Vegetable Zone</a></td>
                 </tr>
                 <tr>
-                  <td>ORD-2023-041</td>
-                  <td>Green Leaf Cafe</td>
-                  <td>Apr 14, 2023</td>
-                  <td>$278.50</td>
-                  <td><span class="badge badge-warning">In Transit</span></td>
+                  <td><span class="text-muted">Today, 9:45 AM</span></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="activity-icon bg-info mr-2">
+                        <i class="fas fa-user text-white"></i>
+                      </div>
+                      <span>Sarah Smith</span>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-info">Updated</span> Zone</td>
+                  <td>Changed status of <a href="#">Herb Garden</a> to <span class="text-success">Active</span></td>
                 </tr>
                 <tr>
-                  <td>ORD-2023-040</td>
-                  <td>Harvest Market</td>
-                  <td>Apr 13, 2023</td>
-                  <td>$512.75</td>
-                  <td><span class="badge badge-info">Processing</span></td>
+                  <td><span class="text-muted">Yesterday, 4:12 PM</span></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="activity-icon bg-warning mr-2">
+                        <i class="fas fa-user text-white"></i>
+                      </div>
+                      <span>Mike Johnson</span>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-warning">Modified</span> Garden</td>
+                  <td>Updated irrigation schedule for <a href="#">Main Garden</a></td>
                 </tr>
                 <tr>
-                  <td>ORD-2023-039</td>
-                  <td>John Smith</td>
-                  <td>Apr 12, 2023</td>
-                  <td>$87.25</td>
-                  <td><span class="badge badge-success">Delivered</span></td>
+                  <td><span class="text-muted">Yesterday, 2:30 PM</span></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="activity-icon bg-success mr-2">
+                        <i class="fas fa-user text-white"></i>
+                      </div>
+                      <span>John Doe</span>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-success">Added</span> Event</td>
+                  <td>Created harvest event for <a href="#">Lettuce Bed</a></td>
                 </tr>
                 <tr>
-                  <td>ORD-2023-038</td>
-                  <td>Farm Fresh Restaurant</td>
-                  <td>Apr 10, 2023</td>
-                  <td>$325.00</td>
-                  <td><span class="badge badge-success">Delivered</span></td>
+                  <td><span class="text-muted">2 days ago</span></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="activity-icon bg-danger mr-2">
+                        <i class="fas fa-user text-white"></i>
+                      </div>
+                      <span>Emily Wilson</span>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-danger">Removed</span> Plant</td>
+                  <td>Removed <a href="#">Basil</a> from <a href="#">Herb Zone</a></td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div class="text-center mt-3">
+            <a href="#" class="btn btn-sm btn-success">View All Activities</a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Right Column - Stats & Info -->
+    <!-- Right Column - Additional Cards -->
     <div class="col-lg-4">
-      <!-- Client Stats Card -->
-      <div class="card shadow mb-4">
-        <div
-          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-        >
-          <h6 class="m-0 font-weight-bold text-success">Client Statistics</h6>
-          <div class="dropdown no-arrow">
-            <a
-              class="dropdown-toggle"
-              href="#"
-              role="button"
-              id="clientStatsDropdown"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-            </a>
-            <div
-              class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-              aria-labelledby="clientStatsDropdown"
-            >
-              <div class="dropdown-header">Client Actions:</div>
-              <a class="dropdown-item" href="#"
-                ><i class="fas fa-user-plus fa-sm fa-fw mr-2 text-gray-400"></i
-                >Add New Client</a
-              >
-              <a class="dropdown-item" href="#"
-                ><i class="fas fa-users fa-sm fa-fw mr-2 text-gray-400"></i>View
-                All Clients</a
-              >
-            </div>
-          </div>
+      <!-- Farm Details Card -->
+      <div class="card shadow mb-4 rounded-custom">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-success">Farm Details</h6>
         </div>
         <div class="card-body">
-          <div class="text-center mb-4">
-            <div class="h1 mb-0 font-weight-bold text-gray-800">28</div>
-            <div
-              class="text-xs font-weight-bold text-success text-uppercase mb-1"
-            >
-              Total Active Clients
-            </div>
-          </div>
-
-          <!-- New vs Returning -->
-          <h6 class="font-weight-bold">New vs. Returning Clients</h6>
-          <div class="chart-pie mb-4">
-            <canvas id="clientTypeChart"></canvas>
-          </div>
-
-          <!-- Client Retention -->
-          <h6 class="font-weight-bold">Client Retention Rate</h6>
-          <div class="mb-4">
-            <div class="d-flex justify-content-between">
-              <span>Retention Rate</span>
-              <span class="font-weight-bold">85%</span>
-            </div>
-            <div class="progress" style="height: 10px">
-              <div
-                class="progress-bar bg-success"
-                role="progressbar"
-                style="width: 85%"
-                aria-valuenow="85"
-                aria-valuemin="0"
-                aria-valuemax="100"
-              ></div>
-            </div>
-          </div>
-
-          <!-- Top Clients -->
-          <h6 class="font-weight-bold">Top Clients by Revenue</h6>
-          <div class="list-group">
-            <a href="#" class="list-group-item list-group-item-action">
-              <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">Farm Fresh Restaurant</h6>
-                <small class="text-success">$5,245</small>
+          {% if selected_farm %}
+            <div class="d-flex align-items-center mb-3">
+              <div class="mr-3">
+                <i class="fas fa-farm fa-2x text-success"></i>
               </div>
-              <small class="text-muted">12 orders this month</small>
-            </a>
-            <a href="#" class="list-group-item list-group-item-action">
-              <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">Green Leaf Cafe</h6>
-                <small class="text-success">$3,780</small>
+              <div>
+                <h5 class="mb-0">{{ selected_farm.name }}</h5>
+                {% if selected_farm.business_name %}
+                <p class="text-muted mb-0">{{ selected_farm.business_name }}</p>
+                {% endif %}
               </div>
-              <small class="text-muted">8 orders this month</small>
-            </a>
-            <a href="#" class="list-group-item list-group-item-action">
-              <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">Harvest Market</h6>
-                <small class="text-success">$2,950</small>
+            </div>
+
+            <hr>
+
+            <div class="mb-3">
+              <h6 class="font-weight-bold">Location</h6>
+              <p class="mb-0">{{ selected_farm.address or 'No address provided' }}</p>
+            </div>
+
+            {% if selected_farm.description %}
+            <hr>
+            <div class="mb-3">
+              <h6 class="font-weight-bold">Description</h6>
+              <p>{{ selected_farm.description }}</p>
+            </div>
+            {% endif %}
+
+            <hr>
+
+            <div class="mb-3">
+              <h6 class="font-weight-bold">Farm Stats</h6>
+              <div class="row mt-2">
+                <div class="col-6">
+                  <div class="stat-item">
+                    <span class="stat-label">Gardens:</span>
+                    <span class="stat-value">{{ selected_farm.gardens|length if selected_farm.gardens else 0 }}</span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="stat-item">
+                    <span class="stat-label">Members:</span>
+                    <span class="stat-value">{{ selected_farm.members|length if selected_farm.members else 0 }}</span>
+                  </div>
+                </div>
               </div>
-              <small class="text-muted">5 orders this month</small>
-            </a>
-          </div>
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="fas fa-seedling fa-3x text-gray-300 mb-3"></i>
+              <p>You don't have any farms yet.</p>
+              {% if current_user.is_super_user() %}
+                <a href="{{ url_for('commercial.create_farm') }}" class="btn btn-success">
+                  <i class="fas fa-plus fa-sm"></i> Create Your First Farm
+                </a>
+              {% else %}
+                <p class="text-muted small">Contact an administrator to be added to a farm.</p>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Farm Members Card -->
+      <div class="card shadow mb-4 rounded-custom">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-success">Farm Members</h6>
+          {% if selected_farm and (current_user.is_super_user() or current_user.is_farm_admin(selected_farm.id) or selected_farm.owner_id == current_user.id) %}
+          <a href="#" class="btn btn-sm btn-success">
+            <i class="fas fa-user-plus fa-sm"></i>
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          {% if selected_farm %}
+            <div class="list-group">
+              <!-- Owner -->
+              {% if selected_farm.owner %}
+              <div class="list-group-item d-flex align-items-center py-3">
+                <div class="mr-3">
+                  <div class="icon-circle bg-success">
+                    <i class="fas fa-user-tie text-white"></i>
+                  </div>
+                </div>
+                <div>
+                  <h6 class="mb-0">{{ selected_farm.owner.username }}</h6>
+                  <span class="badge badge-success">Owner</span>
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Members -->
+              {% if selected_farm.members %}
+                {% for member in selected_farm.members %}
+                  {% if member.id != selected_farm.owner_id %}
+                  <div class="list-group-item d-flex align-items-center py-3">
+                    <div class="mr-3">
+                      <div class="icon-circle bg-light">
+                        <i class="fas fa-user text-success"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h6 class="mb-0">{{ member.username }}</h6>
+                      <span class="badge badge-light">Member</span>
+                    </div>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="text-center py-3">
+              <p class="mb-0">Select a farm to view members</p>
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock content %} {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // Monthly Revenue Chart
-  var ctx = document.getElementById("monthlyRevenueChart").getContext("2d");
-  var monthlyRevenueChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      datasets: [
-        {
-          label: "Monthly Revenue",
-          data: [
-            2100, 2400, 2800, 3200, 3500, 3800, 4100, 3900, 4200, 4500, 4800,
-            5100,
-          ],
-          backgroundColor: "rgba(28, 200, 138, 0.1)",
-          borderColor: "rgba(28, 200, 138, 1)",
-          borderWidth: 2,
-          pointBackgroundColor: "rgba(28, 200, 138, 1)",
-          pointBorderColor: "#fff",
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          tension: 0.3,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return "$" + value.toLocaleString();
-            },
-          },
-        },
-      },
-    },
-  });
+{% endblock content %}
 
-  // Client Type Chart
-  var ctx3 = document.getElementById("clientTypeChart").getContext("2d");
-  var clientTypeChart = new Chart(ctx3, {
-    type: "pie",
-    data: {
-      labels: ["Returning Clients", "New Clients"],
-      datasets: [
-        {
-          data: [22, 6],
-          backgroundColor: [
-            "rgba(28, 200, 138, 0.8)",
-            "rgba(54, 185, 204, 0.8)",
-          ],
-          borderColor: "#ffffff",
-          borderWidth: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "bottom",
-        },
-      },
-    },
+
+
+{% block scripts %}
+<script>
+  // Handle active state for navbar items
+  $(document).ready(function() {
+    // Get current URL path
+    var path = window.location.pathname;
+
+    // Set active class based on current path
+    $('.navbar-nav .nav-item').each(function() {
+      var $this = $(this);
+      var href = $this.find('a').attr('href');
+
+      // If the href matches the path or if we're on the dashboard page
+      if (href === path || (path.includes('/commercial/dashboard') && href.includes('/commercial/dashboard'))) {
+        $this.addClass('active');
+      } else {
+        $this.removeClass('active');
+      }
+    });
+
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
   });
 </script>
-{% endblock scripts %}
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Event Types</h1>
+    <a href="{{ url_for('event_types.new_event_type') }}" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm">
+      <i class="fas fa-plus fa-sm text-white-50"></i> New Event Type
+    </a>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Your Event Types</h6>
+        </div>
+        <div class="card-body">
+          {% if event_types %}
+          <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Color</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for event_type in event_types %}
+                <tr>
+                  <td>{{ event_type.name }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="color-swatch me-2" style="display: inline-block; width: 24px; height: 24px; background-color: {{ event_type.color }}; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></span>
+                      <span>{{ event_type.color }}</span>
+                    </div>
+                  </td>
+                  <td>{{ 'Default' if event_type.is_default else 'Custom' }}</td>
+                  <td>
+                    {% if not event_type.is_default %}
+                    <a href="{{ url_for('event_types.edit_event_type', event_type_id=event_type.id) }}" class="btn btn-sm btn-primary">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal{{ event_type.id }}">
+                      <i class="fas fa-trash"></i>
+                    </button>
+
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteModal{{ event_type.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            Are you sure you want to delete the event type "{{ event_type.name }}"?
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <form action="{{ url_for('event_types.delete_event_type', event_type_id=event_type.id) }}" method="POST">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                              <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {% else %}
+                    <span class="text-muted">Default (cannot modify)</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <p class="text-muted">You haven't created any custom event types yet.</p>
+            <a href="{{ url_for('event_types.new_event_type') }}" class="btn btn-success">
+              <i class="fas fa-plus fa-sm"></i> Create Your First Event Type
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Event Type Tips</h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="text-dark"><i class="fas fa-palette text-success me-2"></i>Custom Event Types</h6>
+            <p class="small text-muted">Create custom event types with your own colors to better organize your calendar events.</p>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="text-dark"><i class="fas fa-info-circle text-success me-2"></i>Default Event Types</h6>
+            <p class="small text-muted">The system provides default event types that cannot be modified:</p>
+            <div class="event-type-container p-3 mt-3" style="background-color: rgba(248, 249, 252, 0.7); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+              <!-- Work -->
+              <div class="d-flex align-items-center mb-2 p-2" style="border-radius: 8px; transition: all 0.2s ease; background-color: rgba(28, 200, 138, 0.05); border-left: 3px solid #1cc88a;">
+                <div class="color-swatch me-3" style="display: inline-block; width: 18px; height: 18px; background-color: #1cc88a; border-radius: 4px; box-shadow: 0 2px 4px rgba(28, 200, 138, 0.3);"></div>
+                <span class="small fw-medium">Work</span>
+              </div>
+
+              <!-- Community -->
+              <div class="d-flex align-items-center mb-2 p-2" style="border-radius: 8px; transition: all 0.2s ease; background-color: rgba(78, 115, 223, 0.05); border-left: 3px solid #4e73df;">
+                <div class="color-swatch me-3" style="display: inline-block; width: 18px; height: 18px; background-color: #4e73df; border-radius: 4px; box-shadow: 0 2px 4px rgba(78, 115, 223, 0.3);"></div>
+                <span class="small fw-medium">Community</span>
+              </div>
+
+              <!-- School -->
+              <div class="d-flex align-items-center mb-2 p-2" style="border-radius: 8px; transition: all 0.2s ease; background-color: rgba(246, 194, 62, 0.05); border-left: 3px solid #f6c23e;">
+                <div class="color-swatch me-3" style="display: inline-block; width: 18px; height: 18px; background-color: #f6c23e; border-radius: 4px; box-shadow: 0 2px 4px rgba(246, 194, 62, 0.3);"></div>
+                <span class="small fw-medium">School</span>
+              </div>
+
+              <!-- Personal -->
+              <div class="d-flex align-items-center mb-2 p-2" style="border-radius: 8px; transition: all 0.2s ease; background-color: rgba(231, 74, 59, 0.05); border-left: 3px solid #e74a3b;">
+                <div class="color-swatch me-3" style="display: inline-block; width: 18px; height: 18px; background-color: #e74a3b; border-radius: 4px; box-shadow: 0 2px 4px rgba(231, 74, 59, 0.3);"></div>
+                <span class="small fw-medium">Personal</span>
+              </div>
+
+              <!-- TODO Task -->
+              <div class="d-flex align-items-center p-2" style="border-radius: 8px; transition: all 0.2s ease; background-color: rgba(54, 185, 204, 0.05); border-left: 3px solid #36b9cc;">
+                <div class="color-swatch me-3" style="display: inline-block; width: 18px; height: 18px; background-color: #36b9cc; border-radius: 4px; box-shadow: 0 2px 4px rgba(54, 185, 204, 0.3);"></div>
+                <span class="small fw-medium">TODO Task</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

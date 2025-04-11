@@ -1,0 +1,24 @@
+/* Navbar spacing fix */
+.sidebar {
+  width: 80px !important;
+}
+
+.sidebar .nav-item {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.sidebar .nav-link {
+  text-align: center !important;
+  padding: 1rem !important;
+  margin: 0 !important;
+  height: auto !important;
+}
+
+.sidebar .nav-link i {
+  font-size: 1.2rem !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  display: block !important;
+  position: static !important;
+}

@@ -38,6 +38,13 @@ user_garden = db.Table('user_garden',
     db.Column('role', db.String(20), nullable=False, default='member')  # 'member', 'commercial', 'manager'
 )
 
+# Many-to-Many Relationship for Farms and Users
+farm_member = db.Table('farm_member',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('farm_id', db.Integer, db.ForeignKey('farm.id'), primary_key=True),
+    db.Column('role', db.String(20), nullable=False, default='gardener')  # 'admin', 'gardener'
+)
+
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -47,10 +54,14 @@ class User(db.Model, UserMixin):
     image_file = db.Column(db.String(25), nullable=False, default='default.jpg')
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    access_level = db.Column(db.String(20), nullable=False, default='user')  # 'user', 'admin', 'superadmin'
 
     # Define the relationship with gardens using back_populates
     gardens = db.relationship('Garden', secondary=user_garden, back_populates='members')
     posts = db.relationship('Post', backref='author', lazy=True)
+
+    # Farm relationships
+    farms = db.relationship('Farm', secondary=farm_member, backref='members')
 
     def get_reset_token(self, expires_sec=1800):
         """Generate a token that expires after a set time (default: 30 minutes)."""
@@ -84,6 +95,32 @@ class User(db.Model, UserMixin):
         """Check if user has manager access in a garden."""
         role = self.get_role_in_garden(garden_id)
         return role == 'manager'
+
+    def is_super_user(self):
+        """Check if user is a super user who can create farms."""
+        # This could be based on a field in the user model, or a specific role
+        # For now, we'll consider users with 'admin' or 'superadmin' access level as super users
+        try:
+            return self.access_level in ['admin', 'superadmin']
+        except AttributeError:
+            # If access_level is not set, default to False
+            return False
+
+    def get_farm_role(self, farm_id):
+        """Get the user's role in a specific farm."""
+        result = db.session.query(farm_member.c.role).filter(
+            farm_member.c.user_id == self.id,
+            farm_member.c.farm_id == farm_id
+        ).first()
+        return result[0] if result else None
+
+    def is_farm_admin(self, farm_id):
+        """Check if user has admin role in a farm."""
+        return self.get_farm_role(farm_id) == 'admin'
+
+    def is_farm_gardener(self, farm_id):
+        """Check if user has gardener role in a farm."""
+        return self.get_farm_role(farm_id) == 'gardener'
 
     def __repr__(self):
         return f"User({self.firstName} {self.lastName}, {self.email}, {self.image_file})"
@@ -178,6 +215,7 @@ class Garden(db.Model, DynamicAttributeMixin):
     location = db.Column(db.String(100))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     last_updated = db.Column(db.DateTime, default=now_in_timezone)
+    farm_id = db.Column(db.Integer, db.ForeignKey('farm.id'), nullable=True)  # Optional link to a farm
 
     # Add owner relationship
     owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_gardens')
@@ -638,6 +676,31 @@ class Harvest(db.Model):
     def __repr__(self):
         return f"Harvest(Date: {self.date}, Amount: {self.amount_collected})"
 
+
+# Many-to-Many Relationship for Posts and Tags
+post_tag = db.Table('post_tag',
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+# Many-to-Many Relationship for Post Likes
+post_like = db.Table('post_like',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=now_in_timezone)
+)
+
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+
+    # Relationship with posts
+    posts = db.relationship('Post', secondary=post_tag, back_populates='tags')
+
+    def __repr__(self):
+        return f"Tag('{self.name}')"
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -664,9 +727,52 @@ class Post(db.Model):
     # Relationships
     images = db.relationship('PostImage', backref='post', lazy=True, cascade='all, delete-orphan')
     plants = db.relationship('PostPlant', backref='post', lazy=True, cascade='all, delete-orphan')
+    garden = db.relationship('Garden', backref='posts', lazy=True)
+    tags = db.relationship('Tag', secondary=post_tag, back_populates='posts', lazy=True)
+    likes = db.relationship('User', secondary=post_like, backref=db.backref('liked_posts', lazy='dynamic'), lazy='dynamic')
+    comments = db.relationship('Comment', backref='post', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"Post({self.title}, {self.date_posted})"
+
+    def like(self, user):
+        """Add a like to the post"""
+        if not self.is_liked_by(user):
+            self.likes.append(user)
+            return True
+        return False
+
+    def unlike(self, user):
+        """Remove a like from the post"""
+        if self.is_liked_by(user):
+            self.likes.remove(user)
+            return True
+        return False
+
+    def is_liked_by(self, user):
+        """Check if the post is liked by a user"""
+        return self.likes.filter(post_like.c.user_id == user.id).count() > 0
+
+    @property
+    def like_count(self):
+        """Get the number of likes for the post"""
+        return self.likes.count()
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    date_posted = db.Column(db.DateTime, default=now_in_timezone)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
+
+    # Relationships
+    author = db.relationship('User', backref='comments')
+    replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy='dynamic')
+
+    def __repr__(self):
+        return f"Comment('{self.content[:20]}...', {self.date_posted})"
+
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -834,6 +940,8 @@ class Payment(db.Model):
     def __repr__(self):
         return f"Payment(Order ID: {self.order_id}, Amount: {self.amount}, Status: {self.status})"
 
+
+
 class PostImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
@@ -847,3 +955,442 @@ class PostPlant(db.Model):
     name = db.Column(db.String(50), nullable=False)  # e.g., 'Basil', 'Tomatoes'
     status = db.Column(db.String(20), nullable=False)  # e.g., 'Growing', 'Fruiting'
     plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)  # Optional link to actual plant
+
+class EventType(db.Model):
+    __tablename__ = 'event_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    color = db.Column(db.String(20), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_default = db.Column(db.Boolean, default=False)  # True for system default types
+
+    # Relationship with User
+    user = db.relationship('User', backref=db.backref('event_types', lazy=True))
+
+    def __repr__(self):
+        return f"EventType('{self.name}', '{self.color}')"
+
+    def to_dict(self):
+        """Convert event type to dictionary for JSON response"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'color': self.color,
+            'is_default': self.is_default
+        }
+
+class CalendarEvent(db.Model):
+    __tablename__ = 'calendar_event'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+    start_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=True)
+    all_day = db.Column(db.Boolean, default=False)
+    repeat_type = db.Column(db.String(20), nullable=True)  # 'daily', 'weekly', 'monthly', 'yearly'
+    repeat_end_date = db.Column(db.DateTime, nullable=True)
+    calendar_type = db.Column(db.String(20), default='work')  # 'work', 'community', 'school', 'personal', 'todo', 'custom'
+    event_type_id = db.Column(db.Integer, db.ForeignKey('event_type.id'), nullable=True)  # For custom event types
+    url = db.Column(db.String(255), nullable=True)
+    is_private = db.Column(db.Boolean, default=False)
+    alert_before_minutes = db.Column(db.Integer, nullable=True)
+    completed = db.Column(db.Boolean, default=False)  # Track completion status for TODO tasks
+    completed_at = db.Column(db.DateTime, nullable=True)  # When the task was completed
+    created_at = db.Column(db.DateTime, default=now_in_timezone)
+    updated_at = db.Column(db.DateTime, default=now_in_timezone, onupdate=now_in_timezone)
+
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    garden_id = db.Column(db.Integer, db.ForeignKey('garden.id'), nullable=True)
+    zone_id = db.Column(db.Integer, db.ForeignKey('zone.id'), nullable=True)
+    plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)
+
+    # Relationships
+    user = db.relationship('User', backref='calendar_events')
+    garden = db.relationship('Garden', backref='calendar_events')
+    zone = db.relationship('Zone', backref='calendar_events')
+    plant = db.relationship('Plant', backref='calendar_events')
+    event_type = db.relationship('EventType', backref='events')
+    invitees = db.relationship('CalendarEventInvitee', backref='event', lazy=True, cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f"CalendarEvent({self.title}, {self.start_datetime})"
+
+    def to_dict(self):
+        """Convert event to dictionary for JSON response"""
+        event_dict = {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'location': self.location,
+            'start_datetime': self.start_datetime.isoformat() if self.start_datetime else None,
+            'end_datetime': self.end_datetime.isoformat() if self.end_datetime else None,
+            'all_day': self.all_day,
+            'repeat_type': self.repeat_type,
+            'repeat_end_date': self.repeat_end_date.isoformat() if self.repeat_end_date else None,
+            'calendar_type': self.calendar_type,
+            'url': self.url,
+            'is_private': self.is_private,
+            'alert_before_minutes': self.alert_before_minutes,
+            'user_id': self.user_id,
+            'garden_id': self.garden_id,
+            'zone_id': self.zone_id,
+            'plant_id': self.plant_id,
+            'completed': self.completed,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+            'garden': {'id': self.garden.id, 'name': self.garden.name} if self.garden else None,
+            'zone': {'id': self.zone.id, 'name': self.zone.name} if self.zone else None,
+            'plant': {'id': self.plant.id, 'name': self.plant.plant_detail.name} if self.plant else None
+        }
+
+        # Add event_type information if available
+        if self.event_type_id and self.event_type:
+            event_dict['event_type'] = self.event_type.to_dict()
+
+        return event_dict
+
+class CalendarEventInvitee(db.Model):
+    __tablename__ = 'calendar_event_invitee'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('calendar_event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Can be null for external invitees
+    email = db.Column(db.String(120), nullable=True)  # For external invitees
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'accepted', 'declined'
+
+    # Relationship
+    user = db.relationship('User', backref='event_invitations')
+
+    def __repr__(self):
+        return f"CalendarEventInvitee(Event: {self.event_id}, User: {self.user_id if self.user_id else self.email})"
+
+
+
+
+class Farm(db.Model, DynamicAttributeMixin):
+    """Farm model for commercial operations"""
+    __tablename__ = 'farm'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(200), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=now_in_timezone)
+    last_updated = db.Column(db.DateTime, default=now_in_timezone, onupdate=now_in_timezone)
+
+    # Business information
+    business_name = db.Column(db.String(100), nullable=True)
+    tax_id = db.Column(db.String(50), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(120), nullable=True)
+    website = db.Column(db.String(120), nullable=True)
+
+    # Owner information
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_farms')
+
+    # Relationships
+    gardens = db.relationship('Garden', backref='farm', lazy=True)
+    inventory_items = db.relationship('InventoryItem', backref='farm', lazy=True)
+    sales = db.relationship('Sale', backref='farm', lazy=True)
+
+    def __repr__(self):
+        return f"Farm({self.name}, {self.business_name or 'No business name'})"
+
+    def get_member_role(self, user_id):
+        """Get the user's role in this farm."""
+        try:
+            result = db.session.query(farm_member.c.role).filter(
+                farm_member.c.user_id == user_id,
+                farm_member.c.farm_id == self.id
+            ).first()
+            return result[0] if result else None
+        except Exception:
+            # If there's any error (e.g., table doesn't exist yet), return None
+            return None
+
+    def is_admin(self, user_id):
+        """Check if user has admin role in this farm."""
+        return self.get_member_role(user_id) == 'admin'
+
+    def is_gardener(self, user_id):
+        """Check if user has gardener role in this farm."""
+        return self.get_member_role(user_id) == 'gardener'
+
+    def add_member(self, user, role='gardener'):
+        """Add a member to the farm with a specific role."""
+        if role not in ['admin', 'gardener']:
+            raise ValueError(f"Invalid role: {role}. Must be 'admin' or 'gardener'.")
+
+        # Check if user is already a member
+        existing_role = self.get_member_role(user.id)
+        if existing_role:
+            # Update role if different
+            if existing_role != role:
+                db.session.execute(
+                    farm_member.update()
+                    .where(farm_member.c.user_id == user.id)
+                    .where(farm_member.c.farm_id == self.id)
+                    .values(role=role)
+                )
+                db.session.commit()
+            return False  # User was already a member
+
+        # Add new member
+        db.session.execute(
+            farm_member.insert().values(
+                user_id=user.id,
+                farm_id=self.id,
+                role=role
+            )
+        )
+        db.session.commit()
+        return True  # New member added
+
+    def remove_member(self, user):
+        """Remove a member from the farm."""
+        if not self.get_member_role(user.id):
+            return False  # User was not a member
+
+        db.session.execute(
+            farm_member.delete()
+            .where(farm_member.c.user_id == user.id)
+            .where(farm_member.c.farm_id == self.id)
+        )
+        db.session.commit()
+        return True  # Member removed
+
+    def get_admins(self):
+        """Get all admin members of the farm."""
+        return [
+            member for member in
+            db.session.query(User)
+            .join(farm_member)
+            .filter(farm_member.c.farm_id == self.id)
+            .filter(farm_member.c.role == "admin")
+            .all()
+        ]
+
+    def get_gardeners(self):
+        """Get all gardener members of the farm."""
+        return [
+            member for member in
+            db.session.query(User)
+            .join(farm_member)
+            .filter(farm_member.c.farm_id == self.id)
+            .filter(farm_member.c.role == "gardener")
+            .all()
+        ]
+
+class InventoryItem(db.Model):
+    """Inventory item for a farm"""
+    __tablename__ = 'inventory_item'
+    id = db.Column(db.Integer, primary_key=True)
+    farm_id = db.Column(db.Integer, db.ForeignKey('farm.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    category = db.Column(db.String(50), nullable=True)  # e.g., 'Produce', 'Seeds', 'Equipment'
+    sku = db.Column(db.String(50), nullable=True)  # Stock Keeping Unit
+    quantity = db.Column(db.Float, nullable=False, default=0)
+    unit = db.Column(db.String(20), nullable=False, default='unit')  # e.g., 'kg', 'lb', 'unit'
+    price_per_unit = db.Column(db.Float, nullable=True)
+    cost_per_unit = db.Column(db.Float, nullable=True)
+    reorder_point = db.Column(db.Float, nullable=True)  # When to reorder
+    reorder_quantity = db.Column(db.Float, nullable=True)  # How much to reorder
+    location = db.Column(db.String(100), nullable=True)  # Storage location
+    created_at = db.Column(db.DateTime, default=now_in_timezone)
+    last_updated = db.Column(db.DateTime, default=now_in_timezone, onupdate=now_in_timezone)
+
+    # Optional link to a plant or harvest
+    plant_id = db.Column(db.Integer, db.ForeignKey('plant.id'), nullable=True)
+    harvest_id = db.Column(db.Integer, db.ForeignKey('harvest.id'), nullable=True)
+
+    # Relationships
+    plant = db.relationship('Plant', backref='inventory_items')
+    harvest = db.relationship('Harvest', backref='inventory_items')
+    inventory_transactions = db.relationship('InventoryTransaction', backref='item', lazy=True)
+
+    def __repr__(self):
+        return f"InventoryItem({self.name}, Qty: {self.quantity} {self.unit}, Farm: {self.farm_id})"
+
+    def adjust_quantity(self, amount, reason=None, transaction_type='adjustment'):
+        """Adjust the inventory quantity and create a transaction record."""
+        old_quantity = self.quantity
+        self.quantity += amount
+
+        # Create transaction record
+        transaction = InventoryTransaction(
+            item_id=self.id,
+            transaction_type=transaction_type,
+            quantity_change=amount,
+            previous_quantity=old_quantity,
+            new_quantity=self.quantity,
+            notes=reason
+        )
+
+        db.session.add(transaction)
+        db.session.commit()
+        return transaction
+
+    def is_low_stock(self):
+        """Check if item is below reorder point."""
+        if self.reorder_point is None:
+            return False
+        return self.quantity <= self.reorder_point
+
+class InventoryTransaction(db.Model):
+    """Record of inventory changes"""
+    __tablename__ = 'inventory_transaction'
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('inventory_item.id'), nullable=False)
+    transaction_type = db.Column(db.String(50), nullable=False)  # 'purchase', 'sale', 'adjustment', 'harvest', 'loss'
+    quantity_change = db.Column(db.Float, nullable=False)  # Positive for additions, negative for reductions
+    previous_quantity = db.Column(db.Float, nullable=False)
+    new_quantity = db.Column(db.Float, nullable=False)
+    transaction_date = db.Column(db.DateTime, default=now_in_timezone)
+    notes = db.Column(db.Text, nullable=True)
+
+    # Optional links to related records
+    sale_id = db.Column(db.Integer, db.ForeignKey('sale.id'), nullable=True)
+    purchase_id = db.Column(db.Integer, db.ForeignKey('purchase.id'), nullable=True)
+
+    def __repr__(self):
+        return f"InventoryTransaction({self.transaction_type}, Change: {self.quantity_change}, Item: {self.item_id})"
+
+class Sale(db.Model):
+    """Sales record for a farm"""
+    __tablename__ = 'sale'
+    id = db.Column(db.Integer, primary_key=True)
+    farm_id = db.Column(db.Integer, db.ForeignKey('farm.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=True)  # Optional link to a client
+    customer_name = db.Column(db.String(100), nullable=True)  # For one-time customers
+    sale_date = db.Column(db.DateTime, default=now_in_timezone)
+    total_amount = db.Column(db.Float, nullable=False, default=0)
+    payment_method = db.Column(db.String(50), nullable=True)  # e.g., 'Cash', 'Credit Card', 'Check'
+    payment_status = db.Column(db.String(50), default='pending')  # 'pending', 'completed', 'refunded'
+    notes = db.Column(db.Text, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Relationships
+    customer = db.relationship('Client', backref='sales')
+    creator = db.relationship('User', backref='created_sales')
+    sale_items = db.relationship('SaleItem', backref='sale', lazy=True, cascade='all, delete-orphan')
+    inventory_transactions = db.relationship('InventoryTransaction', backref='sale', lazy=True)
+
+    def __repr__(self):
+        return f"Sale(Date: {self.sale_date}, Amount: {self.total_amount}, Farm: {self.farm_id})"
+
+    def calculate_total(self):
+        """Calculate the total sale amount based on sale items."""
+        self.total_amount = sum(item.quantity * item.price_per_unit for item in self.sale_items)
+        db.session.commit()
+        return self.total_amount
+
+    def add_item(self, inventory_item, quantity, price_per_unit=None):
+        """Add an item to the sale and update inventory."""
+        # Use the inventory item's price if not specified
+        if price_per_unit is None:
+            price_per_unit = inventory_item.price_per_unit
+
+        if price_per_unit is None:
+            raise ValueError("Price per unit must be specified or available in the inventory item")
+
+        # Check if there's enough inventory
+        if inventory_item.quantity < quantity:
+            raise ValueError(f"Not enough inventory. Available: {inventory_item.quantity} {inventory_item.unit}")
+
+        # Create sale item
+        sale_item = SaleItem(
+            sale_id=self.id,
+            inventory_item_id=inventory_item.id,
+            quantity=quantity,
+            price_per_unit=price_per_unit,
+            total_price=quantity * price_per_unit
+        )
+
+        # Update inventory
+        inventory_item.adjust_quantity(-quantity, f"Sale #{self.id}", 'sale')
+
+        # Add sale item and update total
+        db.session.add(sale_item)
+        self.calculate_total()
+
+        return sale_item
+
+class SaleItem(db.Model):
+    """Individual item in a sale"""
+    __tablename__ = 'sale_item'
+    id = db.Column(db.Integer, primary_key=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey('sale.id'), nullable=False)
+    inventory_item_id = db.Column(db.Integer, db.ForeignKey('inventory_item.id'), nullable=False)
+    quantity = db.Column(db.Float, nullable=False)
+    price_per_unit = db.Column(db.Float, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)  # quantity * price_per_unit
+
+    # Relationship
+    inventory_item = db.relationship('InventoryItem', backref='sale_items')
+
+    def __repr__(self):
+        return f"SaleItem(Item: {self.inventory_item_id}, Qty: {self.quantity}, Price: {self.price_per_unit})"
+
+class Purchase(db.Model):
+    """Purchase record for farm supplies/inventory"""
+    __tablename__ = 'purchase'
+    id = db.Column(db.Integer, primary_key=True)
+    farm_id = db.Column(db.Integer, db.ForeignKey('farm.id'), nullable=False)
+    supplier_name = db.Column(db.String(100), nullable=False)
+    purchase_date = db.Column(db.DateTime, default=now_in_timezone)
+    total_amount = db.Column(db.Float, nullable=False, default=0)
+    payment_method = db.Column(db.String(50), nullable=True)
+    payment_status = db.Column(db.String(50), default='pending')  # 'pending', 'completed', 'refunded'
+    notes = db.Column(db.Text, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Relationships
+    creator = db.relationship('User', backref='created_purchases')
+    purchase_items = db.relationship('PurchaseItem', backref='purchase', lazy=True, cascade='all, delete-orphan')
+    inventory_transactions = db.relationship('InventoryTransaction', backref='purchase', lazy=True)
+
+    def __repr__(self):
+        return f"Purchase(Date: {self.purchase_date}, Amount: {self.total_amount}, Farm: {self.farm_id})"
+
+    def calculate_total(self):
+        """Calculate the total purchase amount based on purchase items."""
+        self.total_amount = sum(item.quantity * item.price_per_unit for item in self.purchase_items)
+        db.session.commit()
+        return self.total_amount
+
+    def add_item(self, inventory_item, quantity, price_per_unit):
+        """Add an item to the purchase and update inventory."""
+        # Create purchase item
+        purchase_item = PurchaseItem(
+            purchase_id=self.id,
+            inventory_item_id=inventory_item.id,
+            quantity=quantity,
+            price_per_unit=price_per_unit,
+            total_price=quantity * price_per_unit
+        )
+
+        # Update inventory
+        inventory_item.adjust_quantity(quantity, f"Purchase #{self.id}", 'purchase')
+
+        # Add purchase item and update total
+        db.session.add(purchase_item)
+        self.calculate_total()
+
+        return purchase_item
+
+class PurchaseItem(db.Model):
+    """Individual item in a purchase"""
+    __tablename__ = 'purchase_item'
+    id = db.Column(db.Integer, primary_key=True)
+    purchase_id = db.Column(db.Integer, db.ForeignKey('purchase.id'), nullable=False)
+    inventory_item_id = db.Column(db.Integer, db.ForeignKey('inventory_item.id'), nullable=False)
+    quantity = db.Column(db.Float, nullable=False)
+    price_per_unit = db.Column(db.Float, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)  # quantity * price_per_unit
+
+    # Relationship
+    inventory_item = db.relationship('InventoryItem', backref='purchase_items')
+
+    def __repr__(self):
+        return f"PurchaseItem(Item: {self.inventory_item_id}, Qty: {self.quantity}, Price: {self.price_per_unit})"

@@ -1,0 +1,1219 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Weekly Calendar Section (Left) -->
+    <div class="col-xl-9 col-lg-8">
+      <div class="card shadow mb-4" style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
+        <div
+          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+          style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
+        >
+          <div class="d-flex align-items-center">
+            <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+              Weekly Schedule
+            </h6>
+            <div class="d-flex align-items-center" style="margin-left: 3rem">
+              <a
+                href="{{ url_for('main.calendar', date_str=prev_week) }}"
+                class="btn btn-sm mr-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                "
+              >
+                <i class="fas fa-chevron-left"></i>
+              </a>
+              <h6 class="m-0">{{ date_range }}</h6>
+              <a
+                href="{{ url_for('main.calendar', date_str=next_week) }}"
+                class="btn btn-sm ml-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                "
+              >
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </div>
+          </div>
+          <a
+            href="{{ url_for('main.add_calendar_event') }}"
+            class="btn btn-sm"
+            style="
+              background: rgba(28, 200, 138, 0.1);
+              color: #1cc88a;
+              border: 1px solid rgba(28, 200, 138, 0.2);
+            "
+          >
+            <i class="fas fa-plus fa-sm"></i>
+          </a>
+        </div>
+        <div class="card-body p-0" style="flex: 1; overflow: auto;">
+          <div class="weekly-board">
+            <div class="board-columns">
+              {% for day in days %}
+              <div class="board-column">
+                <div class="column-header">
+                  <div class="day-name">{{ day.name }}</div>
+                  <div class="day-date">{{ day.date }}</div>
+                </div>
+                <div class="column-content">
+                  <!-- Debug: {{ day.name }} has {{ day.events|length }} events -->
+                  {% for event in day.events %}
+                  <div class="event-card {% if event.multi_day %}multi-day-event{% endif %}"
+                       data-event-id="{{ event.id }}"
+                       onclick="openViewEventModal({{ event.id }})"
+                       style="background-color: #f8f9fc;
+                              border-left: 3px solid {% if event.type == 'work' %}#1cc88a{% elif event.type == 'community' %}#4e73df{% elif event.type == 'school' %}#f6c23e{% elif event.type == 'personal' %}#e74a3b{% elif event.type == 'todo' %}#36b9cc{% elif event.type == 'custom' and event.custom_type %}{{ event.custom_type.color }}{% else %}#1cc88a{% endif %};
+                              margin-bottom: 8px;
+                              padding: 8px;
+                              border-radius: 4px;
+                              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                              {% if event.type == 'todo' and event.completed %}opacity: 0.7;{% endif %}">
+                    <div class="event-title" style="font-weight: bold;{% if event.type == 'todo' and event.completed %}text-decoration: line-through;{% endif %}">
+                      {{ event.title }}
+                      {% if event.type == 'custom' and event.custom_type %}
+                      <span class="badge" style="background-color: {{ event.custom_type.color }}; font-size: 0.7em;">{{ event.custom_type.name }}</span>
+                      {% endif %}
+                      {% if event.multi_day %}
+                      <span class="badge bg-secondary" style="font-size: 0.7rem; margin-left: 5px;">Day {{ event.day_number }}/{{ event.total_days }}</span>
+                      {% endif %}
+                    </div>
+                    <div class="event-time" style="font-size: 0.8rem; color: #666;">
+                      <i class="fas fa-clock fa-sm"></i> {{ event.time }}
+                    </div>
+                  </div>
+                  {% else %}
+                  <!-- No events for {{ day.name }} -->
+                  {% endfor %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar (Right) -->
+    <div class="col-xl-3 col-lg-4">
+      <!-- Mini Monthly Calendar -->
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+          style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
+        >
+          <div class="d-flex align-items-center">
+            <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+              {{ month_name }} {{ year }}
+            </h6>
+            <div class="d-flex align-items-center" style="margin-left: 1rem">
+              <a
+                href="{{ url_for('main.calendar', date_str=prev_month) }}"
+                class="btn btn-sm mr-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                  padding: 0.1rem 0.3rem;
+                "
+              >
+                <i class="fas fa-chevron-left"></i>
+              </a>
+              <a
+                href="{{ url_for('main.calendar', date_str=next_month) }}"
+                class="btn btn-sm ml-2"
+                style="
+                  border: 1px solid rgba(28, 200, 138, 0.2);
+                  color: #1cc88a;
+                  padding: 0.1rem 0.3rem;
+                "
+              >
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          <div class="mini-calendar">
+            <div class="row text-center mb-2">
+              {% for day in ['S', 'M', 'T', 'W', 'T', 'F', 'S'] %}
+              <div class="col px-1">
+                <small style="color: #858796">{{ day }}</small>
+              </div>
+              {% endfor %}
+            </div>
+            {% for week in month_calendar %}
+            <div class="row text-center mb-2">
+              {% for day in week %}
+              <div class="col px-1">
+                <div class="mini-day-wrapper">
+                  <div
+                    class="mini-day p-1 {% if not day.current_month %}text-muted{% endif %}"
+                    {% if day.current_month %}
+                    onclick="window.location.href='{{ url_for('main.calendar', date_str=day.date_str) }}'"
+                    {% endif %}
+                  >
+                    <small>{{ day.day }}</small>
+                  </div>
+                  <!-- Add event indicator dot - we'll control visibility with has-event class -->
+                  <div
+                    class="event-indicator {% if day.has_events %}has-event{% endif %}"
+                  ></div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="card shadow mb-4">
+        <div
+          class="card-header py-3"
+          style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)"
+        >
+          <h6 class="m-0 font-weight-bold" style="color: #1cc88a">
+            Upcoming Events
+          </h6>
+        </div>
+        <div class="card-body">
+          {% for event in upcoming_events %}
+          <div
+            class="upcoming-event d-flex align-items-center p-2 {% if not loop.last %}mb-3{% endif %}"
+            style="
+              border-left: 3px solid {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% elif event.calendar_type == 'todo' %}#36b9cc{% elif event.calendar_type == 'custom' and event.event_type %}{{ event.event_type.color }}{% else %}#1cc88a{% endif %};
+              background: rgba(28, 200, 138, 0.05);
+            "
+            data-event-id="{{ event.id }}"
+            onclick="openViewEventModal({{ event.id }})"
+          >
+            <div class="event-date text-center me-3" style="min-width: 50px">
+              <small class="text-gray-500 d-block">{{ event.start_datetime.strftime('%b').upper() }}</small>
+              <div class="h5 mb-0" style="color: {% if event.calendar_type == 'work' %}#1cc88a{% elif event.calendar_type == 'community' %}#4e73df{% elif event.calendar_type == 'school' %}#f6c23e{% elif event.calendar_type == 'personal' %}#e74a3b{% elif event.calendar_type == 'todo' %}#36b9cc{% elif event.calendar_type == 'custom' and event.event_type %}{{ event.event_type.color }}{% else %}#1cc88a{% endif %};">{{ event.start_datetime.strftime('%d') }}</div>
+            </div>
+            <div class="event-details">
+              <h6 class="mb-0" {% if event.calendar_type == 'todo' and event.completed %}style="text-decoration: line-through; opacity: 0.7;"{% endif %}>
+                {{ event.title }}
+                {% if event.calendar_type == 'custom' and event.event_type %}
+                <span class="badge" style="background-color: {{ event.event_type.color }}; font-size: 0.7em;">{{ event.event_type.name }}</span>
+                {% endif %}
+              </h6>
+              <small class="text-gray-600">
+                <i class="fas fa-clock fa-sm me-1"></i>{{ event.start_datetime.strftime('%I:%M %p') if not event.all_day else 'All Day' }}
+              </small>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-center py-3">
+            <p class="text-muted">No upcoming events</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+     
+    </div>
+  </div>
+</div>
+
+
+
+<!-- View/Edit Event Modal -->
+<div class="modal fade" id="viewEventModal" tabindex="-1" aria-labelledby="viewEventModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)">
+        <h5 class="modal-title" id="viewEventModalLabel" style="color: #1cc88a">Event Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="eventDetails">
+          <!-- Event details will be loaded here -->
+          <div class="text-center py-4">
+            <div class="spinner-border text-success" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(28, 200, 138, 0.2)">
+        <div class="d-flex justify-content-between w-100">
+          <div>
+            <button type="button" class="btn btn-danger" onclick="confirmDeleteEvent()">Delete</button>
+            <button id="toggleCompletionBtn" type="button" class="btn btn-info d-none" onclick="toggleTaskCompletion()">Mark as Completed</button>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <a id="editEventLink" href="#" class="btn btn-success">Edit</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(220, 53, 69, 0.2)">
+        <h5 class="modal-title" id="deleteConfirmModalLabel" style="color: #dc3545">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this event?</p>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(220, 53, 69, 0.2)">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="deleteEvent()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this JavaScript -->
+<script>
+  let currentEventId = null;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // Set default dates to today
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    document.getElementById("startDate").value = todayStr;
+    document.getElementById("endDate").value = todayStr;
+
+    // Handle all-day event toggle
+    const allDayCheckbox = document.getElementById("allDayEvent");
+    const startTimeContainer = document.getElementById("startTimeContainer");
+    const endTimeContainer = document.getElementById("endTimeContainer");
+
+    allDayCheckbox.addEventListener("change", function () {
+      startTimeContainer.style.display = this.checked ? "none" : "block";
+      endTimeContainer.style.display = this.checked ? "none" : "block";
+    });
+
+    // Handle repeat option changes
+    const repeatOption = document.getElementById("repeatOption");
+    const endRepeatContainer =
+      document.getElementById("endRepeat").parentElement.parentElement;
+    const endRepeatSelect = document.getElementById("endRepeat");
+    const endRepeatDate = document.getElementById("endRepeatDate");
+
+    repeatOption.addEventListener("change", function () {
+      endRepeatContainer.style.display =
+        this.value === "none" ? "none" : "flex";
+    });
+
+    endRepeatSelect.addEventListener("change", function() {
+      endRepeatDate.style.display = this.value === "on" ? "block" : "none";
+    });
+
+    // Initialize event cards to be clickable
+    document.querySelectorAll('.event-card').forEach(card => {
+      card.addEventListener('click', function() {
+        const eventId = this.getAttribute('data-event-id');
+        if (eventId) {
+          openViewEventModal(eventId);
+        }
+      });
+    });
+
+    // Fix for modal backdrop issue
+    const fixBackdropIssue = () => {
+      // Remove any lingering backdrops
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => {
+        backdrop.remove();
+      });
+      // Remove modal-open class from body
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+
+    // Add event listeners to all modal close buttons
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+      button.addEventListener('click', fixBackdropIssue);
+    });
+
+    // Handle ESC key to close modals
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        fixBackdropIssue();
+      }
+    });
+
+    // Initialize modals with proper handling
+    const viewEventModal = document.getElementById('viewEventModal');
+    if (viewEventModal) {
+      viewEventModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
+    }
+
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    if (deleteConfirmModal) {
+      deleteConfirmModal.addEventListener('hidden.bs.modal', fixBackdropIssue);
+    }
+
+
+  });
+
+
+
+  function openViewEventModal(eventId) {
+    currentEventId = eventId;
+
+    // Show loading spinner
+    document.getElementById('eventDetails').innerHTML = `
+      <div class="text-center py-4">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    `;
+
+    // Update the edit link
+    document.getElementById('editEventLink').href = `/calendar/events/${eventId}/edit`;
+
+    // Hide the toggle completion button by default
+    const toggleCompletionBtn = document.getElementById('toggleCompletionBtn');
+    toggleCompletionBtn.classList.add('d-none');
+    toggleCompletionBtn.classList.remove('btn-warning');
+    toggleCompletionBtn.classList.add('btn-info');
+    toggleCompletionBtn.textContent = 'Mark as Completed';
+
+    // Show the modal
+    const viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
+    viewEventModal.show();
+
+    // Fetch event details
+    fetch(`/calendar/events/${eventId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch event details');
+        }
+        return response.json();
+      })
+      .then(event => {
+        // Format dates
+        const startDate = new Date(event.start_datetime);
+        const endDate = event.end_datetime ? new Date(event.end_datetime) : null;
+
+        // Format time display
+        const timeDisplay = event.all_day ? 'All Day' :
+          `${startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} -
+           ${endDate ? endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}`;
+
+        // Get calendar color
+        let calendarColor = '#1cc88a'; // Default green
+        if (event.calendar_type === 'community') calendarColor = '#4e73df';
+        if (event.calendar_type === 'school') calendarColor = '#f6c23e';
+        if (event.calendar_type === 'personal') calendarColor = '#e74a3b';
+        if (event.calendar_type === 'todo') calendarColor = '#36b9cc';
+        if (event.calendar_type === 'custom' && event.event_type) calendarColor = event.event_type.color;
+
+        // Show toggle completion button for TODO tasks
+        if (event.calendar_type === 'todo') {
+          // Update the global variable to track completion status
+          currentEventCompleted = event.completed || false;
+
+          // Show the toggle completion button
+          toggleCompletionBtn.classList.remove('d-none');
+
+          // Update button text and style based on current completion status
+          if (currentEventCompleted) {
+            toggleCompletionBtn.textContent = 'Mark as Incomplete';
+            toggleCompletionBtn.classList.remove('btn-info');
+            toggleCompletionBtn.classList.add('btn-warning');
+          } else {
+            toggleCompletionBtn.textContent = 'Mark as Completed';
+            toggleCompletionBtn.classList.remove('btn-warning');
+            toggleCompletionBtn.classList.add('btn-info');
+          }
+        }
+
+        // Build HTML for event details
+        let html = `
+          <div class="event-header mb-3 pb-2" style="border-bottom: 1px solid rgba(28, 200, 138, 0.2)">
+            <h4 ${event.calendar_type === 'todo' && event.completed ? 'style="text-decoration: line-through; opacity: 0.7;"' : ''}>${event.title}</h4>
+            <div class="d-flex align-items-center">
+              ${event.calendar_type === 'custom' && event.event_type ?
+                `<span class="badge me-2" style="background-color: ${event.event_type.color}">${event.event_type.name}</span>` :
+                `<span class="badge me-2" style="background-color: ${calendarColor}">${event.calendar_type}</span>`
+              }
+              <i class="fas fa-clock fa-sm me-1"></i> ${timeDisplay}
+              ${event.calendar_type === 'todo' ? `<span class="ms-2 badge ${event.completed ? 'bg-success' : 'bg-warning'}"><i class="fas ${event.completed ? 'fa-check' : 'fa-hourglass-half'}"></i> ${event.completed ? 'Completed' : 'Pending'}</span>` : ''}
+            </div>
+          </div>
+        `;
+
+        if (event.location) {
+          html += `
+            <div class="mb-3">
+              <i class="fas fa-map-marker-alt me-2"></i> ${event.location}
+            </div>
+          `;
+        }
+
+        if (event.description) {
+          html += `
+            <div class="mb-3">
+              <h6>Description</h6>
+              <p>${event.description}</p>
+            </div>
+          `;
+        }
+
+        if (event.repeat_type) {
+          html += `
+            <div class="mb-3">
+              <i class="fas fa-sync-alt me-2"></i> Repeats ${event.repeat_type}
+              ${event.repeat_end_date ? ` until ${new Date(event.repeat_end_date).toLocaleDateString()}` : ''}
+            </div>
+          `;
+        }
+
+        if (event.garden_id || event.plant_id) {
+          html += `<div class="mb-3">`;
+
+          if (event.garden_id) {
+            html += `<div><i class="fas fa-leaf me-2"></i> Garden: ${event.garden_id}</div>`;
+          }
+
+          if (event.plant_id) {
+            html += `<div><i class="fas fa-seedling me-2"></i> Plant: ${event.plant_id}</div>`;
+          }
+
+          html += `</div>`;
+        }
+
+        if (event.url) {
+          html += `
+            <div class="mb-3">
+              <i class="fas fa-link me-2"></i> <a href="${event.url}" target="_blank">${event.url}</a>
+            </div>
+          `;
+        }
+
+        // Update the modal content
+        document.getElementById('eventDetails').innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error fetching event details:', error);
+        document.getElementById('eventDetails').innerHTML = `
+          <div class="alert alert-danger">
+            Failed to load event details. Please try again.
+          </div>
+        `;
+      });
+  }
+
+  function confirmDeleteEvent() {
+    // Hide the view modal and show the delete confirmation modal
+    bootstrap.Modal.getInstance(document.getElementById('viewEventModal')).hide();
+    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    deleteConfirmModal.show();
+  }
+
+  function deleteEvent() {
+    if (!currentEventId) return;
+
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Send delete request
+    fetch(`/calendar/events/${currentEventId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to delete event');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Hide the modal
+      bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+
+      // Show success message and reload the page
+      alert('Event deleted successfully!');
+      window.location.reload();
+    })
+    .catch(error => {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
+    });
+  }
+
+  function editEvent() {
+    // Redirect to edit page or implement in-place editing
+    if (currentEventId) {
+      window.location.href = `/calendar/events/${currentEventId}/edit`;
+    }
+  }
+
+  // Global variable to track the current event's completion status
+  let currentEventCompleted = false;
+
+  // Function to toggle task completion status
+  function toggleTaskCompletion() {
+    if (!currentEventId) return;
+
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Determine which endpoint to call based on current completion status
+    const endpoint = currentEventCompleted ? 'uncomplete' : 'complete';
+
+    // Send request to toggle completion status
+    fetch(`/calendar/events/${currentEventId}/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to ${currentEventCompleted ? 'unmark' : 'mark'} task as completed`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // Update the button text and current status
+        currentEventCompleted = !currentEventCompleted;
+        const toggleBtn = document.getElementById('toggleCompletionBtn');
+        toggleBtn.textContent = currentEventCompleted ? 'Mark as Incomplete' : 'Mark as Completed';
+        toggleBtn.classList.toggle('btn-info');
+        toggleBtn.classList.toggle('btn-warning');
+
+        // Update the event details to reflect the new status
+        const eventTitle = document.querySelector('#eventDetails h4');
+        if (eventTitle) {
+          if (currentEventCompleted) {
+            eventTitle.style.textDecoration = 'line-through';
+            eventTitle.style.opacity = '0.7';
+          } else {
+            eventTitle.style.textDecoration = 'none';
+            eventTitle.style.opacity = '1';
+          }
+        }
+
+        // Update the status badge
+        const statusBadge = document.querySelector('#eventDetails .badge:last-of-type');
+        if (statusBadge) {
+          statusBadge.className = `ms-2 badge ${currentEventCompleted ? 'bg-success' : 'bg-warning'}`;
+          statusBadge.innerHTML = `<i class="fas ${currentEventCompleted ? 'fa-check' : 'fa-hourglass-half'}"></i> ${currentEventCompleted ? 'Completed' : 'Pending'}`;
+        }
+
+        // Show success message
+        alert(data.message);
+      } else {
+        // Show error message
+        alert(data.message || `Failed to ${currentEventCompleted ? 'unmark' : 'mark'} task as completed`);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert(`An error occurred while ${currentEventCompleted ? 'unmarking' : 'marking'} the task as completed`);
+    });
+  }
+</script>
+
+<!-- Add these styles -->
+<style>
+  .modal-dialog {
+    max-width: 500px;
+  }
+
+  .form-group label {
+    color: #5a5c69;
+    font-weight: 500;
+  }
+
+  .input-group-text {
+    background-color: transparent;
+    border-right: none;
+  }
+
+  .input-group .form-control {
+    border-left: none;
+  }
+
+  .form-control:focus {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+  }
+
+  .form-select:focus {
+    border-color: #1cc88a;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+  }
+</style>
+
+<!-- Custom styles -->
+<style>
+  .weekly-board {
+    height: calc(100vh - 200px);
+    overflow: hidden; /* Remove horizontal scroll */
+  }
+
+  .board-columns {
+    display: flex;
+    min-height: 100%;
+    width: 100%; /* Ensure full width */
+  }
+
+  .board-column {
+    flex: 1;
+    min-width: 0; /* Remove min-width to allow shrinking */
+    border-right: 1px solid rgba(28, 200, 138, 0.1);
+  }
+
+  .board-column:last-child {
+    border-right: none;
+  }
+
+  .column-header {
+    padding: 0.5rem; /* Reduced padding */
+    background: rgba(28, 200, 138, 0.05);
+    border-bottom: 1px solid rgba(28, 200, 138, 0.1);
+    text-align: center;
+  }
+
+  .day-name {
+    color: #5a5c69;
+    font-weight: 600;
+    font-size: 0.85rem; /* Slightly smaller font */
+  }
+
+  .day-date {
+    color: #858796;
+    font-size: 0.75rem;
+  }
+
+  .column-content {
+    padding: 0.5rem; /* Reduced padding */
+    min-height: 100%;
+    overflow-y: auto; /* Allow vertical scrolling within columns */
+  }
+
+  .event-card {
+    background: white;
+    border-radius: 4px; /* Slightly smaller radius */
+    padding: 0.5rem; /* Reduced padding */
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #1cc88a;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    word-break: break-word; /* Prevent text overflow */
+  }
+
+  .event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .event-title {
+    color: #5a5c69;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem; /* Slightly smaller font */
+  }
+
+  .event-time {
+    color: #858796;
+    font-size: 0.7rem; /* Slightly smaller font */
+  }
+
+  .event-time i {
+    margin-right: 0.25rem;
+  }
+
+  .bg-success-light {
+    background-color: rgba(28, 200, 138, 0.1);
+  }
+
+  .mini-day:hover {
+    background-color: rgba(28, 200, 138, 0.1);
+  }
+
+  .hour-slot:hover {
+    background-color: rgba(28, 200, 138, 0.05);
+  }
+
+  .upcoming-event {
+    transition: all 0.3s ease;
+    border-radius: 4px;
+  }
+
+  .upcoming-event:hover {
+    transform: translateX(5px);
+  }
+
+  .event-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .event-card:hover {
+    transform: scale(1.02);
+  }
+
+  /* Make calendar more compact on smaller screens */
+  @media (max-width: 1200px) {
+    .day-name {
+      font-size: 0.8rem;
+    }
+
+    .event-title {
+      font-size: 0.8rem;
+    }
+
+    .column-header {
+      padding: 0.4rem;
+    }
+
+    .column-content {
+      padding: 0.4rem;
+    }
+  }
+
+  .mini-day-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .event-indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #1cc88a;
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .event-indicator.has-event {
+    opacity: 1;
+  }
+
+  /* Optional: Add different colors for different calendar types */
+  .event-indicator.work {
+    background-color: #1cc88a;
+  }
+
+  .event-indicator.community {
+    background-color: #4e73df;
+  }
+
+  .event-indicator.school {
+    background-color: #f6c23e;
+  }
+
+  .event-indicator.personal {
+    background-color: #e74a3b;
+  }
+
+  /* If you want to show multiple dots for multiple events */
+  .event-indicator-multiple {
+    display: flex;
+    gap: 2px;
+  }
+
+  .event-indicator-multiple .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+  }
+</style>
+
+<script>
+  // Initialize date pickers
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates
+    const today = new Date();
+    document.getElementById('startDate').valueAsDate = today;
+    document.getElementById('endDate').valueAsDate = today;
+
+    // Set default times
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('startTime').value = `${hours}:${minutes}`;
+    document.getElementById('endTime').value = `${hours}:${minutes}`;
+
+    // Handle all-day checkbox
+    const allDayCheckbox = document.getElementById('allDayEvent');
+    const startTimeContainer = document.getElementById('startTimeContainer');
+    const endTimeContainer = document.getElementById('endTimeContainer');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+
+    allDayCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        startTimeContainer.style.display = 'none';
+        endTimeContainer.style.display = 'none';
+        startTimeInput.required = false;
+        endTimeInput.required = false;
+      } else {
+        startTimeContainer.style.display = 'block';
+        endTimeContainer.style.display = 'block';
+        startTimeInput.required = true;
+        endTimeInput.required = true;
+      }
+    });
+
+    // Handle end repeat dropdown
+    const endRepeatSelect = document.getElementById('endRepeat');
+    const endRepeatDateInput = document.getElementById('endRepeatDate');
+
+    endRepeatSelect.addEventListener('change', function() {
+      if (this.value === 'on') {
+        endRepeatDateInput.style.display = 'block';
+        endRepeatDateInput.required = true;
+      } else {
+        endRepeatDateInput.style.display = 'none';
+        endRepeatDateInput.required = false;
+      }
+    });
+
+    // Initialize the event form modal
+    const addEventModal = new bootstrap.Modal(document.getElementById('addEventModal'));
+
+    // Form validation
+    const eventForm = document.getElementById('eventForm');
+    const saveEventBtn = document.getElementById('saveEventBtn');
+
+    // Handle save event button click
+    saveEventBtn.addEventListener('click', function() {
+      validateAndSubmitForm();
+    });
+
+    function validateAndSubmitForm() {
+      // Reset previous error messages
+      const errorMessages = document.querySelectorAll('.invalid-feedback');
+      errorMessages.forEach(el => el.remove());
+
+      const formInputs = eventForm.querySelectorAll('input, select');
+      formInputs.forEach(input => {
+        input.classList.remove('is-invalid');
+      });
+
+      let isValid = true;
+
+      // Validate title
+      const titleInput = document.getElementById('eventTitle');
+      if (!titleInput.value.trim()) {
+        showError(titleInput, 'Please enter an event title');
+        isValid = false;
+      }
+
+      // Validate dates
+      const startDate = document.getElementById('startDate');
+      const endDate = document.getElementById('endDate');
+      const startTime = document.getElementById('startTime');
+      const endTime = document.getElementById('endTime');
+
+      if (!startDate.value) {
+        showError(startDate, 'Please select a start date');
+        isValid = false;
+      }
+
+      if (!endDate.value) {
+        showError(endDate, 'Please select an end date');
+        isValid = false;
+      }
+
+      // Validate that end date is not before start date
+      if (startDate.value && endDate.value) {
+        const startDateObj = new Date(startDate.value);
+        const endDateObj = new Date(endDate.value);
+
+        // If dates are the same, check times (if not all-day)
+        if (startDateObj.getTime() === endDateObj.getTime() && !allDayCheckbox.checked) {
+          if (startTime.value && endTime.value && endTime.value < startTime.value) {
+            showError(endTime, 'End time cannot be before start time on the same day');
+            isValid = false;
+          }
+        }
+        // If end date is before start date
+        else if (endDateObj < startDateObj) {
+          showError(endDate, 'End date cannot be before start date');
+          isValid = false;
+        }
+      }
+
+      // Validate times if not all-day event
+      if (!allDayCheckbox.checked) {
+        if (!startTime.value) {
+          showError(startTime, 'Please select a start time');
+          isValid = false;
+        }
+
+        if (!endTime.value) {
+          showError(endTime, 'Please select an end time');
+          isValid = false;
+        }
+      }
+
+      // Validate end repeat date if needed
+      if (endRepeatSelect.value === 'on' && !endRepeatDateInput.value) {
+        showError(endRepeatDateInput, 'Please select an end repeat date');
+        isValid = false;
+      }
+
+      // Submit the form if validation passes
+      if (isValid) {
+        eventForm.submit();
+      }
+    }
+  });
+
+  // Helper function to show error messages
+  function showError(input, message) {
+    input.classList.add('is-invalid');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'invalid-feedback';
+    errorDiv.textContent = message;
+    input.parentNode.appendChild(errorDiv);
+  }
+
+  // Function to open the view event modal
+  function openViewEventModal(eventId) {
+    console.log('Opening event with ID:', eventId);
+    currentEventId = eventId;
+
+    // Show loading spinner
+    document.getElementById('eventDetails').innerHTML = `
+      <div class="text-center py-4">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    `;
+
+    // Open the modal
+    const viewEventModal = new bootstrap.Modal(document.getElementById('viewEventModal'));
+    viewEventModal.show();
+
+    // Fetch event details
+    fetch(`/calendar/events/${eventId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch event details');
+        }
+        return response.json();
+      })
+      .then(event => {
+        // Format dates
+        const startDate = new Date(event.start_datetime);
+        const endDate = event.end_datetime ? new Date(event.end_datetime) : null;
+
+        // Format time for display
+        const formatTime = (date) => {
+          if (!date) return '';
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        };
+
+        // Format date for display
+        const formatDate = (date) => {
+          if (!date) return '';
+          return date.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        };
+
+        // Build HTML for event details
+        let html = `
+          <h4 class="mb-3">${event.title}</h4>
+
+          <div class="mb-3">
+            <strong><i class="fas fa-calendar"></i> Date:</strong>
+            <div class="ms-4">
+              ${formatDate(startDate)}
+              ${endDate && formatDate(endDate) !== formatDate(startDate) ? ` to ${formatDate(endDate)}` : ''}
+            </div>
+          </div>
+
+          ${!event.all_day ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-clock"></i> Time:</strong>
+            <div class="ms-4">
+              ${formatTime(startDate)}
+              ${endDate ? ` to ${formatTime(endDate)}` : ''}
+            </div>
+          </div>
+          ` : `
+          <div class="mb-3">
+            <strong><i class="fas fa-clock"></i> Time:</strong>
+            <div class="ms-4">All Day</div>
+          </div>
+          `}
+
+          ${event.location ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
+            <div class="ms-4">${event.location}</div>
+          </div>
+          ` : ''}
+
+          ${event.garden_id ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-leaf"></i> Garden:</strong>
+            <div class="ms-4">${event.garden ? event.garden.name : 'Unknown Garden'}</div>
+          </div>
+          ` : ''}
+
+          ${event.zone_id ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-map"></i> Zone:</strong>
+            <div class="ms-4">${event.zone ? event.zone.name : 'Unknown Zone'}</div>
+          </div>
+          ` : ''}
+
+          ${event.plant_id ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-seedling"></i> Plant:</strong>
+            <div class="ms-4">${event.plant ? event.plant.name : 'Unknown Plant'}</div>
+          </div>
+          ` : ''}
+
+          ${event.description ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-align-left"></i> Description:</strong>
+            <div class="ms-4">${event.description}</div>
+          </div>
+          ` : ''}
+
+          ${event.url ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-link"></i> URL:</strong>
+            <div class="ms-4"><a href="${event.url}" target="_blank">${event.url}</a></div>
+          </div>
+          ` : ''}
+
+          ${event.repeat_type ? `
+          <div class="mb-3">
+            <strong><i class="fas fa-redo"></i> Repeats:</strong>
+            <div class="ms-4">
+              ${event.repeat_type.charAt(0).toUpperCase() + event.repeat_type.slice(1)}
+              ${event.repeat_end_date ? ` until ${new Date(event.repeat_end_date).toLocaleDateString()}` : ''}
+            </div>
+          </div>
+          ` : ''}
+        `;
+
+        // Update the modal content
+        document.getElementById('eventDetails').innerHTML = html;
+
+        // Update the edit link
+        document.getElementById('editEventLink').href = `/calendar/events/${event.id}/edit`;
+      })
+      .catch(error => {
+        console.error('Error fetching event details:', error);
+        document.getElementById('eventDetails').innerHTML = `
+          <div class="alert alert-danger">
+            Failed to load event details. Please try again.
+          </div>
+        `;
+      });
+  }
+
+  // Function to confirm event deletion
+  function confirmDeleteEvent() {
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    deleteModal.show();
+  }
+
+  // Function to delete an event
+  function deleteEvent() {
+    if (!currentEventId) return;
+
+    fetch(`/calendar/events/${currentEventId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to delete event');
+      }
+      // Close the modals
+      bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+      bootstrap.Modal.getInstance(document.getElementById('viewEventModal')).hide();
+
+      // Reload the page to show the updated calendar
+      window.location.reload();
+    })
+    .catch(error => {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
+    });
+  }
+
+  // Function to update zones based on selected garden
+  function updateZones() {
+    const gardenId = document.getElementById('garden_id').value;
+    const zoneSelect = document.getElementById('zone_id');
+
+    // Clear current options
+    zoneSelect.innerHTML = '<option value="">None</option>';
+
+    if (!gardenId) {
+      return;
+    }
+
+    // Fetch zones for the selected garden
+    fetch(`/api/gardens/${gardenId}/zones`)
+      .then(response => response.json())
+      .then(zones => {
+        zones.forEach(zone => {
+          const option = document.createElement('option');
+          option.value = zone.id;
+          option.textContent = zone.name;
+          zoneSelect.appendChild(option);
+        });
+      })
+      .catch(error => console.error('Error fetching zones:', error));
+  }
+
+  // Function to update plants based on selected zone
+  function updatePlants() {
+    const zoneId = document.getElementById('zone_id').value;
+    const plantSelect = document.getElementById('plant_id');
+
+    // Hide all plant options first
+    Array.from(plantSelect.options).forEach(option => {
+      if (option.value === '') {
+        // Keep the 'None' option visible
+        option.style.display = '';
+      } else {
+        // Hide all other options initially
+        option.style.display = 'none';
+      }
+    });
+
+    if (!zoneId) {
+      return;
+    }
+
+    // Show only plants from the selected zone
+    Array.from(plantSelect.options).forEach(option => {
+      if (option.dataset.zone === zoneId) {
+        option.style.display = '';
+      }
+    });
+  }
+</script>
+
+{% endblock content %}

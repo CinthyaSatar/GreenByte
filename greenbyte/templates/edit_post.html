@@ -1,0 +1,248 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow-sm mb-4" style="background: white;
+                      border: 1px solid rgba(28, 200, 138, 0.2);
+                      border-radius: 1rem !important;
+                      border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+                      box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+                <div class="card-body p-4 position-relative">
+                    <h3 class="text-success mb-4">{{ legend }}</h3>
+
+                    <form method="POST" action="" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Title Field -->
+                        <div class="form-group mb-3">
+                            <label for="title" class="form-label fw-bold">Post Title</label>
+                            {% if form.title.errors %}
+                                {{ form.title(class="form-control is-invalid", placeholder="Enter a catchy title for your post") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.title.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.title(class="form-control", placeholder="Enter a catchy title for your post", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Keep it concise and descriptive (3-100 characters)</div>
+                        </div>
+
+                        <!-- Category Field -->
+                        <div class="form-group mb-3">
+                            <label for="category" class="form-label fw-bold">Category</label>
+                            {% if form.category.errors %}
+                                {{ form.category(class="form-select is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.category(class="form-select", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.3); background-color: rgba(28, 200, 138, 0.05); color: #495057; font-weight: 500; padding: 0.5rem 2rem 0.5rem 0.75rem; background-image: url('data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"%3E%3Cpath fill=\"none\" stroke=\"%231cc88a\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2 5l6 6 6-6\"%2F%3E%3C%2Fsvg%3E'); background-size: 12px 12px; box-shadow: 0 2px 5px rgba(28, 200, 138, 0.08);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Select the category that best fits your post</div>
+                        </div>
+
+                        <!-- Garden Link Field -->
+                        <div class="form-group mb-3">
+                            <label for="garden_id" class="form-label fw-bold">Link to Garden (Optional)</label>
+                            {% if form.garden_id.errors %}
+                                {{ form.garden_id(class="form-select is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.garden_id.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.garden_id(class="form-select", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.3); background-color: rgba(28, 200, 138, 0.05); color: #495057; font-weight: 500; padding: 0.5rem 2rem 0.5rem 0.75rem; background-image: url('data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"%3E%3Cpath fill=\"none\" stroke=\"%231cc88a\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2 5l6 6 6-6\"%2F%3E%3C%2Fsvg%3E'); background-size: 12px 12px; box-shadow: 0 2px 5px rgba(28, 200, 138, 0.08);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Connect this post to one of your gardens</div>
+                        </div>
+
+                        <!-- Tags Field -->
+                        <div class="form-group mb-3">
+                            <label for="tags" class="form-label fw-bold">Tags (Optional)</label>
+                            {% if form.tags.errors %}
+                                {{ form.tags(class="form-control is-invalid", placeholder="tomatoes, organic, beginner") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.tags.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.tags(class="form-control", placeholder="tomatoes, organic, beginner", style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Add comma-separated tags to help others find your post</div>
+                        </div>
+
+                        <!-- Content Field -->
+                        <div class="form-group mb-3">
+                            <label for="content" class="form-label fw-bold">Post Content</label>
+                            {% if form.content.errors %}
+                                {{ form.content(class="form-control is-invalid", placeholder="Share your gardening experience, tips, or questions", rows=10) }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.content.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.content(class="form-control", placeholder="Share your gardening experience, tips, or questions", rows=10, style="border-radius: 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                            {% endif %}
+                            <div class="form-text text-muted">Share your gardening journey, tips, or ask questions (minimum 10 characters)</div>
+                        </div>
+
+                        <!-- Image Upload Field -->
+                        <div class="form-group mb-3">
+                            <label for="images" class="form-label fw-bold">Add More Photos (Optional)</label>
+                            <div class="input-group">
+                                {% if form.images.errors %}
+                                    {{ form.images(class="form-control is-invalid", style="border-radius: 0.5rem 0 0 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.images.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.images(class="form-control", style="border-radius: 0.5rem 0 0 0.5rem; border: 1px solid rgba(28, 200, 138, 0.2);") }}
+                                {% endif %}
+                                <span class="input-group-text" style="border-radius: 0 0.5rem 0.5rem 0; border: 1px solid rgba(28, 200, 138, 0.2); border-left: none;">
+                                    <i class="fas fa-camera text-success"></i>
+                                </span>
+                            </div>
+                            <div class="form-text text-muted">Upload additional images of your garden or plants (JPG, JPEG, PNG only)</div>
+                        </div>
+
+                        <!-- Current Images Section (if any) -->
+                        {% if post and post.images %}
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Current Images</label>
+                            <div class="row g-2">
+                                {% for image in post.images %}
+                                <div class="col-md-4 col-sm-6 mb-3">
+                                    <div class="card h-100 position-relative">
+                                        <img src="{{ url_for('static', filename='post_pics/' + image.image_file) }}"
+                                             class="card-img-top" alt="Post image"
+                                             style="height: 150px; object-fit: cover; border-radius: 0.5rem 0.5rem 0 0;">
+                                        <div class="card-body p-2 text-center">
+                                            <a href="{{ url_for('posts.delete_image', image_id=image.id, post_id=post.id) }}"
+                                               class="btn btn-sm text-danger"
+                                               style="position: absolute; top: 5px; right: 5px; background-color: rgba(255,255,255,0.8); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                            <small class="text-muted">Image #{{ loop.index }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Submit and Delete Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <!-- Delete Button -->
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    data-toggle="modal"
+                                    data-target="#deleteModal"
+                                    style="border-radius: 0.5rem;">
+                                <i class="fas fa-trash-alt me-1"></i> Delete Post
+                            </button>
+
+                            <!-- Save/Cancel Buttons -->
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('posts.post', postId=post.id) }}" class="btn btn-outline-secondary me-md-2" style="border-radius: 0.5rem;">
+                                    Cancel
+                                </a>
+                                {{ form.submit(class="btn btn-success", style="border-radius: 0.5rem;") }}
+                            </div>
+                        </div>
+
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content" style="border-radius: 1rem; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                              <div class="modal-header border-0">
+                                <h5 class="modal-title text-danger" id="deleteModalLabel">
+                                  <i class="fas fa-exclamation-triangle me-2"></i> Delete Post?
+                                </h5>
+                                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body text-center py-4">
+                                <p class="mb-0">Are you sure you want to delete this post? This action cannot be undone.</p>
+                              </div>
+                              <div class="modal-footer border-0 justify-content-center">
+                                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" style="border-radius: 0.5rem;">
+                                  <i class="fas fa-times me-1"></i> Cancel
+                                </button>
+                                <a href="{{ url_for('posts.deletePost', postId=post.id) }}" class="btn btn-danger" style="border-radius: 0.5rem;">
+                                  <i class="fas fa-trash-alt me-1"></i> Delete
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Tips -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow-sm mb-4" style="background: white;
+                      border: 1px solid rgba(28, 200, 138, 0.2);
+                      border-radius: 1rem !important;
+                      border-bottom: 4px solid rgba(28, 200, 138, 0.2);
+                      box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;">
+                <div class="card-body p-4">
+                    <h4 class="text-success mb-3">Post Editing Tips</h4>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-lightbulb text-success me-2"></i>
+                            <span class="fw-bold">Improve Clarity</span>
+                        </div>
+                        <p class="text-muted small ms-4">Review your content for clarity and add any missing details that might help readers.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-camera text-success me-2"></i>
+                            <span class="fw-bold">Update Photos</span>
+                        </div>
+                        <p class="text-muted small ms-4">Add new photos to show progress or different angles of your garden.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-tags text-success me-2"></i>
+                            <span class="fw-bold">Refine Tags</span>
+                        </div>
+                        <p class="text-muted small ms-4">Add more specific tags to help others find your post more easily.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span class="fw-bold">Update Results</span>
+                        </div>
+                        <p class="text-muted small ms-4">Share any new results or outcomes since your original post.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-reply text-success me-2"></i>
+                            <span class="fw-bold">Address Comments</span>
+                        </div>
+                        <p class="text-muted small ms-4">Consider addressing questions or feedback you've received from the community.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

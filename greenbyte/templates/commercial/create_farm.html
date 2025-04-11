@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Create New Farm</h1>
+        <a href="{{ url_for('commercial.dashboard') }}" class="d-none d-sm-inline-block btn btn-sm btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm mr-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Farm Details</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                {{ form.name.label(class="form-control-label") }}
+                                {% if form.name.errors %}
+                                    {{ form.name(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.name(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-6">
+                                {{ form.business_name.label(class="form-control-label") }}
+                                {% if form.business_name.errors %}
+                                    {{ form.business_name(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.business_name.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.business_name(class="form-control") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            {{ form.location.label(class="form-control-label") }}
+                            {% if form.location.errors %}
+                                {{ form.location(class="form-control is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.location.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.location(class="form-control") }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                {{ form.phone.label(class="form-control-label") }}
+                                {% if form.phone.errors %}
+                                    {{ form.phone(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.phone.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.phone(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-6">
+                                {{ form.email.label(class="form-control-label") }}
+                                {% if form.email.errors %}
+                                    {{ form.email(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.email(class="form-control") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                {{ form.website.label(class="form-control-label") }}
+                                {% if form.website.errors %}
+                                    {{ form.website(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.website.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.website(class="form-control") }}
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-6">
+                                {{ form.tax_id.label(class="form-control-label") }}
+                                {% if form.tax_id.errors %}
+                                    {{ form.tax_id(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.tax_id.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.tax_id(class="form-control") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            {{ form.description.label(class="form-control-label") }}
+                            {% if form.description.errors %}
+                                {{ form.description(class="form-control is-invalid", rows=4) }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.description.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.description(class="form-control", rows=4) }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            {{ form.submit(class="btn btn-success") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Farm Creation Tips</h6>
+                </div>
+                <div class="card-body">
+                    <p>Creating a farm allows you to:</p>
+                    <ul>
+                        <li>Manage commercial operations</li>
+                        <li>Track inventory and sales</li>
+                        <li>Organize gardens and plants</li>
+                        <li>Add team members with different roles</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6 class="font-weight-bold">Member Roles</h6>
+                    <p><strong>Admin:</strong> Can manage all farm aspects including commercial operations, inventory, and members.</p>
+                    <p><strong>Gardener:</strong> Can update plant status, move plants between zones, and record harvests.</p>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-1"></i> After creating your farm, you can add gardens, inventory items, and team members.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

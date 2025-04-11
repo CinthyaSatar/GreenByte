@@ -28,3 +28,39 @@
         margin-top: 1rem;
     }
 }
+
+/* Calendar styles */
+.mini-day-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mini-day {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.mini-day:hover {
+    background-color: rgba(28, 200, 138, 0.1);
+    cursor: pointer;
+}
+
+.event-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #1cc88a;
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.event-indicator.has-event {
+    opacity: 1;
+}

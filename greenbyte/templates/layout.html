@@ -7,11 +7,23 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/calendar.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/calendar-custom.css') }}" rel="stylesheet">
 
   <style>
     body {
       background: #f8f9fc;
       overflow-x: hidden;
+    }
+
+    /* Custom card styling */
+    .custom-card {
+      border: 1px solid rgba(28, 200, 138, 0.2) !important;
+      border-radius: 1.5rem !important;
+      border-bottom: 4px solid rgba(28, 200, 138, 0.2) !important;
+      background: white !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
     }
 
     /* Floating sidebar styles */
@@ -224,42 +236,6 @@
           <span>Dashboard</span>
         </a>
       </div>
-
-      <div class="nav-item">
-        <a class="nav-link" href="{{ url_for('commercial.clients') }}">
-          <i class="fas fa-fw fa-users"></i>
-          <span>Clients</span>
-        </a>
-      </div>
-
-      <div class="nav-item">
-        <a class="nav-link" href="{{ url_for('commercial.products') }}">
-          <i class="fas fa-fw fa-leaf"></i>
-          <span>Products</span>
-        </a>
-      </div>
-
-      <div class="nav-item">
-        <a class="nav-link" href="{{ url_for('commercial.orders') }}">
-          <i class="fas fa-fw fa-shopping-cart"></i>
-          <span>Orders</span>
-        </a>
-      </div>
-
-      <div class="nav-item">
-        <a class="nav-link" href="{{ url_for('commercial.deliveries') }}">
-          <i class="fas fa-fw fa-truck"></i>
-          <span>Deliveries</span>
-        </a>
-      </div>
-
-      <div class="nav-item">
-        <a class="nav-link" href="{{ url_for('commercial.invoices') }}">
-          <i class="fas fa-fw fa-file-invoice-dollar"></i>
-          <span>Invoices</span>
-        </a>
-      </div>
-
       <hr class="sidebar-divider d-none d-md-block">
 
     </div>
@@ -381,6 +357,529 @@
   <!-- Page-specific scripts -->
   {% block scripts %}{% endblock %}
 
+  <!-- Include gardens scripts -->
+  {% if request.endpoint == 'gardens.gardens' %}
+  <script>
+    // Function to update relative timestamps
+    function updateRelativeTimestamps() {
+        const timestamps = document.querySelectorAll('.relative-timestamp');
+        const now = new Date();
+
+        timestamps.forEach(timestamp => {
+            const timestampDate = new Date(timestamp.getAttribute('data-timestamp'));
+            const timeDiff = Math.floor((now - timestampDate) / 1000); // in seconds
+
+            let timeText = '';
+            if (timeDiff < 60) {
+                timeText = 'just now';
+            } else if (timeDiff < 3600) {
+                const mins = Math.floor(timeDiff / 60);
+                timeText = `${mins} min${mins !== 1 ? 's' : ''} ago`;
+            } else if (timeDiff < 86400) {
+                const hours = Math.floor(timeDiff / 3600);
+                timeText = `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+            } else if (timeDiff < 604800) {
+                const days = Math.floor(timeDiff / 86400);
+                timeText = `${days} day${days !== 1 ? 's' : ''} ago`;
+            } else if (timeDiff < 2592000) {
+                const weeks = Math.floor(timeDiff / 604800);
+                timeText = `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+            } else {
+                // For older timestamps, keep the original date format
+                timeText = timestamp.getAttribute('data-original-text');
+            }
+
+            timestamp.textContent = timeText;
+        });
+    }
+
+    // Update timestamps every minute
+    setInterval(updateRelativeTimestamps, 60000);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize timestamps when the page loads
+        updateRelativeTimestamps();
+
+        // Garden collapse functionality has been removed
+
+        // Zone collapse functionality has been removed
+
+        // Helper function to show toast notifications
+        function showToast(message, bgClass = 'bg-success') {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white ${bgClass} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            const icon = bgClass === 'bg-success' ? 'check-circle' :
+                         bgClass === 'bg-danger' ? 'exclamation-circle' : 'info-circle';
+
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${icon} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            // Add toast to the document
+            const toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.appendChild(toast);
+            document.body.appendChild(toastContainer);
+
+            // Initialize and show the toast
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 5000
+            });
+            bsToast.show();
+
+            // Remove toast container after toast is hidden
+            toast.addEventListener('hidden.bs.toast', function() {
+                document.body.removeChild(toastContainer);
+            });
+
+            return toast;
+        }
+
+        // Function to update plant status
+        function updatePlantStatus(plantId, newStatus, csrfToken) {
+            console.log('Updating plant', plantId, 'to status', newStatus);
+
+            // Find the plant row and elements to update
+            const link = document.querySelector(`a.status-update-link[data-plant-id="${plantId}"][data-status="${newStatus}"]`);
+            if (!link) {
+                console.error('Could not find status link');
+                showToast('Error updating status: Could not find status link', 'bg-danger');
+                return;
+            }
+
+            const plantRow = link.closest('.plant-row');
+            const statusBadge = plantRow.querySelector('.col-3.d-flex .badge');
+            const timestampElement = plantRow.querySelector('.col-2.text-muted small');
+            const dropdownMenu = plantRow.querySelector('.dropdown-menu');
+            const dropdownToggle = plantRow.querySelector('.dropdown-toggle');
+
+            // Show loading indicator
+            statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+            // Show toast notification
+            showToast('Updating plant status...', 'bg-info');
+
+            // Send AJAX request
+            fetch(`/api/plant/${plantId}/status/${newStatus}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the status badge with new status
+                    statusBadge.className = `badge ${data.style.bg} d-inline-flex align-items-center gap-1`;
+                    statusBadge.style.cssText = `
+                        font-size: 0.8rem;
+                        padding: 0.35rem 0.75rem;
+                        ${data.style.extra_style}
+                        white-space: nowrap;
+                        max-width: fit-content;
+                    `;
+                    statusBadge.innerHTML = `
+                        <i class="fas fa-${data.style.icon}"></i>
+                        ${data.status}
+                    `;
+
+                    // Update the timestamp
+                    if (timestampElement && data.timestamp) {
+                        timestampElement.innerHTML = '<i class="far fa-clock me-1"></i>just now';
+                    }
+
+                    // Update the dropdown menu
+                    if (dropdownMenu) {
+                        // Update the dropdown toggle text
+                        if (dropdownToggle) {
+                            dropdownToggle.textContent = data.status;
+                        }
+
+                        // Clear the dropdown menu
+                        dropdownMenu.innerHTML = '';
+
+                        // Use the valid statuses from the server response
+                        const validStatuses = data.valid_statuses || ['Seedling', 'Growing', 'Flowering', 'Fruiting', 'Harvested'];
+
+                        // Add all statuses in order, making the current one non-clickable
+                        validStatuses.forEach(status => {
+                            const statusItem = document.createElement('li');
+
+                            if (status === data.status) {
+                                // Current status - non-clickable with checkmark
+                                statusItem.innerHTML = `
+                                    <span class="dropdown-item py-1 text-muted d-flex align-items-center">
+                                        <i class="fas fa-check me-2 text-success"></i>
+                                        ${status}
+                                    </span>
+                                `;
+                            } else {
+                                // Other status - clickable
+                                statusItem.innerHTML = `
+                                    <a class="dropdown-item py-1 status-update-link"
+                                       href="#"
+                                       data-plant-id="${plantId}"
+                                       data-status="${status}"
+                                       data-csrf-token="${csrfToken}">
+                                        ${status}
+                                    </a>
+                                `;
+
+                                // Add event listener to the new link
+                                setTimeout(() => {
+                                    const newLink = statusItem.querySelector('.status-update-link');
+                                    if (newLink) {
+                                        newLink.addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            updatePlantStatus(plantId, status, csrfToken);
+                                        });
+                                    }
+                                }, 0);
+                            }
+
+                            dropdownMenu.appendChild(statusItem);
+                        });
+                    }
+
+                    // Show success message
+                    showToast(data.message, 'bg-success');
+                } else {
+                    // Show error message and revert to original status
+                    console.error('Error updating status:', data.error);
+                    showToast('Error updating status: ' + data.error, 'bg-danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while updating the status.', 'bg-danger');
+            });
+        }
+
+        // Helper function to add event listeners to a plant row
+        function addEventListenersToPlantRow(plantRow) {
+            console.log('Adding event listeners to plant row', plantRow);
+
+            // Add event listeners to status update links
+            const statusLinks = plantRow.querySelectorAll('.status-update-link');
+            console.log('Found', statusLinks.length, 'status update links');
+            statusLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const plantId = this.getAttribute('data-plant-id');
+                    const newStatus = this.getAttribute('data-status');
+                    const csrfToken = this.getAttribute('data-csrf-token');
+                    updatePlantStatus(plantId, newStatus, csrfToken);
+                });
+            });
+
+            // Add event listeners to move plant links
+            const moveLinks = plantRow.querySelectorAll('.move-plant-link');
+            console.log('Found', moveLinks.length, 'move plant links');
+            moveLinks.forEach(link => {
+                console.log('Adding click listener to move link', link);
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Move link clicked');
+                    const plantId = this.getAttribute('data-plant-id');
+                    const zoneId = this.getAttribute('data-zone-id');
+                    const zoneName = this.getAttribute('data-zone-name');
+                    const csrfToken = this.getAttribute('data-csrf-token');
+                    console.log('Moving plant', plantId, 'to zone', zoneId);
+                    movePlant(plantId, zoneId, zoneName, csrfToken, this.closest('.plant-row'));
+                });
+            });
+        }
+
+        // Function to add a plant to a zone
+        function addPlantToZone(data) {
+            const newZonePlantsContainer = document.querySelector(`#zone-${data.new_zone_id} .plants-container`);
+            if (!newZonePlantsContainer) return;
+
+            // Check if the zone has the 'No plants' message
+            const noPlantMessage = newZonePlantsContainer.querySelector('.text-center');
+            if (noPlantMessage && noPlantMessage.querySelector('.text-muted')) {
+                // Remove only the 'No plants' message
+                noPlantMessage.remove();
+            }
+
+            // Check if the zone has table headers
+            const hasHeaders = newZonePlantsContainer.querySelector('.plant-table-header');
+            if (!hasHeaders) {
+                // Add table headers
+                const headers = document.createElement('div');
+                headers.className = 'd-flex align-items-center py-2 px-4 border-bottom plant-table-header';
+                headers.style.backgroundColor = 'rgba(28, 200, 138, 0.05)';
+                headers.style.fontWeight = '500';
+                headers.innerHTML = `
+                    <div class="col-3">Plant</div>
+                    <div class="col-2">Quantity</div>
+                    <div class="col-3">Status</div>
+                    <div class="col-2">Last Updated</div>
+                    <div class="col-2">Actions</div>
+                `;
+                newZonePlantsContainer.appendChild(headers);
+            }
+
+            // Create a temporary container to parse the HTML
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = data.plant_html;
+            const newPlantRow = tempContainer.firstElementChild;
+
+            // Explicitly set the data-zone-id attribute
+            newPlantRow.setAttribute('data-zone-id', data.new_zone_id);
+            console.log('Setting data-zone-id attribute to', data.new_zone_id);
+
+            // Add the new plant row to the zone
+            newZonePlantsContainer.appendChild(newPlantRow);
+
+            // Add event listeners to the new plant row
+            const newStatusLinks = newPlantRow.querySelectorAll('.status-update-link');
+            newStatusLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const plantId = this.getAttribute('data-plant-id');
+                    const newStatus = this.getAttribute('data-status');
+                    const csrfToken = this.getAttribute('data-csrf-token');
+                    updatePlantStatus(plantId, newStatus, csrfToken);
+                });
+            });
+
+            // Add event listeners to the new move plant links
+            const newMoveLinks = newPlantRow.querySelectorAll('.move-plant-link');
+            newMoveLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const plantId = this.getAttribute('data-plant-id');
+                    const zoneId = this.getAttribute('data-zone-id');
+                    const zoneName = this.getAttribute('data-zone-name');
+                    const csrfToken = this.getAttribute('data-csrf-token');
+                    movePlant(plantId, zoneId, zoneName, csrfToken, this.closest('.plant-row'));
+                });
+            });
+
+            // Update relative timestamps
+            updateRelativeTimestamps();
+        }
+
+        // Function to get CSRF token from meta tag
+        function getCSRFToken() {
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                return metaTag.getAttribute('content');
+            }
+            return '';
+        }
+
+        // Function to move a plant to a new zone
+        function movePlant(plantId, zoneId, zoneName, csrfToken, plantRow) {
+            // Get CSRF token from meta tag if not provided
+            if (!csrfToken) {
+                csrfToken = getCSRFToken();
+                console.log('Got CSRF token from meta tag:', csrfToken);
+            }
+            // Get the current zone ID from the plant row
+            const currentZoneId = plantRow.getAttribute('data-zone-id');
+            console.log('Moving plant', plantId, 'from zone', currentZoneId, 'to zone', zoneId);
+
+            // Don't try to move to the same zone
+            if (zoneId == currentZoneId) {
+                showToast(`Plant is already in ${zoneName}`, 'bg-info');
+                return;
+            }
+
+            // Store original HTML for potential restoration
+            const originalHtml = plantRow.innerHTML;
+            console.log('Stored original HTML');
+
+            // Show loading indicator
+            plantRow.style.opacity = '0.5';
+            plantRow.innerHTML = `
+                <div class="col-12 text-center py-2">
+                    <i class="fas fa-spinner fa-spin me-2"></i> Moving plant to ${zoneName}...
+                </div>
+            `;
+
+            // Send AJAX request
+            console.log('Using CSRF token:', csrfToken);
+
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('csrf_token', csrfToken);
+
+            fetch(`/api/plant/${plantId}/move/${zoneId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+                // Don't include body for POST requests to this endpoint
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.log('Error response text:', text);
+                        try {
+                            // Try to parse as JSON
+                            const json = JSON.parse(text);
+                            // If it's a status mismatch error, return the parsed JSON
+                            if (json.status_mismatch) {
+                                console.log('Status mismatch detected in response');
+                                return json;
+                            }
+                            // Otherwise throw an error with the error message
+                            throw new Error(json.error || `Server returned ${response.status}: ${response.statusText}`);
+                        } catch (e) {
+                            // If parsing fails, use the raw text
+                            throw new Error(`Server returned ${response.status}: ${response.statusText}. Response: ${text}`);
+                        }
+                    });
+                }
+                return response.json().catch(e => {
+                    console.error('Error parsing JSON:', e);
+                    throw new Error(`Error parsing server response: ${e.message}`);
+                });
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Move successful', data);
+
+                    // Check if the plant is already in the target zone
+                    if (data.already_in_zone) {
+                        console.log('Plant is already in this zone');
+                        // Restore the plant row
+                        plantRow.style.opacity = '1';
+                        plantRow.innerHTML = originalHtml;
+
+                        // Make sure the data-zone-id attribute is set correctly
+                        plantRow.setAttribute('data-zone-id', data.new_zone_id);
+                        console.log('Set data-zone-id attribute to', data.new_zone_id);
+
+                        // Re-add event listeners
+                        addEventListenersToPlantRow(plantRow);
+
+                        // Show message
+                        showToast(data.message, 'bg-info');
+                        return;
+                    }
+
+                    // Remove the plant row with animation
+                    plantRow.style.transition = 'all 0.5s ease';
+                    plantRow.style.maxHeight = '0';
+                    plantRow.style.opacity = '0';
+                    plantRow.style.overflow = 'hidden';
+
+                    setTimeout(() => {
+                        // Remove the row after animation
+                        if (plantRow.parentNode) {
+                            plantRow.parentNode.removeChild(plantRow);
+                        }
+
+                        // Check if there are no more plants in the zone
+                        const plantsContainer = document.querySelector(`#zone-${data.old_zone_id} .plants-container`);
+                        if (plantsContainer && plantsContainer.querySelectorAll('.plant-row').length === 0) {
+                            plantsContainer.innerHTML = `
+                                <div class="text-center py-2">
+                                    <small class="text-muted">No plants in this zone yet</small>
+                                </div>
+                            `;
+                        }
+
+                        // Add the plant to the new zone
+                        addPlantToZone(data);
+
+                        // Show success message
+                        showToast(data.message, 'bg-success');
+                    }, 500);
+                } else {
+                    // Show error message
+                    console.error('Error moving plant:', data.error);
+
+                    // Restore the original plant row
+                    plantRow.style.opacity = '1';
+                    plantRow.innerHTML = originalHtml;
+
+                    // Make sure the data-zone-id attribute is preserved
+                    // We don't change it since the move failed
+                    console.log('Preserving original data-zone-id attribute:', plantRow.getAttribute('data-zone-id'));
+
+                    // Re-add event listeners
+                    addEventListenersToPlantRow(plantRow);
+
+                    // Check if this is a status mismatch error
+                    if (data.status_mismatch) {
+                        console.log('Status mismatch error:', data.current_status, 'not in', data.available_statuses);
+                        // Show a more informative error message
+                        showToast(data.error, 'bg-warning');
+                    } else {
+                        // Show generic error message
+                        showToast('Error moving plant: ' + data.error, 'bg-danger');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                // Restore the original plant row
+                plantRow.style.opacity = '1';
+                plantRow.innerHTML = originalHtml;
+
+                // Make sure the data-zone-id attribute is preserved
+                // We don't change it since the move failed
+                console.log('Preserving original data-zone-id attribute:', plantRow.getAttribute('data-zone-id'));
+
+                // Re-add event listeners
+                addEventListenersToPlantRow(plantRow);
+
+                // Show detailed error message
+                let errorMessage = 'An error occurred while moving the plant.';
+                if (error.message) {
+                    errorMessage += ' ' + error.message;
+                }
+                console.log('Showing error toast with message:', errorMessage);
+                showToast(errorMessage, 'bg-danger');
+            });
+        }
+
+        // Add event listeners to all status update links
+        const statusLinks = document.querySelectorAll('.status-update-link');
+        statusLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const plantId = this.getAttribute('data-plant-id');
+                const newStatus = this.getAttribute('data-status');
+                const csrfToken = this.getAttribute('data-csrf-token');
+                updatePlantStatus(plantId, newStatus, csrfToken);
+            });
+        });
+
+        // Add event listeners to all move plant links
+        const moveLinks = document.querySelectorAll('.move-plant-link');
+        moveLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const plantId = this.getAttribute('data-plant-id');
+                const zoneId = this.getAttribute('data-zone-id');
+                const zoneName = this.getAttribute('data-zone-name');
+                const csrfToken = this.getAttribute('data-csrf-token');
+                movePlant(plantId, zoneId, zoneName, csrfToken, this.closest('.plant-row'));
+            });
+        });
+    });
+  </script>
+  {% endif %}
+
   <!-- Add dropdown functionality for both user and auth dropdowns -->
   <script>
     // User dropdown (when logged in)
@@ -471,6 +970,273 @@
       });
     });
   </script>
+  <!-- Toast container for notifications -->
+  <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Events JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load more events functionality
+      const loadMoreBtn = document.getElementById('load-more-events');
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+          const hiddenEvents = document.getElementById('hidden-events');
+          const eventsList = document.getElementById('events-list');
+          const hiddenEventItems = hiddenEvents.querySelectorAll('.event-item');
+
+          // Get the first 5 hidden events and append them to the visible list
+          let count = 0;
+          hiddenEventItems.forEach(item => {
+            if (count < 5) {
+              const clone = item.cloneNode(true);
+              eventsList.appendChild(clone);
+              item.remove();
+              count++;
+            }
+          });
+
+          // Hide the load more button if no more events
+          if (hiddenEvents.querySelectorAll('.event-item').length === 0) {
+            loadMoreBtn.style.display = 'none';
+          }
+        });
+      }
+
+      // Todo checkbox functionality is handled in page_gardens.html
+    });
+
+    // Function to show toast notifications
+    function showToast(title, message, type = 'success') {
+      // Get or create toast container
+      let toastContainer = document.getElementById('toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1050';
+        document.body.appendChild(toastContainer);
+      }
+
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+      toast.setAttribute('aria-atomic', 'true');
+      toast.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+      toast.style.backdropFilter = 'blur(5px)';
+
+      // Set background color based on type
+      let bgColor = 'rgba(19, 141, 97, 0.95)';
+      let icon = 'fas fa-check-circle';
+
+      if (type === 'danger') {
+        bgColor = 'rgba(231, 74, 59, 0.95)';
+        icon = 'fas fa-exclamation-circle';
+      } else if (type === 'warning') {
+        bgColor = 'rgba(246, 194, 62, 0.95)';
+        icon = 'fas fa-exclamation-triangle';
+      } else if (type === 'info') {
+        bgColor = 'rgba(54, 185, 204, 0.95)';
+        icon = 'fas fa-info-circle';
+      }
+
+      // Create toast content
+      toast.innerHTML = `
+        <div class="toast-header" style="background-color: ${bgColor}; color: white;">
+          <i class="${icon} me-2"></i>
+          <strong class="me-auto">${title}</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" style="background-color: rgba(255, 255, 255, 0.7);">
+          ${message}
+        </div>
+      `;
+
+      // Add to container
+      toastContainer.appendChild(toast);
+
+      // Initialize and show toast
+      const bsToast = new bootstrap.Toast(toast, {
+        animation: true,
+        autohide: true,
+        delay: 5000
+      });
+
+      // Add entrance animation
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-20px)';
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+      bsToast.show();
+
+      // Animate in
+      setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      }, 50);
+
+      // Remove from DOM after hiding
+      toast.addEventListener('hidden.bs.toast', function() {
+        toast.remove();
+      });
+    }
+  </script>
+  <script>
+    // Function to handle sharing a post
+    function sharePost(button) {
+      const postUrl = button.getAttribute('data-post-url');
+      const shareLink = document.getElementById('shareLink');
+      shareLink.value = postUrl;
+
+      // Configure and show the toast
+      const shareToastEl = document.getElementById('shareToast');
+      const shareToast = new bootstrap.Toast(shareToastEl, {
+        animation: true,
+        autohide: true,
+        delay: 5000
+      });
+
+      // Add a subtle entrance animation
+      shareToastEl.style.opacity = '0';
+      shareToastEl.style.transform = 'translateY(-20px)';
+      shareToastEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+      shareToast.show();
+
+      // Animate in after a tiny delay
+      setTimeout(() => {
+        shareToastEl.style.opacity = '1';
+        shareToastEl.style.transform = 'translateY(0)';
+      }, 50);
+
+      // Select the text for easy copying
+      shareLink.select();
+    }
+
+    // Function to copy the share link
+    function copyShareLink() {
+      const shareLink = document.getElementById('shareLink');
+      shareLink.select();
+      document.execCommand('copy');
+
+      // Change the button text temporarily with a subtle animation
+      const copyButton = document.querySelector('#shareLink + button');
+      const originalHTML = copyButton.innerHTML;
+      const originalBg = copyButton.style.backgroundColor;
+
+      // Prepare for animation
+      copyButton.style.transition = 'all 0.3s ease';
+
+      // Animate to success state
+      copyButton.innerHTML = '<i class="fas fa-check"></i>';
+      copyButton.style.backgroundColor = 'rgba(19, 141, 97, 0.2)';
+      copyButton.style.borderColor = 'rgba(19, 141, 97, 0.5)';
+      copyButton.style.color = '#138d61';
+
+      // Add a subtle feedback message
+      const feedbackMsg = document.querySelector('.toast-body small');
+      const originalMsg = feedbackMsg.innerHTML;
+      feedbackMsg.innerHTML = 'Link copied to clipboard!';
+      feedbackMsg.style.color = '#138d61';
+      feedbackMsg.style.transition = 'color 0.3s ease';
+
+      // Reset after 2 seconds with animation
+      setTimeout(() => {
+        copyButton.innerHTML = originalHTML;
+        copyButton.style.backgroundColor = originalBg;
+        copyButton.style.borderColor = 'rgba(28, 200, 138, 0.2)';
+
+        // Reset feedback message
+        feedbackMsg.innerHTML = originalMsg;
+        feedbackMsg.style.color = '';
+      }, 2000);
+    }
+
+    // Function to handle liking/unliking posts
+    function toggleLike(button) {
+      const postId = button.getAttribute('data-post-id');
+      const likeIcon = button.querySelector('i');
+      const likeText = button.querySelector('.like-text');
+      const likeCount = button.querySelector('.like-count');
+      const isLiked = likeIcon.classList.contains('fas');
+
+      // Determine the action based on current state
+      const action = isLiked ? 'unlike' : 'like';
+
+      // Send the request to the server
+      fetch(`/post/${postId}/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update the button appearance
+          if (action === 'like') {
+            likeIcon.classList.remove('far');
+            likeIcon.classList.add('fas');
+            likeText.textContent = 'Liked';
+            button.style.backgroundColor = 'rgba(19, 141, 97, 0.2)';
+          } else {
+            likeIcon.classList.remove('fas');
+            likeIcon.classList.add('far');
+            likeText.textContent = 'Like';
+            button.style.backgroundColor = 'rgba(28, 200, 138, 0.1)';
+          }
+
+          // Update the like count
+          if (data.count > 0) {
+            likeCount.textContent = `(${data.count})`;
+          } else {
+            likeCount.textContent = '';
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    }
+
+    // Initialize like buttons when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      const likeButtons = document.querySelectorAll('.like-btn');
+
+      likeButtons.forEach(button => {
+        const postId = button.getAttribute('data-post-id');
+
+        // Get the initial like status
+        fetch(`/post/${postId}/like_status`)
+          .then(response => response.json())
+          .then(data => {
+            const likeIcon = button.querySelector('i');
+            const likeText = button.querySelector('.like-text');
+            const likeCount = button.querySelector('.like-count');
+
+            // Update button appearance based on like status
+            if (data.is_liked) {
+              likeIcon.classList.remove('far');
+              likeIcon.classList.add('fas');
+              likeText.textContent = 'Liked';
+              button.style.backgroundColor = 'rgba(19, 141, 97, 0.2)';
+            }
+
+            // Update like count
+            if (data.count > 0) {
+              likeCount.textContent = `(${data.count})`;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      });
+    });
+  </script>
 </body>
 
 </html>
@@ -509,11 +1275,12 @@
 
   /* Clean, static card styling */
   .card {
-    border: 1px solid #e3e6f0;
-    border-radius: 0.5rem;
+    border: 1px solid rgba(28, 200, 138, 0.2);
+    border-radius: 1.5rem !important;
+    border-bottom: 4px solid rgba(28, 200, 138, 0.2);
     background: white;
     margin-bottom: 1rem;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
   }
 
   /* Basic card header */
@@ -521,11 +1288,22 @@
     padding: 0.75rem;
     background-color: transparent;
     border-bottom: 1px solid #e3e6f0;
+    border-top-left-radius: 1.5rem !important;
+    border-top-right-radius: 1.5rem !important;
   }
 
   /* Simple card body */
   .card-body {
     padding: 0.75rem;
+  }
+
+  /* Card footer */
+  .card-footer {
+    padding: 0.75rem;
+    background-color: transparent;
+    border-top: 1px solid #e3e6f0;
+    border-bottom-left-radius: 1.5rem !important;
+    border-bottom-right-radius: 1.5rem !important;
   }
 
   /* Basic typography */
@@ -595,3 +1373,23 @@
     }
   }
 </style>
+
+  <!-- Toast container for notifications -->
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <div id="shareToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px);">
+      <div class="toast-header" style="background-color: rgba(19, 141, 97, 0.95); color: white;">
+        <i class="fas fa-link me-2"></i>
+        <strong class="me-auto">Share Link</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" style="background-color: rgba(255, 255, 255, 0.7);">
+        <div class="input-group">
+          <input type="text" id="shareLink" class="form-control" style="background-color: rgba(255, 255, 255, 0.8);" readonly>
+          <button class="btn btn-outline-success" type="button" onclick="copyShareLink()" style="background-color: rgba(255, 255, 255, 0.8);">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <small class="text-muted mt-2 d-block">Click the button to copy the link</small>
+      </div>
+    </div>
+  </div>

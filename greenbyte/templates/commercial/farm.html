@@ -1,0 +1,708 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ farm.name }}</h1>
+        <div>
+            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="modal" data-target="#editFarmModal">
+                <i class="fas fa-edit fa-sm text-white-50 mr-1"></i> Edit Farm
+            </a>
+            <a href="{{ url_for('commercial.dashboard') }}" class="d-none d-sm-inline-block btn btn-sm btn-outline-secondary shadow-sm ml-2">
+                <i class="fas fa-arrow-left fa-sm mr-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <!-- Farm Overview -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-success">Farm Overview</h6>
+                </div>
+                <div class="card-body">
+                    {% if farm.description %}
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">Description</h6>
+                        <p>{{ farm.description }}</p>
+                    </div>
+                    <hr>
+                    {% endif %}
+
+                    <!-- Gardens & Zones Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Gardens</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ farm.gardens|length }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-seedling fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Zones</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ farm.gardens|map(attribute='zones')|map('list')|map('length')|sum }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-map-marked-alt fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Plants</div>
+                                            {% set plant_count = 0 %}
+                                            {% for garden in farm.gardens %}
+                                                {% for zone in garden.zones %}
+                                                    {% set plant_count = plant_count + zone.plants|length %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ plant_count }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-leaf fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gardens List -->
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold mb-3">Gardens</h6>
+                        {% if farm.gardens %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Garden Name</th>
+                                            <th>Location</th>
+                                            <th>Zones</th>
+                                            <th>Plants</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for garden in farm.gardens %}
+                                        <tr>
+                                            <td>{{ garden.name }}</td>
+                                            <td>{{ garden.location or 'N/A' }}</td>
+                                            <td>{{ garden.zones|length }}</td>
+                                            {% set plant_count = 0 %}
+                                            {% for zone in garden.zones %}
+                                                {% set plant_count = plant_count + zone.plants|length %}
+                                            {% endfor %}
+                                            <td>{{ plant_count }}</td>
+                                            <td>
+                                                <a href="{{ url_for('gardens.garden', garden_id=garden.id) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                No gardens have been added to this farm yet.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Farm Info Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Farm Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="mr-3">
+                            <i class="fas fa-farm fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ farm.name }}</h5>
+                            {% if farm.business_name %}
+                                <div class="text-muted">{{ farm.business_name }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <h6 class="font-weight-bold">Contact Information</h6>
+                        <div class="mb-2">
+                            <i class="fas fa-map-marker-alt text-success mr-2"></i>
+                            {{ farm.location or 'No location specified' }}
+                        </div>
+                        {% if farm.phone %}
+                        <div class="mb-2">
+                            <i class="fas fa-phone text-success mr-2"></i>
+                            {{ farm.phone }}
+                        </div>
+                        {% endif %}
+                        {% if farm.email %}
+                        <div class="mb-2">
+                            <i class="fas fa-envelope text-success mr-2"></i>
+                            {{ farm.email }}
+                        </div>
+                        {% endif %}
+                        {% if farm.website %}
+                        <div class="mb-2">
+                            <i class="fas fa-globe text-success mr-2"></i>
+                            <a href="{{ farm.website }}" target="_blank" class="text-success">{{ farm.website }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <h6 class="font-weight-bold">Business Information</h6>
+                        {% if farm.tax_id %}
+                        <div class="mb-2">
+                            <i class="fas fa-id-card text-success mr-2"></i>
+                            Tax ID: {{ farm.tax_id }}
+                        </div>
+                        {% endif %}
+                        <div class="mb-2">
+                            <i class="fas fa-user text-success mr-2"></i>
+                            Owner: {{ farm.owner.firstName }} {{ farm.owner.lastName }}
+                        </div>
+                        <div class="mb-2">
+                            <i class="fas fa-calendar-alt text-success mr-2"></i>
+                            Created: {{ farm.created_at.strftime('%b %d, %Y') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Farm Members Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-success">Farm Members</h6>
+                    <a href="#" class="btn btn-sm btn-success" data-toggle="modal" data-target="#addMemberModal">
+                        <i class="fas fa-user-plus fa-sm"></i> Add Member
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Owner row -->
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img class="rounded-circle mr-2" src="{{ url_for('static', filename='profile_pics/' + farm.owner.image_file) }}" width="32" height="32">
+                                            {{ farm.owner.firstName }} {{ farm.owner.lastName }}
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-primary">Owner</span></td>
+                                    <td>-</td>
+                                </tr>
+
+                                <!-- Members rows -->
+                                {% for member in farm.members %}
+                                    {% if member.id != farm.owner_id %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img class="rounded-circle mr-2" src="{{ url_for('static', filename='profile_pics/' + member.image_file) }}" width="32" height="32">
+                                                {{ member.firstName }} {{ member.lastName }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% set role = farm.get_member_role(member.id) %}
+                                            {% if role %}
+                                            <span class="badge {% if role == 'admin' %}badge-success{% else %}badge-info{% endif %}">
+                                                {{ role|capitalize }}
+                                            </span>
+                                            {% else %}
+                                            <span class="badge badge-secondary">Member</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning edit-role-btn" data-member-id="{{ member.id }}" data-current-role="{{ role or 'member' }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger remove-member-btn" data-member-id="{{ member.id }}">
+                                                <i class="fas fa-user-minus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Activities -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Member Activities</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Action</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sample activities - in a real app, these would come from the database -->
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img class="rounded-circle mr-2" src="{{ url_for('static', filename='profile_pics/' + farm.owner.image_file) }}" width="32" height="32">
+                                            {{ farm.owner.firstName }} {{ farm.owner.lastName }}
+                                        </div>
+                                    </td>
+                                    <td>Added a new garden: <strong>North Field</strong></td>
+                                    <td>{{ farm.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img class="rounded-circle mr-2" src="{{ url_for('static', filename='profile_pics/default.jpg') }}" width="32" height="32">
+                                            Jane Smith
+                                        </div>
+                                    </td>
+                                    <td>Updated plant status: <strong>Tomatoes</strong> to <strong>Harvesting</strong></td>
+                                    <td>{{ farm.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img class="rounded-circle mr-2" src="{{ url_for('static', filename='profile_pics/default.jpg') }}" width="32" height="32">
+                                            Mike Johnson
+                                        </div>
+                                    </td>
+                                    <td>Created a new event: <strong>Spring Planting</strong></td>
+                                    <td>{{ farm.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img class="rounded-circle mr-2" src="{{ url_for('static', filename='profile_pics/' + farm.owner.image_file) }}" width="32" height="32">
+                                            {{ farm.owner.firstName }} {{ farm.owner.lastName }}
+                                        </div>
+                                    </td>
+                                    <td>Added inventory item: <strong>Organic Tomatoes</strong></td>
+                                    <td>{{ farm.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img class="rounded-circle mr-2" src="{{ url_for('static', filename='profile_pics/default.jpg') }}" width="32" height="32">
+                                            Jane Smith
+                                        </div>
+                                    </td>
+                                    <td>Completed harvest: <strong>5 kg of Lettuce</strong></td>
+                                    <td>{{ farm.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory & Financial Data -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Inventory & Financial Data</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Inventory Stats -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="font-weight-bold">Inventory</h6>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Total Items:</span>
+                                    <span class="font-weight-bold">{{ farm.inventory_items|length }}</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+
+                            {% set low_stock_count = farm.inventory_items|selectattr('is_low_stock')|list|length %}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Low Stock Items:</span>
+                                    <span class="font-weight-bold text-warning">{{ low_stock_count }}</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    {% set low_stock_percent = (low_stock_count / farm.inventory_items|length * 100) if farm.inventory_items|length > 0 else 0 %}
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ low_stock_percent }}%" aria-valuenow="{{ low_stock_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <a href="#" class="btn btn-sm btn-success">
+                                    <i class="fas fa-boxes fa-sm mr-1"></i> Manage Inventory
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Financial Stats -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="font-weight-bold">Financial</h6>
+
+                            {% set total_sales = farm.sales|sum(attribute='total_amount') %}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Total Sales:</span>
+                                    <span class="font-weight-bold">${{ total_sales|round(2) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Recent Sales:</span>
+                                    <span class="font-weight-bold">${{ farm.sales[-5:]|sum(attribute='total_amount')|round(2) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Pending Orders:</span>
+                                    <span class="font-weight-bold">{{ farm.sales|selectattr('payment_status', 'equalto', 'pending')|list|length }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <a href="#" class="btn btn-sm btn-success">
+                                    <i class="fas fa-chart-line fa-sm mr-1"></i> View Financial Reports
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" role="dialog" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addMemberModalLabel">Add Farm Member</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addMemberForm">
+                    <div class="form-group">
+                        <label for="memberEmail">Member Email</label>
+                        <input type="email" class="form-control" id="memberEmail" placeholder="Enter email address">
+                        <small class="form-text text-muted">Enter the email of an existing user to add them as a member.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberRole">Role</label>
+                        <select class="form-control" id="memberRole">
+                            <option value="gardener">Gardener</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="addMemberBtn">Add Member</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Farm Modal -->
+<div class="modal fade" id="editFarmModal" tabindex="-1" role="dialog" aria-labelledby="editFarmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editFarmModalLabel">Edit Farm</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editFarmForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="farmName">Farm Name</label>
+                            <input type="text" class="form-control" id="farmName" value="{{ farm.name }}">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="businessName">Business Name</label>
+                            <input type="text" class="form-control" id="businessName" value="{{ farm.business_name or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" class="form-control" id="location" value="{{ farm.location or '' }}">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="phone">Phone</label>
+                            <input type="text" class="form-control" id="phone" value="{{ farm.phone or '' }}">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" value="{{ farm.email or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="website">Website</label>
+                            <input type="url" class="form-control" id="website" value="{{ farm.website or '' }}">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="taxId">Tax ID</label>
+                            <input type="text" class="form-control" id="taxId" value="{{ farm.tax_id or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" id="description" rows="3">{{ farm.description or '' }}</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveFarmBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Add Member functionality
+        $('#addMemberBtn').click(function() {
+            const email = $('#memberEmail').val();
+            const role = $('#memberRole').val();
+
+            if (!email) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            // Send AJAX request to add member
+            $.ajax({
+                url: '/commercial/farm/{{ farm.id }}/add_member',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    email: email,
+                    role: role
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        showToast('Success', 'Member added successfully', 'success');
+                        // Reload the page to show the new member
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showToast('Error', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMsg = 'Failed to add member';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    showToast('Error', errorMsg, 'error');
+                }
+            });
+        });
+
+        // Edit member role functionality
+        $('.edit-role-btn').click(function() {
+            const memberId = $(this).data('member-id');
+            const currentRole = $(this).data('current-role');
+            const newRole = currentRole === 'admin' ? 'gardener' : 'admin';
+
+            if (confirm(`Change role from ${currentRole} to ${newRole}?`)) {
+                // Send AJAX request to update role
+                $.ajax({
+                    url: '/commercial/farm/{{ farm.id }}/update_member_role',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        member_id: memberId,
+                        role: newRole
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('Success', 'Member role updated', 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showToast('Error', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error', 'Failed to update member role', 'error');
+                    }
+                });
+            }
+        });
+
+        // Remove member functionality
+        $('.remove-member-btn').click(function() {
+            const memberId = $(this).data('member-id');
+
+            if (confirm('Are you sure you want to remove this member from the farm?')) {
+                // Send AJAX request to remove member
+                $.ajax({
+                    url: '/commercial/farm/{{ farm.id }}/remove_member',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        member_id: memberId
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('Success', 'Member removed', 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showToast('Error', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error', 'Failed to remove member', 'error');
+                    }
+                });
+            }
+        });
+
+        // Save farm changes
+        $('#saveFarmBtn').click(function() {
+            const farmData = {
+                name: $('#farmName').val(),
+                business_name: $('#businessName').val(),
+                location: $('#location').val(),
+                phone: $('#phone').val(),
+                email: $('#email').val(),
+                website: $('#website').val(),
+                tax_id: $('#taxId').val(),
+                description: $('#description').val()
+            };
+
+            // Send AJAX request to update farm
+            $.ajax({
+                url: '/commercial/farm/{{ farm.id }}/update',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(farmData),
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Success', 'Farm updated successfully', 'success');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showToast('Error', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Error', 'Failed to update farm', 'error');
+                }
+            });
+        });
+
+        // Helper function to show toast notifications
+        function showToast(title, message, type) {
+            // Create toast container if it doesn't exist
+            if ($('#toast-container').length === 0) {
+                $('body').append('<div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3"></div>');
+            }
+
+            // Create a unique ID for the toast
+            const toastId = 'toast-' + Date.now();
+
+            // Determine the header class based on type
+            let headerClass = 'bg-success';
+            if (type === 'error') headerClass = 'bg-danger';
+            if (type === 'warning') headerClass = 'bg-warning';
+
+            // Create the toast HTML
+            const toastHtml = `
+                <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header ${headerClass} text-white">
+                        <strong class="me-auto">${title}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+
+            // Add the toast to the container
+            $('#toast-container').append(toastHtml);
+
+            // Initialize and show the toast
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+        }
+    });
+</script>
+{% endblock %}
