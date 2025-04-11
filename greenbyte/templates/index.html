@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div class="row">
+<div class="row justify-content-center">
     <!-- Left Column - Blog Posts -->
-    <div class="col-xl-8 col-lg-7">
+    <div class="col-xl-8 col-lg-7 col-md-12">
         <!-- Function Bar -->
         <div class="card custom-card shadow-sm mb-4">
             <div class=" p-3">
@@ -16,36 +16,6 @@
                             <button class="btn btn-light"
                                 style="border-radius: 0 0.75rem 0.75rem 0; border: 1px solid rgba(28, 200, 138, 0.2);">
                                 <i class="fas fa-search text-success"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Filter Options -->
-                    <div class="col-lg-6">
-                        <div class="d-flex gap-2 justify-content-lg-end">
-                            <select class="form-select bg-white"
-                                style="width: auto; border-radius: 0.75rem; border: 1px solid rgba(28, 200, 138, 0.2);">
-                                <option selected>All Categories</option>
-                                <option>Vegetables</option>
-                                <option>Herbs</option>
-                                <option>Flowers</option>
-                            </select>
-                            <div class="dropdown">
-                                <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                                    style="border-radius: 0.75rem; border: 1px solid rgba(28, 200, 138, 0.2);">
-                                    <i class="fas fa-sort-amount-down text-success"></i> Sort
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-clock"></i> Most Recent</a>
-                                    </li>
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-fire"></i> Most Popular</a>
-                                    </li>
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-thumbs-up"></i> Most
-                                            Liked</a></li>
-                                </ul>
-                            </div>
-                            <button class="btn btn-light"
-                                style="border-radius: 0.75rem; border: 1px solid rgba(28, 200, 138, 0.2);">
-                                <i class="fas fa-filter text-success"></i> Filters
                             </button>
                         </div>
                     </div>
@@ -277,7 +247,7 @@
     </div> <!-- Closing div for left column -->
 
     <!-- Right Column - Garden Events -->
-    <div class="col-xl-4 col-lg-5">
+    <div class="col-xl-4 col-lg-5 col-md-12">
         <!-- Community Card -->
         <div class="card custom-card shadow-sm mb-4">
             <div class="p-4">
