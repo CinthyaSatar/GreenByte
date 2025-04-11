@@ -20,6 +20,65 @@
     .right-column-container::-webkit-scrollbar-thumb:hover {
         background: rgba(28, 200, 138, 0.5);
     }
+
+    /* Ensure dropdowns appear on top of other content */
+    .dropdown-menu {
+        z-index: 9999 !important;
+        position: fixed !important;
+        transform: none !important;
+    }
+
+    /* Mobile responsiveness for garden cards */
+    @media (max-width: 768px) {
+        .card, .plants-container, .zone-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            border-radius: 0.5rem !important;
+            overflow-x: hidden !important;
+        }
+
+        .plants-container {
+            overflow-x: auto !important;
+        }
+
+        /* Ensure table headers and rows have consistent width */
+        .plant-table-header, .plant-row {
+            min-width: 650px !important;
+            width: 100% !important;
+        }
+
+        .right-column-container {
+            position: static !important;
+            max-height: none !important;
+            overflow-y: visible !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+        }
+
+        .col-12 {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+        }
+
+        body {
+            overflow-x: hidden !important;
+        }
+
+        /* Additional dropdown styling for mobile */
+        .dropdown-menu {
+            background-color: white !important;
+            border: 1px solid rgba(28, 200, 138, 0.2) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -43,7 +102,8 @@
         {% for garden in gardens %}
         <div class="card mb-4" style="border: 1px solid rgba(28, 200, 138, 0.2);
                     border-radius: 1rem !important;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    width: 100%;">
             <div class="card-header bg-white d-flex justify-content-between align-items-center p-4"
                  style="border-bottom: 1px solid rgba(28, 200, 138, 0.2);
                         border-radius: 1rem !important;">
@@ -100,7 +160,7 @@
                 <div class="row">
                     {% for zone in garden.zones %}
                     <div class="col-12">
-                        <div id="zone-{{ zone.id }}" class="card shadow mb-4" data-statuses='{{ zone.get_plant_statuses()|tojson }}' data-zone-id="{{ zone.id }}">
+                        <div id="zone-{{ zone.id }}" class="card shadow mb-4" data-statuses='{{ zone.get_plant_statuses()|tojson }}' data-zone-id="{{ zone.id }}" style="width: 100%;">
                             <div class="card-header py-3 d-flex justify-content-between align-items-center"
                                  style="border-radius: 0.75rem !important;
                                         background-color: rgba(28, 200, 138, 0.05);
@@ -209,12 +269,14 @@
                                 </div>
                             </div>
                             <!-- Plants List -->
-                            <div class="plants-container">
+                            <div class="plants-container" style="width: 100%; overflow-x: auto;">
                                 {% if zone.plants %}
                                     <!-- Column Headers -->
                                     <div class="d-flex align-items-center py-2 px-4 border-bottom plant-table-header"
                                          style="background-color: rgba(28, 200, 138, 0.05);
-                                                font-weight: 500;">
+                                                font-weight: 500;
+                                                min-width: 650px;
+                                                width: 100%;">
                                         <div class="col-3">Plant</div>
                                         <div class="col-2">Quantity</div>
                                         <div class="col-3">Status</div>
@@ -257,7 +319,8 @@
                                     <div class="plant-row d-flex align-items-center py-2 px-4 border-bottom" data-plant-id="{{ plant.id }}"
                                          style="border-color: rgba(28, 200, 138, 0.1) !important;
                                                 min-width: 650px;
-                                                transition: background-color 0.2s ease;">
+                                                transition: background-color 0.2s ease;
+                                                width: 100%;">
                                         <!-- Plant Name & Variety -->
                                         <div class="col-3 d-flex align-items-center gap-2">
                                             <span style="color: #1cc88a; font-weight: 500;">
@@ -307,7 +370,7 @@
                                                 <button class="btn btn-sm btn-light px-2 py-1" onclick="toggleStatusOptions('status-dropdown-{{ plant.id }}')">
                                                     <i class="fas fa-sync-alt"></i>
                                                 </button>
-                                                <ul id="status-dropdown-{{ plant.id }}" class="dropdown-menu dropdown-menu-end" style="display: none;">
+                                                <ul id="status-dropdown-{{ plant.id }}" class="dropdown-menu dropdown-menu-end" style="display: none; z-index: 1050; position: absolute;">
                                                     {% for status in zone.get_plant_statuses() %}
                                                     <li>
                                                         {% if status == plant.status %}
@@ -336,7 +399,7 @@
                                                 <button class="btn btn-sm btn-light px-2 py-1" onclick="toggleMoveOptions('move-dropdown-{{ plant.id }}')">
                                                     <i class="fas fa-exchange-alt"></i>
                                                 </button>
-                                                <ul id="move-dropdown-{{ plant.id }}" class="dropdown-menu dropdown-menu-end" style="display: none;">
+                                                <ul id="move-dropdown-{{ plant.id }}" class="dropdown-menu dropdown-menu-end" style="display: none; z-index: 1050; position: absolute;">
                                                     {% for available_zone in garden.zones %}
                                                         {% if available_zone.id != plant.zone_id %}
                                                         <li>
@@ -808,7 +871,25 @@
             });
 
             // Toggle this menu
-            element.style.display = element.style.display === 'none' ? 'block' : 'none';
+            if (element.style.display === 'none') {
+                // Get the button position
+                const button = document.querySelector(`button[onclick*="toggleStatusOptions('${id}')"]`);
+                const rect = button.getBoundingClientRect();
+
+                // Position the dropdown relative to the button
+                element.style.display = 'block';
+                element.style.zIndex = '9999';
+                element.style.position = 'fixed';
+                element.style.top = (rect.bottom + 5) + 'px';
+                element.style.right = (window.innerWidth - rect.right) + 'px';
+                element.style.backgroundColor = 'white';
+                element.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                element.style.border = '1px solid rgba(28, 200, 138, 0.2)';
+                element.style.borderRadius = '0.5rem';
+                element.style.minWidth = '150px';
+            } else {
+                element.style.display = 'none';
+            }
         }
     }
 
@@ -822,7 +903,25 @@
             });
 
             // Toggle this menu
-            element.style.display = element.style.display === 'none' ? 'block' : 'none';
+            if (element.style.display === 'none') {
+                // Get the button position
+                const button = document.querySelector(`button[onclick*="toggleMoveOptions('${id}')"]`);
+                const rect = button.getBoundingClientRect();
+
+                // Position the dropdown relative to the button
+                element.style.display = 'block';
+                element.style.zIndex = '9999';
+                element.style.position = 'fixed';
+                element.style.top = (rect.bottom + 5) + 'px';
+                element.style.right = (window.innerWidth - rect.right) + 'px';
+                element.style.backgroundColor = 'white';
+                element.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                element.style.border = '1px solid rgba(28, 200, 138, 0.2)';
+                element.style.borderRadius = '0.5rem';
+                element.style.minWidth = '150px';
+            } else {
+                element.style.display = 'none';
+            }
         }
     }
 
